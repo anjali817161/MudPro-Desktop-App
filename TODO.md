@@ -1,0 +1,3 @@
+- [x] Update lib/modules/UG/right_pannel/right_pannel_view.dart to make tab bar scrollable horizontally
+- [x] Update lib/modules/UG/right_pannel/inventory/inventory_products_view.dart to stack bottom tables vertically on small screens using LayoutBuilder
+- [x] Test the changes for responsiveness
