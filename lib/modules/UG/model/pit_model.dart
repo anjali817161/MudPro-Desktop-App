@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 class PitModel {
   final int id;
   final String pit;
-  final String capacity;
+  String capacity;
   final RxBool active;
 
   PitModel({

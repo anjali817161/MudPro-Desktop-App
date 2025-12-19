@@ -45,6 +45,8 @@ dependencies:
   get: ^4.7.3
   file_picker: ^10.3.7
   msix: ^3.16.12
+  intl: ^0.20.2
+  fl_chart: ^1.1.1
 
 dev_dependencies:
   flutter_test:

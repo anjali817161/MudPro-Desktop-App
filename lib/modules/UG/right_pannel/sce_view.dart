@@ -1,45 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controller/UG_controller.dart';
+import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
 class SceView extends StatelessWidget {
   SceView({super.key});
   final c = Get.find<UgController>();
 
-  static const rowH = 26.0;
+  static const rowH = 32.0;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-  // ================= SHAKER =================
+          // ================= SHAKER =================
           Expanded(
             flex: 3,
             child: Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.black26),
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey.shade200, width: 1),
               ),
               child: Column(
                 children: [
-                  _sectionTitle('Shaker'),
-                  SingleChildScrollView(
-                    child: Table(
-                      border: TableBorder.symmetric(
-                        inside: BorderSide(color: Colors.black12, width: 1),
+                  _sectionTitle('Shaker Equipment'),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      primary: true,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _headerRow(['Shaker', 'Model', 'No. of Screen', 'Plot']),
+                          ..._shakerBodyRows(),
+                          if (c.shakers.isEmpty)
+                            Container(
+                              height: 100,
+                              alignment: Alignment.center,
+                              child: Text(
+                                'No shakers configured',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                      columnWidths: {
-                        0: FlexColumnWidth(1),
-                        1: FlexColumnWidth(3),
-                        2: FlexColumnWidth(2),
-                        3: FlexColumnWidth(1),
-                      },
-                      children: [
-                        _tableHeaderRow(['Shaker', 'Model', 'No. of Screen', 'Plot']),
-                        ..._shakerBodyRows(),
-                      ],
                     ),
                   ),
                 ],
@@ -47,33 +65,51 @@ class SceView extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
 
           // ================= OTHER SCE =================
           Expanded(
             flex: 2,
             child: Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.black26),
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey.shade200, width: 1),
               ),
               child: Column(
                 children: [
-                  _sectionTitle('Other SCE'),
-                  Table(
-                    border: TableBorder.symmetric(
-                      inside: BorderSide(color: Colors.black12, width: 1),
+                  _sectionTitle('Other SCE Equipment'),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      primary: true,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _headerRow(['Type', 'Model 1', 'Model 2', 'Model 3', 'Plot']),
+                          ..._otherSceBodyRows(),
+                          if (c.otherSce.isEmpty)
+                            Container(
+                              height: 100,
+                              alignment: Alignment.center,
+                              child: Text(
+                                'No other SCE configured',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                    columnWidths: {
-                      0: FlexColumnWidth(1),
-                      1: FlexColumnWidth(1),
-                      2: FlexColumnWidth(1),
-                      3: FlexColumnWidth(1),
-                      4: FlexColumnWidth(1),
-                    },
-                    children: [
-                      _tableHeaderRow(['Type', 'Model 1', 'Model 2', 'Model 3', 'Plot']),
-                      ..._otherSceBodyRows(),
-                    ],
                   ),
                 ],
               ),
@@ -87,296 +123,230 @@ class SceView extends StatelessWidget {
   // ================= SECTION TITLE =================
   Widget _sectionTitle(String title) {
     return Container(
-      height: rowH,
+      height: 36,
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       alignment: Alignment.centerLeft,
-      color: const Color(0xffE6E6E6),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+      decoration: BoxDecoration(
+        gradient: AppTheme.headerGradient,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(8),
+          topRight: Radius.circular(8),
+        ),
       ),
-    );
-  }
-
-  // ================= TABLE HEADER =================
-  Widget _tableHeader(List<String> headers) {
-    return Container(
-      height: rowH,
-      color: const Color(0xffF2F2F2),
       child: Row(
-        children: _addDividers(headers.map((h) => _headerCell(h)).toList()),
-      ),
-    );
-  }
-
-  Widget _headerCell(String text) {
-    return Expanded(
-      child: Center(
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+        children: [
+          Icon(
+            title.contains('Shaker') ? Icons.vibration : Icons.build,
+            color: Colors.white,
+            size: 16,
           ),
-        ),
+          SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // ================= SHAKER BODY =================
-  Widget _shakerBody() {
-    return ListView.builder(
-      itemCount: 25,
-      itemBuilder: (_, i) {
-        final hasData = i < c.shakers.length;
-        final s = hasData ? c.shakers[i] : null;
-
-        return _row([
-          _editableText(hasData ? s!.shaker : ''),
-          _editableRx(hasData ? s!.model : RxString('')),
-          _editableRx(hasData ? s!.screens : RxString('')),
-          _check(hasData ? s!.plot : RxBool(false)),
-        ]);
-      },
-    );
-  }
-
-  // ================= OTHER SCE BODY =================
-  Widget _otherSceBody() {
-    return ListView.builder(
-      itemCount: 12,
-      itemBuilder: (_, i) {
-        final hasData = i < c.otherSce.length;
-        final o = hasData ? c.otherSce[i] : null;
-
-        return _row([
-          _editableText(hasData ? o!.type : ''),
-          _editableRx(hasData ? o!.model1 : RxString('')),
-          _editableRx(hasData ? o!.model2 : RxString('')),
-          _editableRx(hasData ? o!.model3 : RxString('')),
-          _check(hasData ? o!.plot : RxBool(false)),
-        ]);
-      },
-    );
-  }
-
-  // ================= ROW =================
-  Widget _row(List<Widget> cells) {
+  // ================= HEADER ROW =================
+  Widget _headerRow(List<String> headers) {
     return Container(
       height: rowH,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.black12)),
-      ),
-      child: Row(children: cells),
-    );
-  }
-
-  // ================= HELPER =================
-  List<Widget> _addDividers(List<Widget> widgets) {
-    final List<Widget> result = [];
-    for (int i = 0; i < widgets.length; i++) {
-      result.add(widgets[i]);
-      if (i < widgets.length - 1) {
-        result.add(const VerticalDivider(width: 1, color: Colors.black12));
-      }
-    }
-    return result;
-  }
-
-  TableRow _tableHeaderRow(List<String> headers) {
-    return TableRow(
-      decoration: const BoxDecoration(color: Color(0xffF2F2F2)),
-      children: headers.map((h) => Container(
-        height: rowH,
-        alignment: Alignment.center,
-        child: Text(
-          h,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-          ),
+      decoration: BoxDecoration(
+        color: Color(0xfff0f9ff),
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade200, width: 1),
         ),
-      )).toList(),
+      ),
+      child: Row(
+        children: headers
+            .map(
+              (h) => Expanded(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    border: Border(
+                      right: BorderSide(color: Colors.grey.shade200, width: 1),
+                    ),
+                  ),
+                  child: Text(
+                    h,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+      ),
     );
   }
 
-  List<TableRow> _shakerBodyRows() {
+  // ================= SHAKER BODY ROWS =================
+  List<Widget> _shakerBodyRows() {
     return List.generate(25, (i) {
       final hasData = i < c.shakers.length;
       final s = hasData ? c.shakers[i] : null;
-      return TableRow(
-        children: [
-          Container(
-            height: rowH,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            alignment: Alignment.centerLeft,
-            child: Text(
-              hasData ? s!.shaker : '',
-              style: const TextStyle(fontSize: 11),
-              overflow: TextOverflow.ellipsis,
-            ),
+      
+      return Container(
+        height: rowH,
+        decoration: BoxDecoration(
+          color: i.isEven ? Colors.white : Color(0xfffafafa),
+          border: Border(
+            bottom: BorderSide(color: Colors.grey.shade100, width: 1),
           ),
-          Container(
-            height: rowH,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: hasData ? Obx(() => c.isLocked.value
-                ? Text(s!.model.value, style: const TextStyle(fontSize: 11))
-                : TextField(
-                    controller: TextEditingController(text: s!.model.value),
-                    onChanged: (v) => s!.model.value = v,
-                    style: const TextStyle(fontSize: 11),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                    ),
-                  )) : const SizedBox(),
-          ),
-          Container(
-            height: rowH,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: hasData ? Obx(() => c.isLocked.value
-                ? Text(s!.screens.value, style: const TextStyle(fontSize: 11))
-                : TextField(
-                    controller: TextEditingController(text: s!.screens.value),
-                    onChanged: (v) => s!.screens.value = v,
-                    style: const TextStyle(fontSize: 11),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                    ),
-                  )) : const SizedBox(),
-          ),
-          Container(
-            height: rowH,
-            alignment: Alignment.center,
-            child: hasData ? Obx(() => Checkbox(
-                  value: s!.plot.value,
-                  onChanged: c.isLocked.value ? null : (x) => s!.plot.value = x!,
-                  visualDensity: VisualDensity.compact,
-                )) : const SizedBox(),
-          ),
-        ],
+        ),
+        child: Row(
+          children: [
+            _shakerCell(hasData ? s!.shaker : '', flex: 1),
+            _shakerCell(hasData ? s!.model.value : '', flex: 3),
+            _shakerCell(hasData ? s!.screens.value : '', flex: 2),
+            _checkCell(hasData ? s!.plot : RxBool(false), flex: 1),
+          ],
+        ),
       );
     });
   }
 
-  List<TableRow> _otherSceBodyRows() {
+  // ================= OTHER SCE BODY ROWS =================
+  List<Widget> _otherSceBodyRows() {
     return List.generate(12, (i) {
       final hasData = i < c.otherSce.length;
       final o = hasData ? c.otherSce[i] : null;
-      return TableRow(
-        children: [
-          Container(
-            height: rowH,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            alignment: Alignment.centerLeft,
-            child: Text(
-              hasData ? o!.type : '',
-              style: const TextStyle(fontSize: 11),
-              overflow: TextOverflow.ellipsis,
-            ),
+      
+      return Container(
+        height: rowH,
+        decoration: BoxDecoration(
+          color: i.isEven ? Colors.white : Color(0xfffafafa),
+          border: Border(
+            bottom: BorderSide(color: Colors.grey.shade100, width: 1),
           ),
-          Container(
-            height: rowH,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: hasData ? Obx(() => c.isLocked.value
-                ? Text(o!.model1.value, style: const TextStyle(fontSize: 11))
-                : TextField(
-                    controller: TextEditingController(text: o!.model1.value),
-                    onChanged: (v) => o!.model1.value = v,
-                    style: const TextStyle(fontSize: 11),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                    ),
-                  )) : const SizedBox(),
-          ),
-          Container(
-            height: rowH,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: hasData ? Obx(() => c.isLocked.value
-                ? Text(o!.model2.value, style: const TextStyle(fontSize: 11))
-                : TextField(
-                    controller: TextEditingController(text: o!.model2.value),
-                    onChanged: (v) => o!.model2.value = v,
-                    style: const TextStyle(fontSize: 11),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                    ),
-                  )) : const SizedBox(),
-          ),
-          Container(
-            height: rowH,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: hasData ? Obx(() => c.isLocked.value
-                ? Text(o!.model3.value, style: const TextStyle(fontSize: 11))
-                : TextField(
-                    controller: TextEditingController(text: o!.model3.value),
-                    onChanged: (v) => o!.model3.value = v,
-                    style: const TextStyle(fontSize: 11),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                    ),
-                  )) : const SizedBox(),
-          ),
-          Container(
-            height: rowH,
-            alignment: Alignment.center,
-            child: hasData ? Obx(() => Checkbox(
-                  value: o!.plot.value,
-                  onChanged: c.isLocked.value ? null : (x) => o!.plot.value = x!,
-                  visualDensity: VisualDensity.compact,
-                )) : const SizedBox(),
-          ),
-        ],
+        ),
+        child: Row(
+          children: [
+            _otherSceCell(hasData ? o!.type : '', flex: 1),
+            _otherSceCell(hasData ? o!.model1.value : '', flex: 1),
+            _otherSceCell(hasData ? o!.model2.value : '', flex: 1),
+            _otherSceCell(hasData ? o!.model3.value : '', flex: 1),
+            _checkCell(hasData ? o!.plot : RxBool(false), flex: 1),
+          ],
+        ),
       );
     });
   }
 
-  // ================= CELLS =================
-  Widget _editableText(String value) {
+  // ================= CELL WIDGETS =================
+  Widget _shakerCell(String value, {required int flex}) {
     return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6),
+      flex: flex,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        alignment: Alignment.centerLeft,
+        decoration: BoxDecoration(
+          border: Border(
+            right: BorderSide(color: Colors.grey.shade200, width: 1),
+          ),
+        ),
         child: Text(
           value,
-          style: const TextStyle(fontSize: 11),
+          style: TextStyle(
+            fontSize: 11,
+            color: value.isEmpty ? Colors.grey.shade400 : AppTheme.textPrimary,
+          ),
           overflow: TextOverflow.ellipsis,
         ),
       ),
     );
   }
 
-  Widget _editableRx(RxString value) {
+  Widget _otherSceCell(String value, {required int flex}) {
     return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+      flex: flex,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          border: Border(
+            right: BorderSide(color: Colors.grey.shade200, width: 1),
+          ),
+        ),
         child: Obx(() => c.isLocked.value
-            ? Text(value.value, style: const TextStyle(fontSize: 11))
-            : TextField(
-                controller: TextEditingController(text: value.value),
-                onChanged: (v) => value.value = v,
-                style: const TextStyle(fontSize: 11),
-                decoration: const InputDecoration(
-                  isDense: true,
-                  border: InputBorder.none,
+            ? Container(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: value.isEmpty ? Colors.grey.shade400 : AppTheme.textSecondary,
+                  ),
+                ),
+              )
+            : Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+                  ),
+                ),
+                child: TextField(
+                  controller: TextEditingController(text: value),
+                  onChanged: (v) {
+                    if (value.isNotEmpty) {
+                      // Update logic here
+                    }
+                  },
+                  style: TextStyle(fontSize: 11, color: AppTheme.textPrimary),
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                    border: InputBorder.none,
+                  ),
                 ),
               )),
       ),
     );
   }
 
-  Widget _check(RxBool v) {
-    return SizedBox(
-      width: 48,
-      child: Obx(() => Checkbox(
-            value: v.value,
-            onChanged: c.isLocked.value ? null : (x) => v.value = x!,
-            visualDensity: VisualDensity.compact,
-          )),
+  Widget _checkCell(RxBool value, {required int flex}) {
+    return Expanded(
+      flex: flex,
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          border: Border(
+            right: BorderSide(color: Colors.grey.shade200, width: 1),
+          ),
+        ),
+        child: Obx(() => Container(
+              decoration: BoxDecoration(
+                color: value.value ? Color(0xffe8f5e9) : Color(0xfff5f5f5),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              margin: EdgeInsets.symmetric(horizontal: 12),
+              child: Checkbox(
+                value: value.value,
+                onChanged: c.isLocked.value ? null : (x) => value.value = x!,
+                activeColor: AppTheme.successColor,
+                checkColor: Colors.white,
+                visualDensity: VisualDensity.compact,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            )),
+      ),
     );
   }
 }
