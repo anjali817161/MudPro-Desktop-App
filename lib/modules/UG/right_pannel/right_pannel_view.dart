@@ -10,7 +10,7 @@ import 'package:mudpro_desktop_app/modules/UG/right_pannel/pad_view.dart';
 import 'package:mudpro_desktop_app/modules/UG/right_pannel/pit_view.dart';
 import 'package:mudpro_desktop_app/modules/UG/right_pannel/pump_view.dart';
 import 'package:mudpro_desktop_app/modules/UG/right_pannel/sce_view.dart';
-import 'package:mudpro_desktop_app/modules/dashboard/widgets/secondary_tabbar.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/widgets/home_secondary_tabbar.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
 class UGRightPanel extends StatelessWidget {

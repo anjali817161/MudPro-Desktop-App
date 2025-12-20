@@ -8,14 +8,14 @@ import 'package:intl/intl.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 import '../controller/dashboard_controller.dart';
 
-class SecondaryTabBar extends StatefulWidget {
-  const SecondaryTabBar({super.key});
+class HomeSecondaryTabbar extends StatefulWidget {
+  const HomeSecondaryTabbar({super.key});
 
   @override
   _SecondaryTabBarState createState() => _SecondaryTabBarState();
 }
 
-class _SecondaryTabBarState extends State<SecondaryTabBar> with SingleTickerProviderStateMixin {
+class _SecondaryTabBarState extends State<HomeSecondaryTabbar> with SingleTickerProviderStateMixin {
   final DashboardController controller = Get.find<DashboardController>();
   late AnimationController _animationController;
   int _hoveredIndex = -1;

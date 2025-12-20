@@ -21,10 +21,12 @@ class PrimaryTabBar extends StatelessWidget {
       ),
       child: Obx(
         () => Row(
+          mainAxisAlignment: MainAxisAlignment.start, // Changed from default
           children: List.generate(tabs.length, (index) {
             final isActive = controller.activePrimaryTab.value == index;
 
-            return Expanded(
+            return Container( // Changed from Expanded to Container
+              margin: EdgeInsets.only(left: index == 0 ? 8 : 4, right: 4), // Added margin
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
@@ -33,6 +35,7 @@ class PrimaryTabBar extends StatelessWidget {
                     duration: Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
                     alignment: Alignment.center,
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8), // Adjusted padding
                     decoration: BoxDecoration(
                       gradient: isActive ? AppTheme.primaryGradient : null,
                       color: isActive ? null : Colors.transparent,
@@ -49,9 +52,13 @@ class PrimaryTabBar extends StatelessWidget {
                           offset: Offset(0, 2),
                         )
                       ] : null,
+                      borderRadius: BorderRadius.only( // Added rounded corners
+                        topLeft: Radius.circular(6),
+                        topRight: Radius.circular(6),
+                      ),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min, // Changed to min
                       children: [
                         Icon(
                           _getTabIcon(index),

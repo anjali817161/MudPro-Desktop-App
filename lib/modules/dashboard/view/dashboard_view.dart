@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/widgets/help_secondary_tabbar.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/widgets/report_secondary_tabbar.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/widgets/utility_secondary_tabbar.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/editable_table.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/left_report_list.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/lock_bar.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/primary_tabbar.dart';
-import 'package:mudpro_desktop_app/modules/dashboard/widgets/secondary_tabbar.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/widgets/home_secondary_tabbar.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/well_tab_content.dart';
 import 'package:mudpro_desktop_app/modules/UG/controller/UG_controller.dart';
 import 'package:mudpro_desktop_app/modules/UG/right_pannel/right_pannel_view.dart';
@@ -52,75 +55,144 @@ class DashboardView extends StatelessWidget {
             ),
             
             // Secondary Tab Bar
-            Material(
-              elevation: 1,
-              shadowColor: Colors.black.withOpacity(0.03),
-              child: SecondaryTabBar(),
-            ),
+            /// SECONDARY TAB BAR (dynamic)
+Obx(() {
+  switch (c.activePrimaryTab.value) {
+    case 0:
+      return HomeSecondaryTabbar();
+    case 1:
+      return ReportSecondaryTabbar();
+    case 2:
+      return UtilitySecondaryTabbar(); // future
+    case 3:
+      return HelpSecondaryTabbar(); // future
+    default:
+      return const SizedBox();
+  }
+}),
+
             
             // Main Content Area
-            Expanded(
-              child: Row(
-                children: [
-                  // Left Sidebar with shadow
-                  Material(
-                    elevation: 2,
-                    shadowColor: Colors.black.withOpacity(0.05),
-                    child: LeftReportTree(),
-                  ),
-                  
-                  // Main Content
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.white, Color(0xffFAFBFC)],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                      child: Obx(() {
-                        if (c.selectedNodeId.value == 'UG') {
-                          return _buildAnimatedTransition(UGRightPanel());
-                        } else if (c.selectedNodeId.value == 'UG-0293-ST') {
-                          return _buildAnimatedTransition(RightPanel());
-                        } else {
-                          return _buildAnimatedTransition(
-                            Column(
-                              children: [
-                                Material(
-                                  elevation: 1,
-                                  shadowColor: Colors.black.withOpacity(0.03),
-                                  child: SectionNavBar(),
-                                ),
-                                
-                                Material(
-                                  elevation: 1,
-                                  shadowColor: Colors.black.withOpacity(0.02),
-                                  child: LockBar(),
-                                ),
-                                
-                                Expanded(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: WellTabContent(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                      }),
+          Expanded(
+  child: Stack(
+    children: [
+      /// MAIN DASHBOARD CONTENT (unchanged)
+      _buildMainDashboardContent(),
+
+      /// OVERLAY PAGE
+      Obx(() {
+        final page = c.overlayPage.value;
+        if (page == null) return const SizedBox();
+
+        return Positioned.fill(
+          child: Material(
+            color: Colors.white,
+            elevation: 12,
+            child: Column(
+              children: [
+                /// Top bar with back/close
+                Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardColor,
+                    border: Border(
+                      bottom:
+                          BorderSide(color: Colors.black.withOpacity(0.1)),
                     ),
-                  )
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: c.closeOverlay,
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: c.closeOverlay,
+                      ),
+                    ],
+                  ),
+                ),
+
+                /// PAGE CONTENT
+                Expanded(child: page),
+              ],
+            ),
+          ),
+        );
+      }),
+    ],
+  ),
+),
+
                 ],
               ),
             )
-          ],
+        
+  
+        );
+      
+    
+  }
+
+  Widget _buildMainDashboardContent() {
+  return Row(
+    children: [
+      // Left Sidebar
+      Material(
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.05),
+        child: LeftReportTree(),
+      ),
+
+      // Main Content
+      Expanded(
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.white, Color(0xffFAFBFC)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Obx(() {
+            if (c.selectedNodeId.value == 'UG') {
+              return _buildAnimatedTransition(UGRightPanel());
+            } else if (c.selectedNodeId.value == 'UG-0293-ST') {
+              return _buildAnimatedTransition(RightPanel());
+            } else {
+              return _buildAnimatedTransition(
+                Column(
+                  children: [
+                    Material(
+                      elevation: 1,
+                      shadowColor: Colors.black.withOpacity(0.03),
+                      child: SectionNavBar(),
+                    ),
+                    Material(
+                      elevation: 1,
+                      shadowColor: Colors.black.withOpacity(0.02),
+                      child: LockBar(),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: WellTabContent(),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+          }),
         ),
       ),
-    );
-  }
+    ],
+  );
+}
+
 
   Widget _buildAnimatedTransition(Widget child) {
     return AnimatedSwitcher(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mudpro_desktop_app/modules/UG_ST_navigation/model/UG_ST_model.dart';
 import 'package:mudpro_desktop_app/modules/UG_ST_navigation/view/right_section/survey/survey_3d_tab.dart';
 import 'package:mudpro_desktop_app/modules/UG_ST_navigation/view/right_section/survey/survey_data_tab.dart';
 import 'package:mudpro_desktop_app/modules/UG_ST_navigation/view/right_section/survey/survey_dogleg_tab.dart';
@@ -19,6 +20,45 @@ class SurveyView extends StatelessWidget {
     {"label": "Dogleg", "icon": Icons.show_chart},
     {"label": "3D", "icon": Icons.rotate_90_degrees_ccw},
   ];
+
+
+  final demoPlanData = [
+  PlanPoint(-600, -950),
+  PlanPoint(-520, -800),
+  PlanPoint(-450, -650),
+  PlanPoint(-380, -500),
+  PlanPoint(-300, -350),
+  PlanPoint(-220, -180),
+  PlanPoint(-150, -40),
+  PlanPoint(-120, -10),
+];
+
+final demoDoglegData = [
+  DoglegPoint(0, 0.2),
+  DoglegPoint(500, 0.5),
+  DoglegPoint(1200, 2.0),
+  DoglegPoint(2000, 1.8),
+  DoglegPoint(2800, 0.6),
+  DoglegPoint(3500, 0.8),
+  DoglegPoint(4500, 0.4),
+  DoglegPoint(6000, 0.7),
+  DoglegPoint(7000, 2.5),
+  DoglegPoint(7800, 4.5),
+  DoglegPoint(8500, 5.8),
+  DoglegPoint(9200, 6.3),
+];
+
+final demo3DWellPath = [
+  Well3DPoint(0, 0, 0),
+  Well3DPoint(0, 0, -500),
+  Well3DPoint(20, 10, -1500),
+  Well3DPoint(60, 40, -3000),
+  Well3DPoint(120, 90, -5000),
+  Well3DPoint(200, 160, -8000),
+];
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +83,11 @@ class SurveyView extends StatelessWidget {
                   case 1:
                     return const SectionViewChart(points: [],);
                   case 2:
-                    return const SurveyPlanTab();
+                    return PlanViewChart(points: demoPlanData,);
                   case 3:
-                    return const SurveyDoglegTab();
+                    return  DoglegChart(points: demoDoglegData,);
                   case 4:
-                    return const Survey3DTab();
+                    return  Survey3DChart(points: demo3DWellPath,);
                   default:
                     return SurveyDataTab();
                 }

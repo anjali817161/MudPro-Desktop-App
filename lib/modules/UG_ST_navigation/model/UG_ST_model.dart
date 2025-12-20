@@ -41,3 +41,27 @@ class SectionPoint {
 
   SectionPoint(this.tvd, this.hd);
 }
+
+
+class PlanPoint {
+  final double ew; // East(+)/West(-)
+  final double ns; // North(+)/South(-)
+
+  PlanPoint(this.ew, this.ns);
+}
+
+class DoglegPoint {
+  final double md;       // Measured Depth (ft)
+  final double dogleg;   // Dogleg Severity (°/100ft)
+
+  DoglegPoint(this.md, this.dogleg);
+}
+
+
+class Well3DPoint {
+  final double x; // E/W
+  final double y; // N/S
+  final double z; // TVD
+
+  Well3DPoint(this.x, this.y, this.z);
+}

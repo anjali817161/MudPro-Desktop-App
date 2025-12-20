@@ -1,11 +1,12 @@
 // ==================== CONTROLLER ====================
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 
 class DashboardController extends GetxController {
   var activePrimaryTab = 0.obs;
   var activeSectionTab = 0.obs;
-  var activeSecondaryTab = 1.obs; // Well tab selected by default
+  var activeSecondaryTab = (-1).obs; // No active tab initially
   var isLocked = true.obs;
   var reports = <String>[].obs;
   var selectedReport = 11.obs; // #12 selected
@@ -20,6 +21,41 @@ class DashboardController extends GetxController {
     super.onInit();
   }
 
+
+
+  /// secondary tab index per primary tab
+ var activeHomeTab = 0.obs;
+  var activeReportTab = 0.obs;
+  var activeUtilityTab = 0.obs;
+  var activeHelpTab = 0.obs;
+
+  /// overlay page (null = no overlay)
+  Rx<Widget?> overlayPage = Rx<Widget?>(null);
+
+  void openOverlay(Widget page) {
+    overlayPage.value = page;
+  }
+
+  void closeOverlay() {
+    overlayPage.value = null;
+  }
+
+  void setPrimaryTab(int index) {
+  activePrimaryTab.value = index;
+  activeSecondaryTab.value = -1; // reset secondary to no active tab
+}
+
+ // 👇 All actions kept here (clean separation)
+  void createNewReport(BuildContext context) {}
+  void openFolder(BuildContext context) {}
+  void saveReport(BuildContext context, bool saveAs) {}
+  void openCarryOverPad(BuildContext context) {}
+  void carryOver(BuildContext context) {}
+  void performCalculations(BuildContext context) {}
+  void showOptions(BuildContext context) {}
+  void showMudCompanySetup(BuildContext context) {}
+  void uploadFile(BuildContext context) {}
+  void batchUpload(BuildContext context) {}
   
 
   void generateDummyReports() {
