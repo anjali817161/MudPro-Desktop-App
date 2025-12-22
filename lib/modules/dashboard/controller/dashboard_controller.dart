@@ -24,10 +24,10 @@ class DashboardController extends GetxController {
 
 
   /// secondary tab index per primary tab
- var activeHomeTab = 0.obs;
-  var activeReportTab = 0.obs;
-  var activeUtilityTab = 0.obs;
-  var activeHelpTab = 0.obs;
+ var activeHomeTab = (-1).obs;
+  var activeReportTab = (-1).obs;
+  var activeUtilityTab = (-1).obs;
+  var activeHelpTab = (-1).obs;
 
   /// overlay page (null = no overlay)
   Rx<Widget?> overlayPage = Rx<Widget?>(null);

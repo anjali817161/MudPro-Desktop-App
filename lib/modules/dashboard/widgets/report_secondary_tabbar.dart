@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/controller/dashboard_controller.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/base_secondary_tababr.dart';
 import 'package:mudpro_desktop_app/modules/report/report_manager/report_manager_view.dart';
+import 'package:mudpro_desktop_app/modules/well_comparision/view/well_comparision_view.dart';
 
 class ReportSecondaryTabbar extends StatelessWidget {
   ReportSecondaryTabbar({super.key});
@@ -29,7 +30,7 @@ class ReportSecondaryTabbar extends StatelessWidget {
             controller.openOverlay(ReportManagerPage());
             break;
           case 1:
-            controller.openOverlay(const Text("Well Comparison"));
+            controller.openOverlay(WellComparisonPage());
             break;
           case 2:
             controller.openOverlay(const Text("Recap Page"));

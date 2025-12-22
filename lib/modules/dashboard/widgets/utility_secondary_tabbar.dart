@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/base_secondary_tababr.dart';
+import 'package:mudpro_desktop_app/modules/utility/view/engineering_tools.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 import '../controller/dashboard_controller.dart';
 
@@ -20,12 +21,25 @@ class UtilitySecondaryTabbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BaseSecondaryTabBar(
       tabs: tabs,
-      onTap: (index) {
-        controller.activeSecondaryTab.value = index;
+      activeIndex: controller.activeUtilityTab,
+      onTap: (i) {
+        controller.activeUtilityTab.value = i;
 
-        // 🔹 Future overlay/page open logic yahin add karna
-        // controller.openOverlay(EngineeringToolsPage());
-      }, activeIndex: controller.activeUtilityTab,
+        switch (i) {
+          case 0:
+            controller.openOverlay(EngineeringToolsPage());
+            break;
+          case 1:
+            controller.openOverlay(const Text("Unit Conversion Page"));
+            break;
+          case 2:
+            controller.openOverlay(const Text("Calculator Page"));
+            break;
+          case 3:
+            controller.openOverlay(const Text("Notepad Page"));
+            break;
+        }
+      },
     );
   }
 }

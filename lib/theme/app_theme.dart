@@ -14,6 +14,7 @@ class AppTheme {
   static const Color warningColor = Color(0xffED8936);
   static const Color errorColor = Color(0xffFC8181);
   static const Color infoColor = Color(0xff4299E1);
+  static const Color tableHeadColor = Color(0xff0d9488);
   
   // Dark Theme Colors
   static const Color darkPrimaryColor = Color(0xff5D8BCF);
