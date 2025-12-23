@@ -15,6 +15,11 @@ class EngineeringToolsController extends GetxController {
   var annularVelocity = RxnDouble();
 
   void calculateAnnularVelocity() {
+    if (pumpOutput.value.isEmpty || holeSize.value.isEmpty || pipeOD.value.isEmpty) {
+      Get.snackbar('Error', 'All fields are required');
+      return;
+    }
+
     final q = double.tryParse(pumpOutput.value);
     final dh = double.tryParse(holeSize.value);
     final dp = double.tryParse(pipeOD.value);

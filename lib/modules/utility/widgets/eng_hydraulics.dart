@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mudpro_desktop_app/modules/utility/subtabs/eng_bit_hydra_view.dart';
 import 'package:mudpro_desktop_app/modules/utility/subtabs/eng_hydraulics_annularvelocity.dart';
 import '../controller/engineering_tools_controller.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
@@ -11,6 +12,7 @@ class HydraulicsPage extends StatelessWidget {
 
   final subTabs = const [
     "Annular Velocity",
+    "Bit Hydraulics",
     "Critical Velocity (Annulus)",
     "Critical Velocity (Pipe)",
     "ECD",
@@ -112,7 +114,7 @@ class HydraulicsPage extends StatelessWidget {
               case 0:
                 return const HydraulicsAnnularVelocity();
               case 1:
-                return _emptyContent("Critical Velocity (Annulus)");
+                return const BitHydraulicsPage();
               case 2:
                 return _emptyContent("Critical Velocity (Pipe)");
               case 3:

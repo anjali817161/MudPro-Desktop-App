@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/tabs/pit/pit_tab_content.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/tabs/pump/pump_tab_content.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/tabs/remarks_tab_content.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/help_secondary_tabbar.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/report_secondary_tabbar.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/utility_secondary_tabbar.dart';
@@ -9,9 +12,15 @@ import 'package:mudpro_desktop_app/modules/dashboard/widgets/left_report_list.da
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/lock_bar.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/primary_tabbar.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/home_secondary_tabbar.dart';
-import 'package:mudpro_desktop_app/modules/dashboard/widgets/well_tab_content.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/tabs/well_tab_content.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/tabs/mud_tab_content.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/tabs/operation_tab_content.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/tabs/safety_tab_content.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/tabs/jsa_tab_content.dart';
 import 'package:mudpro_desktop_app/modules/UG/controller/UG_controller.dart';
 import 'package:mudpro_desktop_app/modules/UG/right_pannel/right_pannel_view.dart';
+import 'package:mudpro_desktop_app/modules/UG/right_pannel/pump_view.dart';
+import 'package:mudpro_desktop_app/modules/UG/right_pannel/pit_view.dart';
 import 'package:mudpro_desktop_app/modules/UG_ST_navigation/controller/UG_ST_controller.dart';
 import 'package:mudpro_desktop_app/modules/UG_ST_navigation/view/pannel_switcher.dart';
 import '../controller/dashboard_controller.dart';
@@ -46,14 +55,14 @@ class DashboardView extends StatelessWidget {
               shadowColor: Colors.black.withOpacity(0.1),
               child: TopHeaderBar(),
             ),
-            
+
             // Primary Tab Bar
             Material(
               elevation: 2,
               shadowColor: Colors.black.withOpacity(0.05),
               child: PrimaryTabBar(),
             ),
-            
+
             // Secondary Tab Bar
             /// SECONDARY TAB BAR (dynamic)
 Obx(() {
@@ -71,7 +80,7 @@ Obx(() {
   }
 }),
 
-            
+
             // Main Content Area
           Expanded(
   child: Stack(
@@ -130,11 +139,13 @@ Obx(() {
                 ],
               ),
             )
-        
-  
+
+
+
         );
-      
-    
+
+
+
   }
 
   Widget _buildMainDashboardContent() {
@@ -179,7 +190,28 @@ Obx(() {
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(8),
-                        child: WellTabContent(),
+                        child: Obx(() {
+                          switch (c.activeSectionTab.value) {
+                            case 0:
+                              return WellTabContent();
+                            case 1:
+                              return MudView();
+                            case 2:
+                              return PumpPage();
+                            case 3:
+                              return OperationTabContent();
+                            case 4:
+                              return PitPage();
+                            case 5:
+                              return SafetyTabContent();
+                            case 6:
+                              return RemarksTabContent();
+                            case 7:
+                              return JSATabContent();
+                            default:
+                              return WellTabContent();
+                          }
+                        }),
                       ),
                     ),
                   ],

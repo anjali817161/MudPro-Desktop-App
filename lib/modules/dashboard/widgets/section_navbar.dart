@@ -8,7 +8,7 @@ class SectionNavBar extends StatefulWidget {
   _SectionNavBarState createState() => _SectionNavBarState();
 }
 
-class _SectionNavBarState extends State<SectionNavBar> with SingleTickerProviderStateMixin {
+class _SectionNavBarState extends State<SectionNavBar> with TickerProviderStateMixin {
   final tabs = [
     {"name": "Well", "icon": Icons.vertical_align_bottom},
     {"name": "Mud", "icon": Icons.water_drop},
@@ -22,6 +22,7 @@ class _SectionNavBarState extends State<SectionNavBar> with SingleTickerProvider
   
   final c = Get.find<DashboardController>();
   late AnimationController _animationController;
+  late AnimationController _tapAnimationController;
 
   @override
   void initState() {
@@ -30,11 +31,16 @@ class _SectionNavBarState extends State<SectionNavBar> with SingleTickerProvider
       duration: Duration(milliseconds: 300),
       vsync: this,
     );
+    _tapAnimationController = AnimationController(
+      duration: Duration(milliseconds: 200),
+      vsync: this,
+    );
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _tapAnimationController.dispose();
     super.dispose();
   }
 
@@ -135,15 +141,8 @@ class _SectionNavBarState extends State<SectionNavBar> with SingleTickerProvider
   }
 
   void _playTapAnimation(int index) {
-    final controller = AnimationController(
-      duration: Duration(milliseconds: 200),
-      vsync: this,
-    );
-    
-    controller.forward().then((_) {
-      controller.reverse().then((_) {
-        controller.dispose();
-      });
+    _tapAnimationController.forward().then((_) {
+      _tapAnimationController.reverse();
     });
   }
 }

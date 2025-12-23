@@ -8,7 +8,7 @@ class LockBar extends StatefulWidget {
   _LockBarState createState() => _LockBarState();
 }
 
-class _LockBarState extends State<LockBar> with SingleTickerProviderStateMixin {
+class _LockBarState extends State<LockBar> with TickerProviderStateMixin {
   final c = Get.find<DashboardController>();
   late AnimationController _animationController;
 

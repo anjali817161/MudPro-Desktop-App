@@ -143,7 +143,9 @@ class HydraulicsAnnularVelocity extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: c.calculateAnnularVelocity,
+                        onPressed: () {
+                          _validateAndCalculate(c);
+                        },
                         style: AppTheme.primaryButtonStyle,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -358,7 +360,9 @@ class HydraulicsAnnularVelocity extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: c.calculateAnnularVelocity,
+                        onPressed: () {
+                          _validateAndCalculate(c);
+                        },
                         style: AppTheme.primaryButtonStyle,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -622,6 +626,105 @@ class HydraulicsAnnularVelocity extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // Validation method
+  void _validateAndCalculate(EngineeringToolsController c) {
+    // Check if any field is empty
+    if (c.pumpOutput.value.isEmpty || c.holeSize.value.isEmpty || c.pipeOD.value.isEmpty) {
+      // Show small popup alert
+      _showRequiredFieldsAlert(c);
+      return;
+    }
+    
+    // If all fields are filled, proceed with calculation
+    c.calculateAnnularVelocity();
+  }
+
+  // Show alert for required fields
+  void _showRequiredFieldsAlert(EngineeringToolsController c) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.all(16),
+        content: Container(
+          width: 280, // Small width
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Warning icon
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.orange.shade600,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Title
+              Text(
+                "Required Fields",
+                style: AppTheme.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 8),
+              
+              // Message
+              Text(
+                "Please fill all the input fields to calculate annular velocity.",
+                style: AppTheme.caption.copyWith(
+                  color: AppTheme.textSecondary,
+                  fontSize: 11,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // OK button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.back();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade600,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  child: Text(
+                    "OK",
+                    style: AppTheme.caption.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: true,
     );
   }
 }
