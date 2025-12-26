@@ -1,3 +1,8 @@
-- [ ] Change SingleTickerProviderStateMixin to TickerProviderStateMixin in section_navbar.dart
-- [ ] Read pump_tab_content.dart to identify ParentDataWidget issues
-- [ ] Fix ParentDataWidget errors in pump_tab_content.dart
+- [ ] Add import for EditableCell in mudloss_storage.dart
+- [ ] Define tableData as List<Map<String, RxString>> with 20 rows, keys: 'storage', 'dump', 'evaporation', 'pitCleaning', 'other', 'total'
+- [ ] Update Storage DataCell to use tableData[rowIndex]['storage'] for dropdown logic per row
+- [ ] Make dropdown only open when unlocked
+- [ ] Replace _buildEmptyCell() calls for Dump, Evaporation, Pit Cleaning, Other, Total with EditableCell
+- [ ] Update footer and action section to handle per-row storage selection
+- [ ] Remove global selectedStorage and activeDropdownRow logic where not needed
+- [ ] Test that when locked, cells show text, when unlocked, show TextField or dropdown
