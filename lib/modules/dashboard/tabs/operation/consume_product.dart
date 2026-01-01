@@ -35,9 +35,9 @@ class ConsumeProductView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ---------------- ENHANCED TITLE ----------------
-            _buildTitleSection(),
+            // _buildTitleSection(),
 
-            const SizedBox(height: 16),
+            // const SizedBox(height: 16),
 
             // ---------------- ENHANCED TOP CONTROLS ----------------
             _buildTopControls(),

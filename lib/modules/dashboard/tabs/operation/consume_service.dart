@@ -22,8 +22,8 @@ class ConsumeServicesView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               /// ================= ENHANCED HEADER =================
-              _buildHeader(),
-              const SizedBox(height: 24),
+              // _buildHeader(),
+              // const SizedBox(height: 24),
 
               /// ================= PACKAGE TABLE =================
               _buildAdvancedTableCard(

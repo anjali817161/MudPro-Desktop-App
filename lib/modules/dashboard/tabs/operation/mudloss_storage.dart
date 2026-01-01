@@ -60,9 +60,9 @@ class MudLossStorageView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ================= ENHANCED HEADER =================
-            _buildHeader(),
+            // _buildHeader(),
 
-            const SizedBox(height: 20),
+            // const SizedBox(height: 20),
 
             // ================= ENHANCED TABLE (EMPTY) =================
             _buildEnhancedEmptyTable(),
@@ -371,59 +371,60 @@ class MudLossStorageView extends StatelessWidget {
                                                 : Colors.grey.shade300,
                                           ),
                                         ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Padding(
-                                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                                child: activeDropdownRow.value == rowIndex
-                                                    ? DropdownButtonHideUnderline(
-                                                        child: DropdownButton<String>(
-                                                          isExpanded: true,
-                                                          value: tableData[rowIndex]['storage']!.value == "Select Storage" ? null : tableData[rowIndex]['storage']!.value,
-                                                          icon: const Icon(
-                                                            Icons.arrow_drop_up_rounded,
-                                                            size: 20,
-                                                            color: AppTheme.primaryColor,
-                                                          ),
-                                                          elevation: 4,
-                                                          dropdownColor: Colors.white,
+                                        child: activeDropdownRow.value == rowIndex
+                                            ? DropdownButtonHideUnderline(
+                                                child: DropdownButton<String>(
+                                                  isExpanded: true,
+                                                  value: tableData[rowIndex]['storage']!.value == "Select Storage" ? null : tableData[rowIndex]['storage']!.value,
+                                                  icon: const Icon(
+                                                    Icons.arrow_drop_down_rounded,
+                                                    size: 20,
+                                                    color: AppTheme.primaryColor,
+                                                  ),
+                                                  menuMaxHeight: 200,
+                                                  elevation: 4,
+                                                  dropdownColor: Colors.white,
+                                                  style: AppTheme.bodySmall.copyWith(
+                                                    fontSize: 11,
+                                                    color: AppTheme.textPrimary,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                  hint: Text(
+                                                    "Select Storage",
+                                                    style: AppTheme.bodySmall.copyWith(
+                                                      fontSize: 11,
+                                                      color: Colors.grey.shade500,
+                                                    ),
+                                                  ),
+                                                  onChanged: (newValue) {
+                                                    if (newValue != null) {
+                                                      tableData[rowIndex]['storage']!.value = newValue;
+                                                      activeDropdownRow.value = -1;
+                                                    }
+                                                  },
+                                                  items: storageOptions.map((option) {
+                                                    return DropdownMenuItem<String>(
+                                                      value: option,
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.symmetric(vertical: 4),
+                                                        child: Text(
+                                                          option,
                                                           style: AppTheme.bodySmall.copyWith(
                                                             fontSize: 11,
                                                             color: AppTheme.textPrimary,
-                                                            fontWeight: FontWeight.w500,
                                                           ),
-                                                          hint: Text(
-                                                            "Select Storage",
-                                                            style: AppTheme.bodySmall.copyWith(
-                                                              fontSize: 11,
-                                                              color: Colors.grey.shade500,
-                                                            ),
-                                                          ),
-                                                          onChanged: (newValue) {
-                                                            if (newValue != null) {
-                                                              tableData[rowIndex]['storage']!.value = newValue;
-                                                              activeDropdownRow.value = -1;
-                                                            }
-                                                          },
-                                                          items: storageOptions.map((option) {
-                                                            return DropdownMenuItem<String>(
-                                                              value: option,
-                                                              child: Padding(
-                                                                padding: const EdgeInsets.symmetric(vertical: 4),
-                                                                child: Text(
-                                                                  option,
-                                                                  style: AppTheme.bodySmall.copyWith(
-                                                                    fontSize: 11,
-                                                                    color: AppTheme.textPrimary,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            );
-                                                          }).toList(),
                                                         ),
-                                                      )
-                                                    : Text(
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                              )
+                                            : Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                                child: Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
                                                         tableData[rowIndex]['storage']!.value == "Select Storage"
                                                             ? "Select Storage"
                                                             : tableData[rowIndex]['storage']!.value,
@@ -436,43 +437,15 @@ class MudLossStorageView extends StatelessWidget {
                                                         ),
                                                         overflow: TextOverflow.ellipsis,
                                                       ),
-                                              ),
-                                            ),
-                                            // Dropdown icon only shows on the active row
-                                            if (activeDropdownRow.value == rowIndex)
-                                              Container(
-                                                width: 40,
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.primaryColor.withOpacity(0.1),
-                                                  borderRadius: const BorderRadius.only(
-                                                    topRight: Radius.circular(6),
-                                                    bottomRight: Radius.circular(6),
-                                                  ),
-                                                ),
-                                                child: const Icon(
-                                                  Icons.arrow_drop_down_rounded,
-                                                  size: 20,
-                                                  color: AppTheme.primaryColor,
-                                                ),
-                                              )
-                                            else
-                                              Container(
-                                                width: 40,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  borderRadius: const BorderRadius.only(
-                                                    topRight: Radius.circular(6),
-                                                    bottomRight: Radius.circular(6),
-                                                  ),
-                                                ),
-                                                child: const Icon(
-                                                  Icons.arrow_drop_down_rounded,
-                                                  size: 20,
-                                                  color: Colors.transparent,
+                                                    ),
+                                                    Icon(
+                                                      Icons.arrow_drop_down_rounded,
+                                                      size: 20,
+                                                      color: Colors.grey.shade400,
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                          ],
-                                        ),
                                       )),
                                     ),
                                   ),

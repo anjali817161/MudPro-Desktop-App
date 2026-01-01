@@ -251,6 +251,12 @@ class PumpPage extends StatelessWidget {
           DataCell(
             Container(
               width: 120,
+              decoration: dashboardController.isLocked.value
+                  ? null
+                  : BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300, width: 1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: row["model"],
@@ -386,6 +392,12 @@ class PumpPage extends StatelessWidget {
                       DataCell(
                         Container(
                           width: 100,
+                          decoration: dashboardController.isLocked.value
+                              ? null
+                              : BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300, width: 1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               value: row["shaker"],
@@ -445,6 +457,12 @@ class PumpPage extends StatelessWidget {
                       DataCell(
                         Container(
                           width: 100,
+                          decoration: dashboardController.isLocked.value
+                              ? null
+                              : BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300, width: 1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               value: row["sce"],

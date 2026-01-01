@@ -1,8 +1,19 @@
-- [ ] Add import for EditableCell in mudloss_storage.dart
-- [ ] Define tableData as List<Map<String, RxString>> with 20 rows, keys: 'storage', 'dump', 'evaporation', 'pitCleaning', 'other', 'total'
-- [ ] Update Storage DataCell to use tableData[rowIndex]['storage'] for dropdown logic per row
-- [ ] Make dropdown only open when unlocked
-- [ ] Replace _buildEmptyCell() calls for Dump, Evaporation, Pit Cleaning, Other, Total with EditableCell
-- [ ] Update footer and action section to handle per-row storage selection
-- [ ] Remove global selectedStorage and activeDropdownRow logic where not needed
-- [ ] Test that when locked, cells show text, when unlocked, show TextField or dropdown
+# TODO List for Table and Dropdown Fixes
+
+## Task 1: Remove Border from Text Fields in Editable Table
+- [x] Edit lib/modules/dashboard/widgets/editable_table.dart to remove the border from TextFormField containers when unlocked
+
+## Task 2: Investigate and Fix Dropdown Behavior
+- [x] Analyze dropdown components in table sections (e.g., pump_dopdown_Cell.dart, well_tab_content.dart)
+- [x] Identify why dropdowns are not working as expected
+- [x] Implement fixes for dropdown functionality
+
+## Task 3: Convert Specific Dropdowns to Text Fields
+- [x] Convert "Operator Rep.", "Contractor Rep.", "FIT", "Formation" dropdowns to text fields in well_tab_content.dart
+
+## Task 4: Make Middle and Right Section Tables Editable
+- [x] Fix CasedHoleSection, OpenHoleSection, DrillStringSection tables to be editable when unlocked
+- [x] Fix BitSection, NozzleSection, TimeDistributionSection tables to be editable when unlocked
+
+## Task 5: Fix Empty Rows Functionality
+- [ ] Ensure empty rows in all tables can be edited and new data can be added

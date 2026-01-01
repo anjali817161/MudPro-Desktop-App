@@ -207,7 +207,7 @@ Obx(() {
                             case 5:
                               return SafetyTabContent();
                             case 6:
-                              return RemarksTabContent();
+                              return RemarksView();
                             case 7:
                               return JSATabContent();
                             default:

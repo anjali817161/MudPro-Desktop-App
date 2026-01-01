@@ -19,70 +19,70 @@ class EmptyActiveSystemView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ================= ENHANCED HEADER =================
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primaryColor.withOpacity(0.9),
-                    AppTheme.primaryColor,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Empty Fluid in Active System",
-                          style: AppTheme.titleMedium.copyWith(
-                            fontSize: 18,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Manage fluid transfer between active system and storage",
-                          style: AppTheme.bodySmall.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Container(
+            //   padding: const EdgeInsets.all(16),
+            //   decoration: BoxDecoration(
+            //     gradient: LinearGradient(
+            //       colors: [
+            //         AppTheme.primaryColor.withOpacity(0.9),
+            //         AppTheme.primaryColor,
+            //       ],
+            //       begin: Alignment.topLeft,
+            //       end: Alignment.bottomRight,
+            //     ),
+            //     borderRadius: BorderRadius.circular(12),
+            //     boxShadow: [
+            //       BoxShadow(
+            //         color: AppTheme.primaryColor.withOpacity(0.2),
+            //         blurRadius: 8,
+            //         offset: const Offset(0, 4),
+            //       ),
+            //     ],
+            //   ),
+            //   child: Row(
+            //     children: [
+            //       Container(
+            //         padding: const EdgeInsets.all(10),
+            //         decoration: BoxDecoration(
+            //           color: Colors.white.withOpacity(0.2),
+            //           borderRadius: BorderRadius.circular(10),
+            //         ),
+            //         child: const Icon(
+            //           Icons.delete_outline_rounded,
+            //           color: Colors.white,
+            //           size: 24,
+            //         ),
+            //       ),
+            //       const SizedBox(width: 16),
+            //       Expanded(
+            //         child: Column(
+            //           crossAxisAlignment: CrossAxisAlignment.start,
+            //           children: [
+            //             Text(
+            //               "Empty Fluid in Active System",
+            //               style: AppTheme.titleMedium.copyWith(
+            //                 fontSize: 18,
+            //                 color: Colors.white,
+            //                 fontWeight: FontWeight.w700,
+            //                 letterSpacing: 0.5,
+            //               ),
+            //             ),
+            //             const SizedBox(height: 4),
+            //             Text(
+            //               "Manage fluid transfer between active system and storage",
+            //               style: AppTheme.bodySmall.copyWith(
+            //                 color: Colors.white.withOpacity(0.9),
+            //                 fontSize: 12,
+            //               ),
+            //             ),
+            //           ],
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
 
-            const SizedBox(height: 20),
+            // const SizedBox(height: 20),
 
             // ================= ENHANCED RADIO BUTTONS =================
             Container(

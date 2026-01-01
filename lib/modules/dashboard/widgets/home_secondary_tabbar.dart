@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/company_setup_page.dart';
+import 'package:mudpro_desktop_app/modules/daily_report/dailyreport_home_page.dart';
 import 'package:path/path.dart' as path;
 import 'dart:io';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 import '../controller/dashboard_controller.dart';
+import '../../options/options_page.dart';
 
 class HomeSecondaryTabbar extends StatefulWidget {
   const HomeSecondaryTabbar({super.key});
@@ -15,7 +18,7 @@ class HomeSecondaryTabbar extends StatefulWidget {
   _SecondaryTabBarState createState() => _SecondaryTabBarState();
 }
 
-class _SecondaryTabBarState extends State<HomeSecondaryTabbar> with SingleTickerProviderStateMixin {
+class _SecondaryTabBarState extends State<HomeSecondaryTabbar> with TickerProviderStateMixin {
   final DashboardController controller = Get.find<DashboardController>();
   late AnimationController _animationController;
   int _hoveredIndex = -1;
@@ -519,13 +522,13 @@ class _SecondaryTabBarState extends State<HomeSecondaryTabbar> with SingleTicker
         _toggleLock(context);
         break;
       case 8: // Calculate
-        _performCalculations(context);
+        Get.to(() => DailyReportPage());
         break;
       case 9: // Options
-        _showOptions(context);
+        Get.to(() => OptionsPage());
         break;
       case 10: // Mud company setup
-        _showMudCompanySetup(context);
+        Get.to(() =>  CompanySetupPage());
         break;
       case 11: // Upload
         await _uploadFile(context);

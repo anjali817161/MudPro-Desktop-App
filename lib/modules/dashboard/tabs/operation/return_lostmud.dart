@@ -29,9 +29,9 @@ class ReturnLostMudView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ================= ENHANCED HEADER =================
-            _buildHeader(),
+            // _buildHeader(),
 
-            const SizedBox(height: 20),
+            // const SizedBox(height: 20),
 
             // ================= ENHANCED PREMIXED MUD SECTION =================
             _buildPremixedMudSection(),

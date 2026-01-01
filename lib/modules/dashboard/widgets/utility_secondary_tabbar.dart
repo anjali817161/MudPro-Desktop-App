@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/base_secondary_tababr.dart';
 import 'package:mudpro_desktop_app/modules/utility/view/engineering_tools.dart';
+import 'package:mudpro_desktop_app/modules/utility/view/unit_Conversion.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 import '../controller/dashboard_controller.dart';
 
@@ -30,7 +31,7 @@ class UtilitySecondaryTabbar extends StatelessWidget {
             controller.openOverlay(EngineeringToolsPage());
             break;
           case 1:
-            controller.openOverlay(const Text("Unit Conversion Page"));
+            controller.openOverlay(UnitConversionView());
             break;
           case 2:
             controller.openOverlay(const Text("Calculator Page"));

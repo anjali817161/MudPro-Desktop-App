@@ -73,7 +73,7 @@ class _SwitchPitViewState extends State<SwitchPitView> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return Obx(() => SingleChildScrollView(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -410,7 +410,7 @@ class _SwitchPitViewState extends State<SwitchPitView> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   // ===================================================

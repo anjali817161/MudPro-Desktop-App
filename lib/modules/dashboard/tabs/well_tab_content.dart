@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/controller/dashboard_controller.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/widgets/tabular_database.dart';
 
 class WellTabContent extends StatelessWidget {
   final c = Get.find<DashboardController>();
@@ -37,21 +40,21 @@ class WellTabContent extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // LEFT PORTION - General section
+                    // LEFT PORTION - General section (reduced width)
                     ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: 300, maxWidth: 350),
+                      constraints: BoxConstraints(minWidth: 280, maxWidth: 320),
                       child: LeftPortion(),
                     ),
                     const SizedBox(width: 12),
-                    // MIDDLE PORTION - Cased Hole, Open Hole, Drill String (more width)
+                    // MIDDLE PORTION - Expanded width
                     Expanded(
-                      flex: 3,
+                      flex: 4,
                       child: MiddlePortion(),
                     ),
                     const SizedBox(width: 12),
-                    // RIGHT PORTION - Bit, Nozzle, Time Distribution (less width)
-                    Expanded(
-                      flex: 2,
+                    // RIGHT PORTION - Reduced width
+                    ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: 200, maxWidth: 280),
                       child: RightPortion(),
                     ),
                   ],
@@ -78,8 +81,130 @@ class LeftPortion extends StatelessWidget {
 }
 
 // ==================== GENERAL SECTION ====================
-class GeneralSection extends StatelessWidget {
+class GeneralSection extends StatefulWidget {
+  @override
+  _GeneralSectionState createState() => _GeneralSectionState();
+}
+
+class _GeneralSectionState extends State<GeneralSection> {
   final c = Get.find<DashboardController>();
+  
+  // Static data for dropdowns
+  final List<String> engineerOptions = [
+    'Keyur Agarwal',
+    'John Smith',
+    'Jane Doe',
+    'Robert Johnson',
+    'Michael Brown'
+  ];
+  
+  final List<String> engineer2Options = [
+    'Chandra Shekhar',
+    'Alex Turner',
+    'Sarah Williams',
+    'David Miller',
+    'Emily Davis'
+  ];
+  
+  final List<String> operatorRepOptions = [
+    'Wang',
+    'Chen',
+    'Li',
+    'Zhang',
+    'Liu'
+  ];
+  
+  final List<String> contractorRepOptions = [
+    'Jerry',
+    'Tom',
+    'Harry',
+    'Bob',
+    'Frank'
+  ];
+  
+  final List<String> activityOptions = [
+    'Drilling Cement',
+    'Completion',
+    'Cementing',
+    'Tripping',
+    'Circulation',
+    'Pressure Test',
+    'Install Wellhead',
+    'NLDR BOP',
+    'Drilling',
+    'Reaming',
+    'Other'
+  ];
+  
+  final List<String> intervalOptions = [
+    'Completion',
+    'Drilling',
+    'Casing',
+    'Testing',
+    'Logging',
+    'Completion/Production'
+  ];
+  
+  final List<String> formationOptions = [
+    'MaG',
+    'Sandstone',
+    'Shale',
+    'Limestone',
+    'Dolomite',
+    'Chalk',
+    'Coal'
+  ];
+  
+  final List<String> fitOptions = [
+    'Completion',
+    'Drilling',
+    'Testing',
+    'Production',
+    'Abandonment'
+  ];
+
+  // Controllers for editable fields
+  final Map<String, TextEditingController> fieldControllers = {
+    'Report #': TextEditingController(text: '12'),
+    'User Report #': TextEditingController(),
+    'Bit #': TextEditingController(text: '120.0'),
+    'Bottom T.': TextEditingController(text: '180.0'),
+    'MD': TextEditingController(text: '9575.0'),
+    'TVD': TextEditingController(text: '7683.0'),
+    'Inc': TextEditingController(text: '89.38'),
+    'Azi': TextEditingController(text: '299.50'),
+    'WOB': TextEditingController(),
+    'Rot. Wt.': TextEditingController(),
+    'S/O Wt.': TextEditingController(),
+    'P/U Wt.': TextEditingController(),
+    'RPM': TextEditingController(),
+    'ROP': TextEditingController(),
+    'Off-bottom TQ': TextEditingController(),
+    'On-bottom TQ': TextEditingController(),
+    'Suction T.': TextEditingController(),
+    'Additional Footage': TextEditingController(text: '0.0'),
+    'NPT Time': TextEditingController(),
+    'NPT Cost': TextEditingController(),
+    'Depth Drilled': TextEditingController(text: '0.0'),
+    'Operator Rep.': TextEditingController(text: 'Wang'),
+    'Contractor Rep.': TextEditingController(text: 'Jerry'),
+    'FIT': TextEditingController(text: 'Completion'),
+    'Formation': TextEditingController(text: 'MaG'),
+  };
+
+  // Dropdown values
+  String selectedDate = 'Tuesday, December 30, 2025';
+  String selectedTime = '23:30';
+  String selectedEngineer = 'Keyur Agarwal';
+  String selectedEngineer2 = 'Chandra Shekhar';
+  String selectedActivity = 'Drilling Cement';
+  String selectedInterval = 'Completion';
+
+  @override
+  void dispose() {
+    fieldControllers.values.forEach((controller) => controller.dispose());
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,12 +224,12 @@ class GeneralSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with teal color
+          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Color(0xff0d9488), // Teal color
+              color: Color(0xff0d9488),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -120,62 +245,70 @@ class GeneralSection extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
-                    letterSpacing: 0.5,
                   ),
                 ),
               ],
             ),
           ),
           
-          // Vertical list of label-value pairs
+          // Table with 3 columns: Label, Value, Unit
           Padding(
             padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                _buildVerticalRow("Report #", "12"),
-                SizedBox(height: 2),
-                _buildVerticalRow("User Report #", ""),
-                SizedBox(height: 2),
-                _buildVerticalRow("Date", "12/27/2025"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Time", "23:30"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Engineer", "Keyur Agarwal"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Bit #", "120.0 (°F)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Engineer 2", ""),
-                SizedBox(height: 2),
-                _buildVerticalRow("Bottom T.", "180.0 (°F)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Operator Rep.", "Chandra Shekhar"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Contractor Rep.", "Wang"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Activity", "Drilling Cement"),
-                SizedBox(height: 2),
-                _buildVerticalRow("MD", "9055.0 (ft)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("TVD", "8603.0 (ft)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Inc", "73.45 (°)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Azi", "206.00 (°)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("WOB", "10000 (lbf)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Rot. Wt.", "(lbf)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("S/O Wt.", "(lbf)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("P/U Wt.", "(lbf)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("RPM", "70.0 (rpm)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("ROP", "30 (ft/hr)"),
-                SizedBox(height: 2),
-                _buildVerticalRow("Off-bottom TQ", "4000 (ft-lb)"),
-              ],
+            child: SingleChildScrollView(
+              child: Table(
+                border: TableBorder.all(
+                  color: Colors.grey.shade300,
+                  width: 1,
+                ),
+                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                columnWidths: const {
+                  0: FlexColumnWidth(2),
+                  1: FlexColumnWidth(3),
+                  2: FlexColumnWidth(2),
+                },
+                children: [
+                  _buildTableRow("Report #", "Report #", ""),
+                  _buildTableRow("User Report #", "User Report #", ""),
+                  _buildDateRow("Date"),
+                  _buildTimeRow("Time"),
+                  _buildDropdownRow("Engineer", selectedEngineer, engineerOptions, (value) {
+                    setState(() => selectedEngineer = value!);
+                  }),
+                  _buildTableRow("Bit #", "Bit #", "°F"),
+                  _buildDropdownRow("Engineer 2", selectedEngineer2, engineer2Options, (value) {
+                    setState(() => selectedEngineer2 = value!);
+                  }),
+                  _buildTableRow("Bottom T.", "Bottom T.", "°F"),
+                  _buildTableRow("Operator Rep.", "Operator Rep.", ""),
+                  _buildTableRow("Contractor Rep.", "Contractor Rep.", ""),
+                  _buildDropdownRow("Activity", selectedActivity, activityOptions, (value) {
+                    setState(() => selectedActivity = value!);
+                  }),
+                  _buildTableRow("MD", "MD", "ft"),
+                  _buildTableRow("TVD", "TVD", "ft"),
+                  _buildTableRow("Inc", "Inc", "°"),
+                  _buildTableRow("Azi", "Azi", "°"),
+                  _buildTableRow("WOB", "WOB", "lbf"),
+                  _buildTableRow("Rot. Wt.", "Rot. Wt.", "lbf"),
+                  _buildTableRow("S/O Wt.", "S/O Wt.", "lbf"),
+                  _buildTableRow("P/U Wt.", "P/U Wt.", "lbf"),
+                  _buildTableRow("RPM", "RPM", "rpm"),
+                  _buildTableRow("ROP", "ROP", "ft/hr"),
+                  _buildTableRow("Off-bottom TQ", "Off-bottom TQ", "ft-lb"),
+                  _buildTableRow("On-bottom TQ", "On-bottom TQ", "ft-lb"),
+                  _buildTableRow("Suction T.", "Suction T.", "°F"),
+                  _buildTableRow("Bottom T.", "Bottom T.", "°F"),
+                  _buildDropdownRow("Interval", selectedInterval, intervalOptions, (value) {
+                    setState(() => selectedInterval = value!);
+                  }),
+                  _buildTableRow("FIT", "FIT", "ppg"),
+                  _buildTableRow("Formation", "Formation", ""),
+                  _buildTableRow("Additional Footage", "Additional Footage", "ft"),
+                  _buildTableRow("NPT Time", "NPT Time", "hr"),
+                  _buildTableRow("NPT Cost", "NPT Cost", "\$"),
+                  _buildTableRow("Depth Drilled", "Depth Drilled", "ft"),
+                ],
+              ),
             ),
           ),
         ],
@@ -183,64 +316,363 @@ class GeneralSection extends StatelessWidget {
     );
   }
 
-  Widget _buildVerticalRow(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+  TableRow _buildTableRow(String label, String fieldKey, String unit) {
+    final controller = fieldControllers[fieldKey] ?? TextEditingController();
+
+    return TableRow(
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200, width: 1),
-        ),
+        color: Colors.white,
       ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xff2c3e50),
-                ),
-              ),
+      children: [
+        // Label column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xff2c3e50),
             ),
           ),
-          Expanded(
-            flex: 3,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 4),
-              child: Obx(() => c.isLocked.value
-                  ? Container(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        value,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    )
-                  : Container(
-                      child: TextFormField(
-                        initialValue: value,
-                        style: TextStyle(fontSize: 11),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-                          border: InputBorder.none,
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xff0d9488), width: 1),
+        ),
+        // Value column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: TextField(
+            controller: controller,
+            style: TextStyle(fontSize: 11),
+            textAlign: TextAlign.center,
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+        // Unit column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            unit,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+  }
+
+  TableRow _buildDateRow(String label) {
+    return TableRow(
+      decoration: BoxDecoration(
+        color: Colors.white,
+      ),
+      children: [
+        // Label column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xff2c3e50),
+            ),
+          ),
+        ),
+        // Value column with date dropdown
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Obx(() => c.isLocked.value
+              ? Container(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    selectedDate,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : Container(
+                  height: 30,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300, width: 1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: TextButton(
+                    onPressed: () => _showDatePicker(context),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      alignment: Alignment.centerLeft,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              selectedDate,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
-                      ),
-                    )),
+                        Icon(Icons.arrow_drop_down, size: 16, color: Colors.grey),
+                      ],
+                    ),
+                  ),
+                )),
+        ),
+        // Unit column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            "",
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+  }
+
+  TableRow _buildTimeRow(String label) {
+    return TableRow(
+      decoration: BoxDecoration(
+        color: Colors.white,
+      ),
+      children: [
+        // Label column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xff2c3e50),
             ),
           ),
-        ],
-      ),
+        ),
+        // Value column with time dropdown
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: c.isLocked.value
+              ? Container(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    selectedTime,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : Container(
+                  height: 30,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300, width: 1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedTime,
+                      isExpanded: true,
+                      icon: Icon(Icons.arrow_drop_down, size: 16),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.black,
+                      ),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            selectedTime = newValue;
+                          });
+                        }
+                      },
+                      items: [
+                        '23:30',
+                        '22:30',
+                        '21:30',
+                        '20:30',
+                        '19:30',
+                        '18:30',
+                        '17:30',
+                        '16:30'
+                      ].map<DropdownMenuItem<String>>((String time) {
+                        return DropdownMenuItem<String>(
+                          value: time,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              time,
+                              style: TextStyle(fontSize: 11),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+        ),
+        // Unit column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            "",
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
     );
+  }
+
+  TableRow _buildDropdownRow(String label, String value, List<String> options,
+      ValueChanged<String?> onChanged, {String unit = ""}) {
+    return TableRow(
+      decoration: BoxDecoration(
+        color: Colors.white,
+      ),
+      children: [
+        // Label column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xff2c3e50),
+            ),
+          ),
+        ),
+        // Value column with dropdown
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: c.isLocked.value
+              ? Container(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : DropdownButtonFormField<String>(
+                  value: value,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+                    ),
+                  ),
+                  icon: Icon(Icons.arrow_drop_down, size: 16),
+                  isExpanded: true,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.black,
+                  ),
+                  onChanged: onChanged,
+                  items: options.map<DropdownMenuItem<String>>((String option) {
+                    return DropdownMenuItem<String>(
+                      value: option,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          option,
+                          style: TextStyle(fontSize: 11),
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+        ),
+        // Unit column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            unit,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showDatePicker(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedDate = "${_getDayOfWeek(picked.weekday)}, ${_getMonthName(picked.month)} ${picked.day}, ${picked.year}";
+      });
+    }
+  }
+
+  String _getDayOfWeek(int day) {
+    switch (day) {
+      case 1: return 'Monday';
+      case 2: return 'Tuesday';
+      case 3: return 'Wednesday';
+      case 4: return 'Thursday';
+      case 5: return 'Friday';
+      case 6: return 'Saturday';
+      case 7: return 'Sunday';
+      default: return '';
+    }
+  }
+
+  String _getMonthName(int month) {
+    switch (month) {
+      case 1: return 'January';
+      case 2: return 'February';
+      case 3: return 'March';
+      case 4: return 'April';
+      case 5: return 'May';
+      case 6: return 'June';
+      case 7: return 'July';
+      case 8: return 'August';
+      case 9: return 'September';
+      case 10: return 'October';
+      case 11: return 'November';
+      case 12: return 'December';
+      default: return '';
+    }
   }
 }
 
@@ -255,120 +687,129 @@ class MiddlePortion extends StatelessWidget {
         OpenHoleSection(),
         const SizedBox(height: 12),
         DrillStringSection(),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Get.to(() => TabularDatabaseView());
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                backgroundColor: Color(0xff0d9488),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: Text(
+                'Tabular Database',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                print('Calculate ID tapped');
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                backgroundColor: Color(0xff0d9488),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: Text(
+                'Calculate ID',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
 }
 
 // ==================== CASED HOLE SECTION ====================
-class CasedHoleSection extends StatelessWidget {
+class CasedHoleSection extends StatefulWidget {
+  @override
+  _CasedHoleSectionState createState() => _CasedHoleSectionState();
+}
+
+class _CasedHoleSectionState extends State<CasedHoleSection> {
   final c = Get.find<DashboardController>();
-  final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController odController = TextEditingController();
-  final TextEditingController wtController = TextEditingController();
-  final TextEditingController idController = TextEditingController();
-  final TextEditingController topController = TextEditingController();
-  final TextEditingController shoeController = TextEditingController();
-  final TextEditingController lenController = TextEditingController();
+  
+  // Casing types dropdown
+  final List<String> casingTypes = [
+    '30° CSG',
+    '18 5/8° CSG',
+    '13 3/8° CSG',
+    '9 5/8° CSG',
+    '7° LINER'
+  ];
+  String selectedCasingType = '30° CSG';
+  
+  // Data for the table (12 rows total, some pre-filled)
+  List<List<TextEditingController>> tableData = [
+    [
+      TextEditingController(text: '9 5/8" Casing'),
+      TextEditingController(text: '9.625'),
+      TextEditingController(text: '47.000'),
+      TextEditingController(text: '8.681'),
+      TextEditingController(text: '0.0'),
+      TextEditingController(text: '7830.0'),
+      TextEditingController(text: '7830.0'),
+    ],
+    [
+      TextEditingController(text: 'Liner'),
+      TextEditingController(text: '7.000'),
+      TextEditingController(text: '26.000'),
+      TextEditingController(text: '6.276'),
+      TextEditingController(text: '7590.0'),
+      TextEditingController(text: '9053.0'),
+      TextEditingController(text: '1463.0'),
+    ],
+    // Empty rows with controllers for editability
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+  ];
 
-  void _showAddCasingDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Add New Casing", style: TextStyle(fontSize: 16)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildDialogTextField(descriptionController, "Description"),
-                SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(child: _buildDialogTextField(odController, "OD (in)")),
-                    SizedBox(width: 8),
-                    Expanded(child: _buildDialogTextField(wtController, "Wt. (lb/ft)")),
-                    SizedBox(width: 8),
-                    Expanded(child: _buildDialogTextField(idController, "ID (in)")),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(child: _buildDialogTextField(topController, "Top (ft)")),
-                    SizedBox(width: 8),
-                    Expanded(child: _buildDialogTextField(shoeController, "Shoe (ft)")),
-                    SizedBox(width: 8),
-                    Expanded(child: _buildDialogTextField(lenController, "Len. (ft)")),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _clearControllers();
-              },
-              child: Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _addCasingToTable();
-                Navigator.pop(context);
-                _clearControllers();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xff0d9488),
-              ),
-              child: Text("Add"),
-            ),
-          ],
-        );
-      },
-    );
+  void _addCasing() {
+    setState(() {
+      tableData.add([
+        TextEditingController(text: selectedCasingType),
+        TextEditingController(),
+        TextEditingController(),
+        TextEditingController(),
+        TextEditingController(),
+        TextEditingController(),
+        TextEditingController(),
+      ]);
+    });
   }
 
-  Widget _buildDialogTextField(TextEditingController controller, String hint) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        hintText: hint,
-        isDense: true,
-        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-      ),
-    );
-  }
-
-  void _addCasingToTable() {
-    final newCasing = [
-      descriptionController.text.isNotEmpty ? descriptionController.text : '-',
-      odController.text.isNotEmpty ? odController.text : '-',
-      wtController.text.isNotEmpty ? wtController.text : '-',
-      idController.text.isNotEmpty ? idController.text : '-',
-      topController.text.isNotEmpty ? topController.text : '-',
-      shoeController.text.isNotEmpty ? shoeController.text : '-',
-      lenController.text.isNotEmpty ? lenController.text : '-',
-    ];
-    
-    // Add to controller or directly to UI (you'll need to implement state management)
-    print("Added new casing: $newCasing");
-    // Here you should add the new casing to your data source
-  }
-
-  void _clearControllers() {
-    descriptionController.clear();
-    odController.clear();
-    wtController.clear();
-    idController.clear();
-    topController.clear();
-    shoeController.clear();
-    lenController.clear();
+  void _removeCasing(int index) {
+    if (tableData.length > 1) {
+      setState(() {
+        tableData.removeAt(index);
+      });
+    }
   }
 
   @override
@@ -388,11 +829,11 @@ class CasedHoleSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header with teal color
+          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Color(0xff0d9488), // Teal color
+              color: Color(0xff0d9488),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -415,83 +856,127 @@ class CasedHoleSection extends StatelessWidget {
                     ),
                   ],
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    _showAddCasingDialog(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.add, size: 14, color: Color(0xff0d9488)),
-                      SizedBox(width: 4),
-                      Text(
-                        "Add Casing",
-                        style: TextStyle(fontSize: 11, color: Color(0xff0d9488)),
+                Row(
+                  children: [
+                    Container(
+                      width: 140,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white, width: 1),
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                    ],
-                  ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedCasingType,
+                          isExpanded: true,
+                          icon: Icon(Icons.arrow_drop_down, size: 16, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white,
+                          ),
+                          dropdownColor: Color(0xff0d9488),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                selectedCasingType = newValue;
+                              });
+                            }
+                          },
+                          items: casingTypes.map<DropdownMenuItem<String>>((String type) {
+                            return DropdownMenuItem<String>(
+                              value: type,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: Text(
+                                  type,
+                                  style: TextStyle(fontSize: 11),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _addCasing,
+                      icon: Icon(Icons.add, color: Colors.white, size: 20),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                        padding: EdgeInsets.all(6),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           
-          // Table with increased size
-          Obx(() => Container(
-            constraints: BoxConstraints(maxHeight: 250),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
+          // Table with scrollable content
+          Container(
+            constraints: BoxConstraints(maxHeight: 350),
+            child: Scrollbar(
+              thumbVisibility: true,
               child: SingleChildScrollView(
                 scrollDirection: Axis.vertical,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Table(
-                    border: TableBorder.all(
-                      color: Colors.grey.shade300,
-                      width: 1,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                    columnWidths: const {
-                      0: FixedColumnWidth(120),
-                      1: FixedColumnWidth(70),
-                      2: FixedColumnWidth(80),
-                      3: FixedColumnWidth(70),
-                      4: FixedColumnWidth(80),
-                      5: FixedColumnWidth(80),
-                      6: FixedColumnWidth(80),
-                    },
-                    children: [
-                      // Header row
-                      TableRow(
-                        decoration: BoxDecoration(
-                          color: Color(0xfff0f9ff),
-                        ),
-                        children: [
-                          _buildTableHeaderCell("Description", TextAlign.left),
-                          _buildTableHeaderCell("OD\n(in)", TextAlign.center),
-                          _buildTableHeaderCell("Wt.\n(lb/ft)", TextAlign.center),
-                          _buildTableHeaderCell("ID\n(in)", TextAlign.center),
-                          _buildTableHeaderCell("Top\n(ft)", TextAlign.center),
-                          _buildTableHeaderCell("Shoe\n(ft)", TextAlign.center),
-                          _buildTableHeaderCell("Len.\n(ft)", TextAlign.center),
-                        ],
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Table(
+                      border: TableBorder.all(
+                        color: Colors.grey.shade300,
+                        width: 1,
                       ),
-                      
-                      // Data rows
-                      _buildCasingDataRow(['9 5/8" Casing', "9.625", "47.000", "8.681", "0.0", "7830.0", "7830.0"]),
-                      _buildCasingDataRow(['Liner', "7.000", "26.000", "6.276", "7590.0", "9053.0", "1463.0"]),
-                    ],
+                      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                      columnWidths: const {
+                        0: FixedColumnWidth(40),  // No.
+                        1: FixedColumnWidth(120), // Description
+                        2: FixedColumnWidth(70),  // OD (in)
+                        3: FixedColumnWidth(80),  // Wt. (lb/ft)
+                        4: FixedColumnWidth(70),  // ID (in)
+                        5: FixedColumnWidth(80),  // Top (ft)
+                        6: FixedColumnWidth(80),  // Shoe (ft)
+                        7: FixedColumnWidth(80),  // Len. (ft)
+                        8: FixedColumnWidth(40),  // Actions
+                      },
+                      children: [
+                        // Header row
+                        TableRow(
+                          decoration: BoxDecoration(
+                            color: Color(0xfff0f9ff),
+                          ),
+                          children: [
+                            _buildTableHeaderCell("No.", TextAlign.center),
+                            _buildTableHeaderCell("Description", TextAlign.left),
+                            _buildTableHeaderCell("OD\n(in)", TextAlign.center),
+                            _buildTableHeaderCell("Wt.\n(lb/ft)", TextAlign.center),
+                            _buildTableHeaderCell("ID\n(in)", TextAlign.center),
+                            _buildTableHeaderCell("Top\n(ft)", TextAlign.center),
+                            _buildTableHeaderCell("Shoe\n(ft)", TextAlign.center),
+                            _buildTableHeaderCell("Len.\n(ft)", TextAlign.center),
+                            _buildTableHeaderCell("", TextAlign.center),
+                          ],
+                        ),
+                        
+                        // Data rows
+                        ...tableData.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final rowControllers = entry.value;
+                          return _buildCasingDataRow(index, rowControllers);
+                        }).toList(),
+                        
+                        // Add empty rows to make total 12 rows
+                        ...List.generate(max(0, 12 - tableData.length), (index) {
+                          return _buildEmptyCasingRow(tableData.length + index);
+                        }),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -499,7 +984,7 @@ class CasedHoleSection extends StatelessWidget {
 
   Widget _buildTableHeaderCell(String text, TextAlign align) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       child: Text(
         text,
         style: TextStyle(
@@ -512,51 +997,208 @@ class CasedHoleSection extends StatelessWidget {
     );
   }
 
-  TableRow _buildCasingDataRow(List<String> values) {
+  TableRow _buildCasingDataRow(int rowIndex, List<TextEditingController> controllers) {
     return TableRow(
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade100),
-        ),
-        color: Colors.white,
+        color: rowIndex % 2 == 0 ? Colors.white : Colors.grey.shade50,
       ),
-      children: values.asMap().entries.map((entry) {
-        final index = entry.key;
-        final value = entry.value;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          height: 40, // Increased height
-          child: c.isLocked.value
-              ? Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade700,
-                  ),
-                  textAlign: index == 0 ? TextAlign.left : TextAlign.center,
-                )
-              : TextFormField(
-                  initialValue: value,
-                  style: TextStyle(fontSize: 11),
-                  textAlign: index == 0 ? TextAlign.left : TextAlign.center,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                    border: InputBorder.none,
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xff0d9488), width: 1),
-                    ),
-                  ),
+      children: [
+        // No.
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            '${rowIndex + 1}',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        // Description
+        _buildEditableCell(controllers[0], TextAlign.left),
+        // OD (in)
+        _buildEditableCell(controllers[1], TextAlign.center),
+        // Wt. (lb/ft)
+        _buildEditableCell(controllers[2], TextAlign.center),
+        // ID (in)
+        _buildEditableCell(controllers[3], TextAlign.center),
+        // Top (ft)
+        _buildEditableCell(controllers[4], TextAlign.center),
+        // Shoe (ft)
+        _buildEditableCell(controllers[5], TextAlign.center),
+        // Len. (ft)
+        _buildEditableCell(controllers[6], TextAlign.center),
+        // Actions
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: IconButton(
+            onPressed: () => _removeCasing(rowIndex),
+            icon: Icon(Icons.remove, size: 16, color: Colors.red),
+            padding: EdgeInsets.zero,
+            constraints: BoxConstraints(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  TableRow _buildEmptyCasingRow(int rowIndex) {
+    return TableRow(
+      decoration: BoxDecoration(
+        color: rowIndex % 2 == 0 ? Colors.white : Colors.grey.shade50,
+      ),
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            '${rowIndex + 1}',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade400,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Icon(Icons.add, size: 16, color: Colors.grey.shade400),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEditableCell(TextEditingController controller, TextAlign align) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: c.isLocked.value
+          ? Container(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                controller.text.isNotEmpty ? controller.text : '-',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade700,
                 ),
-        );
-      }).toList(),
+                textAlign: align,
+              ),
+            )
+          : Container(
+              height: 30,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300, width: 1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: TextField(
+                controller: controller,
+                style: TextStyle(fontSize: 11),
+                textAlign: align,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildEmptyCell() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: c.isLocked.value
+          ? Container(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                '-',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade400,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            )
+          : Container(
+              height: 30,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300, width: 1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: TextField(
+                style: TextStyle(fontSize: 11),
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
     );
   }
 }
 
 // ==================== OPEN HOLE SECTION ====================
-class OpenHoleSection extends StatelessWidget {
+class OpenHoleSection extends StatefulWidget {
+  @override
+  _OpenHoleSectionState createState() => _OpenHoleSectionState();
+}
+
+class _OpenHoleSectionState extends State<OpenHoleSection> {
   final c = Get.find<DashboardController>();
+
+  // Scroll controller for the table
+  final ScrollController scrollController = ScrollController();
+
+  // Data for the table (10 rows total, some pre-filled)
+  List<List<TextEditingController>> tableData = [
+    [
+      TextEditingController(text: '8.5" Hole'),
+      TextEditingController(text: '8.500'),
+      TextEditingController(text: '9055.0'),
+      TextEditingController(),
+    ],
+    // Empty rows with controllers for editability
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+    [TextEditingController(), TextEditingController(), TextEditingController(), TextEditingController()],
+  ];
+
+  bool cementPlug = false;
+  final TextEditingController cementPlugVolController = TextEditingController();
+  final TextEditingController plugTopController = TextEditingController();
+
+  void _addRow() {
+    setState(() {
+      tableData.add([
+        TextEditingController(),
+        TextEditingController(),
+        TextEditingController(),
+        TextEditingController(),
+      ]);
+    });
+  }
+
+  void _removeRow(int index) {
+    if (tableData.length > 1) {
+      setState(() {
+        tableData.removeAt(index);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -575,11 +1217,11 @@ class OpenHoleSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header with teal color
+          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Color(0xff0d9488), // Teal color
+              color: Color(0xff0d9488),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -602,50 +1244,153 @@ class OpenHoleSection extends StatelessWidget {
           ),
 
           // Table
-          Obx(() => Padding(
-            padding: const EdgeInsets.all(12),
-            child: Table(
-              border: TableBorder.all(
-                color: Colors.grey.shade300,
-                width: 1,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              columnWidths: const {
-                0: FixedColumnWidth(120),
-                1: FixedColumnWidth(70),
-                2: FixedColumnWidth(90),
-                3: FixedColumnWidth(90),
-              },
-              children: [
-                // Header row
-                TableRow(
-                  decoration: BoxDecoration(
-                    color: Color(0xfff0f9ff),
-                  ),
-                  children: [
-                    _buildTableHeaderCell("Description", TextAlign.left),
-                    _buildTableHeaderCell("ID\n(in)", TextAlign.center),
-                    _buildTableHeaderCell("MD\n(ft)", TextAlign.center),
-                    _buildTableHeaderCell("Washout\n(%)", TextAlign.center),
-                  ],
-                ),
+          Container(
+            constraints: BoxConstraints(maxHeight: 250),
+            child: Scrollbar(
+              controller: scrollController,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                controller: scrollController,
+                scrollDirection: Axis.vertical,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Table(
+                      border: TableBorder.all(
+                        color: Colors.grey.shade300,
+                        width: 1,
+                      ),
+                      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                      columnWidths: const {
+                        0: FixedColumnWidth(40),  // No.
+                        1: FixedColumnWidth(140), // Description
+                        2: FixedColumnWidth(80),  // ID (in)
+                        3: FixedColumnWidth(100), // MD (ft)
+                        4: FixedColumnWidth(100), // Washout (%)
+                        5: FixedColumnWidth(60),  // Actions
+                      },
+                      children: [
+                        // Header row
+                        TableRow(
+                          decoration: BoxDecoration(
+                            color: Color(0xfff0f9ff),
+                          ),
+                          children: [
+                            _buildTableHeaderCell("No.", TextAlign.center),
+                            _buildTableHeaderCell("Description", TextAlign.left),
+                            _buildTableHeaderCell("ID\n(in)", TextAlign.center),
+                            _buildTableHeaderCell("MD\n(ft)", TextAlign.center),
+                            _buildTableHeaderCell("Washout\n(%)", TextAlign.center),
+                            _buildTableHeaderCell("", TextAlign.center),
+                          ],
+                        ),
 
-                // Data row
-                TableRow(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+                        // Data rows
+                        ...tableData.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final rowControllers = entry.value;
+                          return _buildOpenHoleRow(index, rowControllers);
+                        }).toList(),
+
+                        // Add empty rows
+                        ...List.generate(10 - tableData.length, (index) {
+                          return _buildEmptyOpenHoleRow(tableData.length + index);
+                        }),
+                      ],
+                    ),
                   ),
-                  children: [
-                    _buildOpenHoleCell('8.5" Hole', 0),
-                    _buildOpenHoleCell("8.500", 1),
-                    _buildOpenHoleCell("9055.0", 2),
-                    _buildOpenHoleCell("", 3),
-                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Cement Plug Controls
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: cementPlug,
+                        onChanged: (value) {
+                          setState(() {
+                            cementPlug = value ?? false;
+                          });
+                        },
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      Text(
+                        "Cement Plug Vol.",
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          constraints: BoxConstraints(minWidth: 50),
+                          height: 30,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300, width: 1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: TextField(
+                            controller: cementPlugVolController,
+                            style: TextStyle(fontSize: 11),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8),
+                Flexible(
+                  child: Row(
+                    children: [
+                      Text(
+                        "Plug Top",
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          constraints: BoxConstraints(minWidth: 50),
+                          height: 30,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300, width: 1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: TextField(
+                            controller: plugTopController,
+                            style: TextStyle(fontSize: 11),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          // Adjust length functionality
+                        },
+                        icon: Icon(Icons.tune, size: 20, color: Color(0xff0d9488)),
+                        tooltip: 'Adjust Length',
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -653,7 +1398,7 @@ class OpenHoleSection extends StatelessWidget {
 
   Widget _buildTableHeaderCell(String text, TextAlign align) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       child: Text(
         text,
         style: TextStyle(
@@ -666,39 +1411,231 @@ class OpenHoleSection extends StatelessWidget {
     );
   }
 
-  Widget _buildOpenHoleCell(String value, int index) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      height: 40, // Increased height
-      child: c.isLocked.value
-          ? Text(
-              value,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade700,
+  TableRow _buildOpenHoleRow(int rowIndex, List<TextEditingController> controllers) {
+    return TableRow(
+      decoration: BoxDecoration(
+        color: rowIndex % 2 == 0 ? Colors.white : Colors.grey.shade50,
+      ),
+      children: [
+        // No.
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            '${rowIndex + 1}',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        // Description
+        _buildEditableCell(controllers[0], TextAlign.left),
+        // ID (in)
+        _buildEditableCell(controllers[1], TextAlign.center),
+        // MD (ft)
+        _buildEditableCell(controllers[2], TextAlign.center),
+        // Washout (%)
+        _buildEditableCell(controllers[3], TextAlign.center),
+        // Actions
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: () => _removeRow(rowIndex),
+                icon: Icon(Icons.remove, size: 16, color: Colors.red),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(),
               ),
-              textAlign: index == 0 ? TextAlign.left : TextAlign.center,
+              IconButton(
+                onPressed: _addRow,
+                icon: Icon(Icons.add, size: 16, color: Color(0xff0d9488)),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  TableRow _buildEmptyOpenHoleRow(int rowIndex) {
+    return TableRow(
+      decoration: BoxDecoration(
+        color: rowIndex % 2 == 0 ? Colors.white : Colors.grey.shade50,
+      ),
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            '${rowIndex + 1}',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade400,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: IconButton(
+            onPressed: _addRow,
+            icon: Icon(Icons.add, size: 16, color: Colors.grey.shade400),
+            padding: EdgeInsets.zero,
+            constraints: BoxConstraints(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEditableCell(TextEditingController controller, TextAlign align) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: c.isLocked.value
+          ? Container(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                controller.text.isNotEmpty ? controller.text : '-',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade700,
+                ),
+                textAlign: align,
+              ),
             )
-          : TextFormField(
-              initialValue: value,
-              style: TextStyle(fontSize: 11),
-              textAlign: index == 0 ? TextAlign.left : TextAlign.center,
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                border: InputBorder.none,
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xff0d9488), width: 1),
+          : Container(
+              height: 30,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300, width: 1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: TextField(
+                controller: controller,
+                style: TextStyle(fontSize: 11),
+                textAlign: align,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  border: InputBorder.none,
                 ),
               ),
             ),
     );
   }
+
+  Widget _buildEmptyCell() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Text(
+        '-',
+        style: TextStyle(
+          fontSize: 11,
+          color: Colors.grey.shade400,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
 }
 
 // ==================== DRILL STRING SECTION ====================
-class DrillStringSection extends StatelessWidget {
+class DrillStringSection extends StatefulWidget {
+  @override
+  _DrillStringSectionState createState() => _DrillStringSectionState();
+}
+
+class _DrillStringSectionState extends State<DrillStringSection> {
   final c = Get.find<DashboardController>();
+  
+  // Data for the table
+  List<List<TextEditingController>> tableData = [
+    [
+      TextEditingController(text: 'DP'),
+      TextEditingController(text: '5.000'),
+      TextEditingController(),
+      TextEditingController(text: '4.276'),
+      TextEditingController(text: '7430.4'),
+    ],
+    [
+      TextEditingController(text: 'X-OVER'),
+      TextEditingController(text: '6.500'),
+      TextEditingController(),
+      TextEditingController(text: '2.630'),
+      TextEditingController(text: '2.3'),
+    ],
+    [
+      TextEditingController(text: 'DP'),
+      TextEditingController(text: '4.000'),
+      TextEditingController(),
+      TextEditingController(text: '3.340'),
+      TextEditingController(text: '851.5'),
+    ],
+    [
+      TextEditingController(text: 'HWDP'),
+      TextEditingController(text: '4.000'),
+      TextEditingController(),
+      TextEditingController(text: '2.438'),
+      TextEditingController(text: '92.3'),
+    ],
+    [
+      TextEditingController(text: 'JAR'),
+      TextEditingController(text: '4.750'),
+      TextEditingController(),
+      TextEditingController(text: '2.250'),
+      TextEditingController(text: '19.8'),
+    ],
+    [
+      TextEditingController(text: 'HWDP'),
+      TextEditingController(text: '4.000'),
+      TextEditingController(),
+      TextEditingController(text: '2.438'),
+      TextEditingController(text: '551.7'),
+    ],
+    [
+      TextEditingController(text: 'DC'),
+      TextEditingController(text: '4.750'),
+      TextEditingController(),
+      TextEditingController(text: '3.340'),
+      TextEditingController(text: '31.1'),
+    ],
+    [
+      TextEditingController(text: 'BIT SUB'),
+      TextEditingController(text: '4.750'),
+      TextEditingController(),
+      TextEditingController(text: '2.000'),
+      TextEditingController(text: '3.0'),
+    ],
+  ];
+  
+  final TextEditingController totalLengthController = TextEditingController(text: '8982.0');
+
+  void _addRow() {
+    setState(() {
+      tableData.add([
+        TextEditingController(),
+        TextEditingController(),
+        TextEditingController(),
+        TextEditingController(),
+        TextEditingController(),
+      ]);
+    });
+  }
+
+  void _removeRow(int index) {
+    if (tableData.length > 1) {
+      setState(() {
+        tableData.removeAt(index);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -717,11 +1654,11 @@ class DrillStringSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header with teal color
+          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Color(0xff0d9488), // Teal color
+              color: Color(0xff0d9488),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -744,57 +1681,68 @@ class DrillStringSection extends StatelessWidget {
           ),
 
           // Table
-          Obx(() => Container(
+          Container(
             constraints: BoxConstraints(maxHeight: 250),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Table(
-                  border: TableBorder.all(
-                    color: Colors.grey.shade300,
-                    width: 1,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                  columnWidths: const {
-                    0: FixedColumnWidth(120),
-                    1: FixedColumnWidth(70),
-                    2: FixedColumnWidth(90),
-                    3: FixedColumnWidth(70),
-                    4: FixedColumnWidth(90),
-                  },
-                  children: [
-                    // Header row
-                    TableRow(
-                      decoration: BoxDecoration(
-                        color: Color(0xfff0f9ff),
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Table(
+                      border: TableBorder.all(
+                        color: Colors.grey.shade300,
+                        width: 1,
                       ),
+                      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                      columnWidths: const {
+                        0: FixedColumnWidth(40),  // No.
+                        1: FixedColumnWidth(140), // Description
+                        2: FixedColumnWidth(80),  // OD (in)
+                        3: FixedColumnWidth(100), // Wt. (lb/ft)
+                        4: FixedColumnWidth(80),  // ID (in)
+                        5: FixedColumnWidth(100), // Len. (ft)
+                        6: FixedColumnWidth(60),  // Actions
+                      },
                       children: [
-                        _buildTableHeaderCell("Description", TextAlign.left),
-                        _buildTableHeaderCell("OD\n(in)", TextAlign.center),
-                        _buildTableHeaderCell("Wt.\n(lb/ft)", TextAlign.center),
-                        _buildTableHeaderCell("ID\n(in)", TextAlign.center),
-                        _buildTableHeaderCell("Len.\n(ft)", TextAlign.center),
+                        // Header row
+                        TableRow(
+                          decoration: BoxDecoration(
+                            color: Color(0xfff0f9ff),
+                          ),
+                          children: [
+                            _buildTableHeaderCell("No.", TextAlign.center),
+                            _buildTableHeaderCell("Description", TextAlign.left),
+                            _buildTableHeaderCell("OD\n(in)", TextAlign.center),
+                            _buildTableHeaderCell("Wt.\n(lb/ft)", TextAlign.center),
+                            _buildTableHeaderCell("ID\n(in)", TextAlign.center),
+                            _buildTableHeaderCell("Len.\n(ft)", TextAlign.center),
+                            _buildTableHeaderCell("", TextAlign.center),
+                          ],
+                        ),
+                        
+                        // Data rows
+                        ...tableData.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final rowControllers = entry.value;
+                          return _buildDrillStringRow(index, rowControllers);
+                        }).toList(),
+                        
+                        // Add empty rows
+                        ...List.generate(10 - tableData.length, (index) {
+                          return _buildEmptyDrillStringRow(tableData.length + index);
+                        }),
                       ],
                     ),
-
-                    // Data rows
-                    _buildDrillStringDataRow(['DP', "5.000", "", "4.276", "7430.4"]),
-                    _buildDrillStringDataRow(['X-OVER', "6.500", "", "2.630", "2.3"]),
-                    _buildDrillStringDataRow(['DP', "4.000", "", "3.340", "851.5"]),
-                    _buildDrillStringDataRow(['HWDP', "4.000", "", "2.438", "92.3"]),
-                    _buildDrillStringDataRow(['JAR', "4.750", "", "2.250", "19.8"]),
-                    _buildDrillStringDataRow(['HWDP', "4.000", "", "2.438", "551.7"]),
-                    _buildDrillStringDataRow(['DC', "4.750", "", "3.340", "31.1"]),
-                    _buildDrillStringDataRow(['BIT SUB', "4.750", "", "2.000", "3.0"]),
-                  ],
+                  ),
                 ),
               ),
             ),
-          )),
+          ),
 
-          // Footer
+          // Footer with editable total length
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
@@ -810,11 +1758,13 @@ class DrillStringSection extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  "Total String Length < Well Depth",
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Color(0xff0d9488),
+                Flexible(
+                  child: Text(
+                    "Total String Length < Well Depth",
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xff0d9488),
+                    ),
                   ),
                 ),
                 Row(
@@ -828,19 +1778,38 @@ class DrillStringSection extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      width: 100,
+                      height: 30,
                       decoration: BoxDecoration(
-                        color: Color(0xff0d9488),
+                        border: Border.all(color: Colors.grey.shade300, width: 1),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Text(
-                        "8982.0",
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: c.isLocked.value
+                          ? Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              child: Text(
+                                totalLengthController.text,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xff0d9488),
+                                ),
+                              ),
+                            )
+                          : TextField(
+                              controller: totalLengthController,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xff0d9488),
+                              ),
+                              textAlign: TextAlign.center,
+                              decoration: InputDecoration(
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                border: InputBorder.none,
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -854,7 +1823,7 @@ class DrillStringSection extends StatelessWidget {
 
   Widget _buildTableHeaderCell(String text, TextAlign align) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       child: Text(
         text,
         style: TextStyle(
@@ -867,44 +1836,140 @@ class DrillStringSection extends StatelessWidget {
     );
   }
 
-  TableRow _buildDrillStringDataRow(List<String> values) {
+  TableRow _buildDrillStringRow(int rowIndex, List<TextEditingController> controllers) {
     return TableRow(
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade100),
-        ),
-        color: Colors.white,
+        color: rowIndex % 2 == 0 ? Colors.white : Colors.grey.shade50,
       ),
-      children: values.asMap().entries.map((entry) {
-        final index = entry.key;
-        final value = entry.value;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          height: 40, // Increased height
-          child: c.isLocked.value
-              ? Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade700,
-                  ),
-                  textAlign: index == 0 ? TextAlign.left : TextAlign.center,
-                )
-              : TextFormField(
-                  initialValue: value,
-                  style: TextStyle(fontSize: 11),
-                  textAlign: index == 0 ? TextAlign.left : TextAlign.center,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                    border: InputBorder.none,
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xff0d9488), width: 1),
-                    ),
-                  ),
+      children: [
+        // No.
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            '${rowIndex + 1}',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        // Description
+        _buildEditableCell(controllers[0], TextAlign.left),
+        // OD (in)
+        _buildEditableCell(controllers[1], TextAlign.center),
+        // Wt. (lb/ft)
+        _buildEditableCell(controllers[2], TextAlign.center),
+        // ID (in)
+        _buildEditableCell(controllers[3], TextAlign.center),
+        // Len. (ft)
+        _buildEditableCell(controllers[4], TextAlign.center),
+        // Actions
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: () => _removeRow(rowIndex),
+                icon: Icon(Icons.remove, size: 16, color: Colors.red),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(),
+              ),
+              IconButton(
+                onPressed: _addRow,
+                icon: Icon(Icons.add, size: 16, color: Color(0xff0d9488)),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  TableRow _buildEmptyDrillStringRow(int rowIndex) {
+    return TableRow(
+      decoration: BoxDecoration(
+        color: rowIndex % 2 == 0 ? Colors.white : Colors.grey.shade50,
+      ),
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            '${rowIndex + 1}',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade400,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: IconButton(
+            onPressed: _addRow,
+            icon: Icon(Icons.add, size: 16, color: Colors.grey.shade400),
+            padding: EdgeInsets.zero,
+            constraints: BoxConstraints(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEditableCell(TextEditingController controller, TextAlign align) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: c.isLocked.value
+          ? Container(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                controller.text.isNotEmpty ? controller.text : '-',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade700,
                 ),
-        );
-      }).toList(),
+                textAlign: align,
+              ),
+            )
+          : Container(
+              height: 30,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300, width: 1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: TextField(
+                controller: controller,
+                style: TextStyle(fontSize: 11),
+                textAlign: align,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildEmptyCell() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Text(
+        '-',
+        style: TextStyle(
+          fontSize: 11,
+          color: Colors.grey.shade400,
+        ),
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }
@@ -946,11 +2011,11 @@ class BitSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header with teal color
+          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Color(0xff0d9488), // Teal color
+              color: Color(0xff0d9488),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -1031,15 +2096,19 @@ class BitSection extends StatelessWidget {
                         ),
                       ),
                     )
-                  : TextFormField(
-                      initialValue: value,
-                      style: TextStyle(fontSize: 11),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-                        border: InputBorder.none,
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xff0d9488), width: 1),
+                  : Container(
+                      height: 30,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300, width: 1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: TextField(
+                        controller: TextEditingController(text: value),
+                        style: TextStyle(fontSize: 11),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          border: InputBorder.none,
                         ),
                       ),
                     )),
@@ -1052,8 +2121,52 @@ class BitSection extends StatelessWidget {
 }
 
 // ==================== NOZZLE SECTION ====================
-class NozzleSection extends StatelessWidget {
+class NozzleSection extends StatefulWidget {
+  @override
+  _NozzleSectionState createState() => _NozzleSectionState();
+}
+
+class _NozzleSectionState extends State<NozzleSection> {
   final c = Get.find<DashboardController>();
+  
+  // Data for the table
+  List<List<TextEditingController>> tableData = [
+    [
+      TextEditingController(text: '1'),
+      TextEditingController(text: '14'),
+    ],
+    [
+      TextEditingController(text: '2'),
+      TextEditingController(),
+    ],
+    [
+      TextEditingController(text: '3'),
+      TextEditingController(),
+    ],
+  ];
+  
+  final TextEditingController tfaController = TextEditingController(text: '0.518');
+
+  void _addRow() {
+    setState(() {
+      tableData.add([
+        TextEditingController(text: '${tableData.length + 1}'),
+        TextEditingController(),
+      ]);
+    });
+  }
+
+  void _removeRow(int index) {
+    if (tableData.length > 1) {
+      setState(() {
+        tableData.removeAt(index);
+        // Update numbers
+        for (int i = 0; i < tableData.length; i++) {
+          tableData[i][0].text = '${i + 1}';
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1072,11 +2185,11 @@ class NozzleSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header with teal color
+          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Color(0xff0d9488), // Teal color
+              color: Color(0xff0d9488),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -1099,52 +2212,49 @@ class NozzleSection extends StatelessWidget {
           ),
 
           // Table
-          Obx(() => Padding(
+          Padding(
             padding: const EdgeInsets.all(12),
-            child: Table(
-              border: TableBorder.all(
-                color: Colors.grey.shade300,
-                width: 1,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              columnWidths: const {
-                0: FixedColumnWidth(60),
-                1: FixedColumnWidth(100),
-              },
-              children: [
-                // Header row
-                TableRow(
-                  decoration: BoxDecoration(
-                    color: Color(0xfff0f9ff),
-                  ),
-                  children: [
-                    _buildNozzleHeaderCell("No.", TextAlign.center),
-                    _buildNozzleHeaderCell("Size\n(1/32in)", TextAlign.center),
-                  ],
+            child: SingleChildScrollView(
+              child: Table(
+                border: TableBorder.all(
+                  color: Colors.grey.shade300,
+                  width: 1,
                 ),
-
-                // Data rows
-                _buildNozzleTableRow(["1", "14"]),
-                _buildNozzleTableRow(["2", ""]),
-                _buildNozzleTableRow(["3", ""]),
-              ],
-            ),
-          )),
-
-          // Footer
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Color(0xfff0f9ff),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(8),
-                bottomRight: Radius.circular(8),
+                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                columnWidths: const {
+                  0: FixedColumnWidth(40),  // No.
+                  1: FixedColumnWidth(70),  // #
+                  2: FixedColumnWidth(100),  // Size (1/32in)
+                  3: FixedColumnWidth(40),  // Actions
+                },
+                children: [
+                  // Header row
+                  TableRow(
+                    decoration: BoxDecoration(
+                      color: Color(0xfff0f9ff),
+                    ),
+                    children: [
+                      _buildNozzleHeaderCell("#", TextAlign.center),
+                      _buildNozzleHeaderCell("No.", TextAlign.center),
+                      _buildNozzleHeaderCell("Size\n(1/32in)", TextAlign.center),
+                      _buildNozzleHeaderCell("", TextAlign.center),
+                    ],
+                  ),
+                  
+                  // Data rows
+                  ...tableData.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final rowControllers = entry.value;
+                    return _buildNozzleTableRow(index, rowControllers);
+                  }).toList(),
+                ],
               ),
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade300, width: 1),
-              ),
             ),
+          ),
+
+          // TFA Footer
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1157,19 +2267,38 @@ class NozzleSection extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  width: 80,
+                  height: 30,
                   decoration: BoxDecoration(
-                    color: Color(0xff0d9488),
+                    border: Border.all(color: Colors.grey.shade300, width: 1),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text(
-                    "0.518",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: c.isLocked.value
+                      ? Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                          child: Text(
+                            tfaController.text,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xff0d9488),
+                            ),
+                          ),
+                        )
+                      : TextField(
+                          controller: tfaController,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff0d9488),
+                          ),
+                          textAlign: TextAlign.center,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            border: InputBorder.none,
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -1181,7 +2310,7 @@ class NozzleSection extends StatelessWidget {
 
   Widget _buildNozzleHeaderCell(String text, TextAlign align) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       child: Text(
         text,
         style: TextStyle(
@@ -1194,50 +2323,146 @@ class NozzleSection extends StatelessWidget {
     );
   }
 
-  TableRow _buildNozzleTableRow(List<String> values) {
+  TableRow _buildNozzleTableRow(int rowIndex, List<TextEditingController> controllers) {
     return TableRow(
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade100),
-        ),
-        color: Colors.white,
+        color: rowIndex % 2 == 0 ? Colors.white : Colors.grey.shade50,
       ),
-      children: values.asMap().entries.map((entry) {
-        final value = entry.value;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          height: 40, // Increased height
-          child: c.isLocked.value
-              ? Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade700,
-                  ),
-                  textAlign: TextAlign.center,
-                )
-              : TextFormField(
-                  initialValue: value,
-                  style: TextStyle(fontSize: 11),
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                    border: InputBorder.none,
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xff0d9488), width: 1),
-                    ),
-                  ),
+      children: [
+        // No.
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            '${rowIndex + 1}',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        // #
+        _buildEditableCell(controllers[0], TextAlign.center),
+        // Size (1/32in)
+        _buildEditableCell(controllers[1], TextAlign.center),
+        // Actions
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (rowIndex >= 3)
+                IconButton(
+                  onPressed: () => _removeRow(rowIndex),
+                  icon: Icon(Icons.remove, size: 16, color: Colors.red),
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(),
                 ),
-        );
-      }).toList(),
+              IconButton(
+                onPressed: _addRow,
+                icon: Icon(Icons.add, size: 16, color: Color(0xff0d9488)),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEditableCell(TextEditingController controller, TextAlign align) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: c.isLocked.value
+          ? Container(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                controller.text.isNotEmpty ? controller.text : '-',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade700,
+                ),
+                textAlign: align,
+              ),
+            )
+          : Container(
+              height: 30,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300, width: 1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: TextField(
+                controller: controller,
+                style: TextStyle(fontSize: 11),
+                textAlign: align,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
     );
   }
 }
 
 // ==================== TIME DISTRIBUTION SECTION ====================
-class TimeDistributionSection extends StatelessWidget {
+class TimeDistributionSection extends StatefulWidget {
+  @override
+  _TimeDistributionSectionState createState() => _TimeDistributionSectionState();
+}
+
+class _TimeDistributionSectionState extends State<TimeDistributionSection> {
   final c = Get.find<DashboardController>();
+  
+  // Activity options for dropdown
+  final List<String> activityOptions = [
+    'NLDR BOP',
+    'Install Wellhead',
+    'Pressure Test',
+    'Others',
+    'Circulation',
+    'Tripping',
+    'Drilling Cement',
+    'Drilling',
+    'Reaming',
+    'Completion',
+    'Cementing'
+  ];
+  
+  // Data for the table
+  List<List<dynamic>> tableData = [
+    ['1', 'NLDR BOP', '2.00'],
+    ['2', 'Install Wellhead', '2.30'],
+    ['3', 'Pressure Test', '3.00'],
+    ['4', 'Others', '2.00'],
+    ['5', 'Circulation', '1.30'],
+    ['6', 'Tripping', '4.00'],
+    ['7', 'Drilling Cement', '6.40'],
+  ];
+
+  void _addRow() {
+    setState(() {
+      tableData.add([
+        '${tableData.length + 1}',
+        activityOptions[0],
+        ''
+      ]);
+    });
+  }
+
+  void _removeRow(int index) {
+    if (tableData.length > 1) {
+      setState(() {
+        tableData.removeAt(index);
+        // Update numbers
+        for (int i = 0; i < tableData.length; i++) {
+          tableData[i][0] = '${i + 1}';
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1256,11 +2481,11 @@ class TimeDistributionSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header with teal color
+          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Color(0xff0d9488), // Teal color
+              color: Color(0xff0d9488),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -1283,51 +2508,64 @@ class TimeDistributionSection extends StatelessWidget {
           ),
 
           // Table
-          Obx(() => Container(
+          Container(
             constraints: BoxConstraints(maxHeight: 250),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Table(
-                  border: TableBorder.all(
-                    color: Colors.grey.shade300,
-                    width: 1,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                  columnWidths: const {
-                    0: FixedColumnWidth(40),
-                    1: FixedColumnWidth(140),
-                    2: FixedColumnWidth(70),
-                  },
-                  children: [
-                    // Header row
-                    TableRow(
-                      decoration: BoxDecoration(
-                        color: Color(0xfff0f9ff),
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Table(
+                      border: TableBorder.all(
+                        color: Colors.grey.shade300,
+                        width: 1,
                       ),
+                      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                      columnWidths: const {
+                        0: FixedColumnWidth(40),  // #
+                        1: FixedColumnWidth(120), // Activity
+                        2: FixedColumnWidth(70),  // Time (hr)
+                        3: FixedColumnWidth(40),  // Actions
+                      },
                       children: [
-                        _buildTimeHeaderCell("#", TextAlign.center),
-                        _buildTimeHeaderCell("Activity", TextAlign.left),
-                        _buildTimeHeaderCell("Time\n(hr)", TextAlign.center),
+                        // Header row
+                        TableRow(
+                          decoration: BoxDecoration(
+                            color: Color(0xfff0f9ff),
+                          ),
+                          children: [
+                            _buildTimeHeaderCell("#", TextAlign.center),
+                            _buildTimeHeaderCell("Activity", TextAlign.left),
+                            _buildTimeHeaderCell("Time\n(hr)", TextAlign.center),
+                            _buildTimeHeaderCell("", TextAlign.center),
+                          ],
+                        ),
+                        
+                        // Data rows
+                        ...tableData.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final rowData = entry.value;
+                          return _buildTimeDistributionRow(index, rowData);
+                        }).toList(),
                       ],
                     ),
-
-                    // Data rows
-                    _buildTimeDistributionRow(["1", "NLDR BOP", "2.00"]),
-                    _buildTimeDistributionRow(["2", "Install Wellhead", "2.30"]),
-                    _buildTimeDistributionRow(["3", "NLDR BOP", "3.00"]),
-                    _buildTimeDistributionRow(["4", "Pressure Test", "3.00"]),
-                    _buildTimeDistributionRow(["5", "Others", "2.00"]),
-                    _buildTimeDistributionRow(["6", "Circulation", "1.30"]),
-                    _buildTimeDistributionRow(["7", "Tripping", "4.00"]),
-                    _buildTimeDistributionRow(["8", "Drilling Cement", "6.40"]),
-                  ],
+                  ),
                 ),
               ),
             ),
-          )),
+          ),
+
+          // Add button
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: IconButton(
+              onPressed: _addRow,
+              icon: Icon(Icons.add_circle, color: Color(0xff0d9488), size: 24),
+            ),
+          ),
         ],
       ),
     );
@@ -1335,7 +2573,7 @@ class TimeDistributionSection extends StatelessWidget {
 
   Widget _buildTimeHeaderCell(String text, TextAlign align) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       child: Text(
         text,
         style: TextStyle(
@@ -1348,44 +2586,127 @@ class TimeDistributionSection extends StatelessWidget {
     );
   }
 
-  TableRow _buildTimeDistributionRow(List<String> values) {
+  TableRow _buildTimeDistributionRow(int rowIndex, List<dynamic> rowData) {
+    final TextEditingController timeController = TextEditingController(text: rowData[2]);
+
     return TableRow(
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade100),
-        ),
-        color: Colors.white,
+        color: rowIndex % 2 == 0 ? Colors.white : Colors.grey.shade50,
       ),
-      children: values.asMap().entries.map((entry) {
-        final index = entry.key;
-        final value = entry.value;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          height: 40, // Increased height
+      children: [
+        // #
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            rowData[0],
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        // Activity with dropdown
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: c.isLocked.value
-              ? Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade700,
+              ? Container(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    rowData[1],
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                    ),
+                    textAlign: TextAlign.left,
                   ),
-                  textAlign: index == 1 ? TextAlign.left : TextAlign.center,
                 )
-              : TextFormField(
-                  initialValue: value,
-                  style: TextStyle(fontSize: 11),
-                  textAlign: index == 1 ? TextAlign.left : TextAlign.center,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                    border: InputBorder.none,
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xff0d9488), width: 1),
+              : Container(
+                  height: 30,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300, width: 1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: rowData[1],
+                      isExpanded: true,
+                      icon: Icon(Icons.arrow_drop_down, size: 16),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.black,
+                      ),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            tableData[rowIndex][1] = newValue;
+                          });
+                        }
+                      },
+                      items: activityOptions.map<DropdownMenuItem<String>>((String option) {
+                        return DropdownMenuItem<String>(
+                          value: option,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              option,
+                              style: TextStyle(fontSize: 11),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
-        );
-      }).toList(),
+        ),
+        // Time (hr)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: c.isLocked.value
+              ? Container(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    timeController.text.isNotEmpty ? timeController.text : '-',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : Container(
+                  height: 30,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300, width: 1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: TextField(
+                    controller: timeController,
+                    style: TextStyle(fontSize: 11),
+                    textAlign: TextAlign.center,
+                    onChanged: (value) {
+                      tableData[rowIndex][2] = value;
+                    },
+                    decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+        ),
+        // Actions
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: IconButton(
+            onPressed: () => _removeRow(rowIndex),
+            icon: Icon(Icons.remove, size: 16, color: Colors.red),
+            padding: EdgeInsets.zero,
+            constraints: BoxConstraints(),
+          ),
+        ),
+      ],
     );
   }
 }

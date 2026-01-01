@@ -71,13 +71,13 @@ class EditableTable extends StatelessWidget {
                   _buildDataColumn("TVD", Icons.vertical_align_bottom),
                   _buildDataColumn("Inc", Icons.trending_up),
                 ],
-                rows: List.generate(6, (index) {
+                rows: List.generate(10, (index) {
                   return DataRow(
                     cells: [
-                      _buildDataCell("Casing ${index + 1}", c.isLocked.value),
-                      _buildDataCell("9055", c.isLocked.value),
-                      _buildDataCell("8630", c.isLocked.value),
-                      _buildDataCell("73.45", c.isLocked.value),
+                      _buildDataCell(index < 6 ? "Casing ${index + 1}" : "", c.isLocked.value),
+                      _buildDataCell(index < 6 ? "9055" : "", c.isLocked.value),
+                      _buildDataCell(index < 6 ? "8630" : "", c.isLocked.value),
+                      _buildDataCell(index < 6 ? "73.45" : "", c.isLocked.value),
                     ],
                   );
                 }),
@@ -128,14 +128,6 @@ class EditableTable extends StatelessWidget {
                 ),
               )
             : Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
-                    width: 1,
-                  ),
-                  color: Colors.white,
-                ),
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: TextFormField(
                   initialValue: value,
