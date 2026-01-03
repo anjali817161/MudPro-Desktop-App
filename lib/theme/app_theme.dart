@@ -113,11 +113,7 @@ class AppTheme {
   );
   
   static BoxDecoration tableHeaderDecoration = BoxDecoration(
-    gradient: LinearGradient(
-      colors: [Color(0xffE8F4FD), Color(0xffF0F9FF)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    ),
+    gradient: primaryGradient,
     borderRadius: BorderRadius.only(
       topLeft: Radius.circular(8),
       topRight: Radius.circular(8),

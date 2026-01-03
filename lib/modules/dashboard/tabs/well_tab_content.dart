@@ -33,31 +33,35 @@ class WellTabContent extends StatelessWidget {
           );
         } else {
           return Container(
-            color: Colors.white,
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // LEFT PORTION - General section (reduced width)
-                    ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: 280, maxWidth: 320),
-                      child: LeftPortion(),
-                    ),
-                    const SizedBox(width: 12),
-                    // MIDDLE PORTION - Expanded width
-                    Expanded(
-                      flex: 4,
-                      child: MiddlePortion(),
-                    ),
-                    const SizedBox(width: 12),
-                    // RIGHT PORTION - Reduced width
-                    ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: 200, maxWidth: 280),
-                      child: RightPortion(),
-                    ),
-                  ],
+            height: MediaQuery.of(context).size.height - 120,
+            child: Container(
+              color: Colors.white,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // LEFT PORTION - General section (reduced width)
+                      ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: 280, maxWidth: 320),
+                        child: LeftPortion(),
+                      ),
+
+                      const SizedBox(width: 12),
+                      // MIDDLE PORTION - Expanded width
+                      Expanded(
+                        flex: 4,
+                        child: MiddlePortion(),
+                      ),
+                      const SizedBox(width: 12),
+                      // RIGHT PORTION - Reduced width
+                      ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: 200, maxWidth: 280),
+                        child: RightPortion(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -105,69 +109,33 @@ class _GeneralSectionState extends State<GeneralSection> {
     'David Miller',
     'Emily Davis'
   ];
-  
-  final List<String> operatorRepOptions = [
-    'Wang',
-    'Chen',
-    'Li',
-    'Zhang',
-    'Liu'
-  ];
-  
-  final List<String> contractorRepOptions = [
-    'Jerry',
-    'Tom',
-    'Harry',
-    'Bob',
-    'Frank'
-  ];
-  
+ 
   final List<String> activityOptions = [
-    'Drilling Cement',
-    'Completion',
-    'Cementing',
-    'Tripping',
-    'Circulation',
-    'Pressure Test',
-    'Install Wellhead',
-    'NLDR BOP',
+    'Rig-up/Service',
     'Drilling',
-    'Reaming',
-    'Other'
+    'Circulating',
+    'Tripping',
+    'Survey',
+    'Logging',
+    'Run Casing',
+    'Testing',
+    'Coring/Reaming',
+    'Cementing'
   ];
   
   final List<String> intervalOptions = [
-    'Completion',
-    'Drilling',
-    'Casing',
-    'Testing',
-    'Logging',
-    'Completion/Production'
+    '22° Hole',
+    '16° Hole',
+    '12 1/4° Hole',
+    '8 1/2° Hole',
+    '6 1/8° Hole',
+    "Completion"
   ];
   
-  final List<String> formationOptions = [
-    'MaG',
-    'Sandstone',
-    'Shale',
-    'Limestone',
-    'Dolomite',
-    'Chalk',
-    'Coal'
-  ];
-  
-  final List<String> fitOptions = [
-    'Completion',
-    'Drilling',
-    'Testing',
-    'Production',
-    'Abandonment'
-  ];
-
   // Controllers for editable fields
   final Map<String, TextEditingController> fieldControllers = {
     'Report #': TextEditingController(text: '12'),
     'User Report #': TextEditingController(),
-    'Bit #': TextEditingController(text: '120.0'),
     'Bottom T.': TextEditingController(text: '180.0'),
     'MD': TextEditingController(text: '9575.0'),
     'TVD': TextEditingController(text: '7683.0'),
@@ -197,8 +165,20 @@ class _GeneralSectionState extends State<GeneralSection> {
   String selectedTime = '23:30';
   String selectedEngineer = 'Keyur Agarwal';
   String selectedEngineer2 = 'Chandra Shekhar';
-  String selectedActivity = 'Drilling Cement';
+  String selectedActivity = 'Cementing';
   String selectedInterval = 'Completion';
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize dropdown values in controllers
+    fieldControllers['Engineer'] = TextEditingController(text: selectedEngineer);
+    fieldControllers['Engineer 2'] = TextEditingController(text: selectedEngineer2);
+    fieldControllers['Activity'] = TextEditingController(text: selectedActivity);
+    fieldControllers['Interval'] = TextEditingController(text: selectedInterval);
+    fieldControllers['Date'] = TextEditingController(text: selectedDate);
+    fieldControllers['Time'] = TextEditingController(text: selectedTime);
+  }
 
   @override
   void dispose() {
@@ -267,46 +247,44 @@ class _GeneralSectionState extends State<GeneralSection> {
                   2: FlexColumnWidth(2),
                 },
                 children: [
-                  _buildTableRow("Report #", "Report #", ""),
-                  _buildTableRow("User Report #", "User Report #", ""),
+                  _buildTextFieldRow("Report #", "Report #", ""),
+                  _buildTextFieldRow("User Report #", "User Report #", ""),
                   _buildDateRow("Date"),
                   _buildTimeRow("Time"),
                   _buildDropdownRow("Engineer", selectedEngineer, engineerOptions, (value) {
                     setState(() => selectedEngineer = value!);
                   }),
-                  _buildTableRow("Bit #", "Bit #", "°F"),
                   _buildDropdownRow("Engineer 2", selectedEngineer2, engineer2Options, (value) {
                     setState(() => selectedEngineer2 = value!);
                   }),
-                  _buildTableRow("Bottom T.", "Bottom T.", "°F"),
-                  _buildTableRow("Operator Rep.", "Operator Rep.", ""),
-                  _buildTableRow("Contractor Rep.", "Contractor Rep.", ""),
+                  _buildTextFieldRow("Operator Rep.", "Operator Rep.", ""),
+                  _buildTextFieldRow("Contractor Rep.", "Contractor Rep.", ""),
                   _buildDropdownRow("Activity", selectedActivity, activityOptions, (value) {
                     setState(() => selectedActivity = value!);
                   }),
-                  _buildTableRow("MD", "MD", "ft"),
-                  _buildTableRow("TVD", "TVD", "ft"),
-                  _buildTableRow("Inc", "Inc", "°"),
-                  _buildTableRow("Azi", "Azi", "°"),
-                  _buildTableRow("WOB", "WOB", "lbf"),
-                  _buildTableRow("Rot. Wt.", "Rot. Wt.", "lbf"),
-                  _buildTableRow("S/O Wt.", "S/O Wt.", "lbf"),
-                  _buildTableRow("P/U Wt.", "P/U Wt.", "lbf"),
-                  _buildTableRow("RPM", "RPM", "rpm"),
-                  _buildTableRow("ROP", "ROP", "ft/hr"),
-                  _buildTableRow("Off-bottom TQ", "Off-bottom TQ", "ft-lb"),
-                  _buildTableRow("On-bottom TQ", "On-bottom TQ", "ft-lb"),
-                  _buildTableRow("Suction T.", "Suction T.", "°F"),
-                  _buildTableRow("Bottom T.", "Bottom T.", "°F"),
+                  _buildTextFieldRow("MD", "MD", "ft"),
+                  _buildTextFieldRow("TVD", "TVD", "ft"),
+                  _buildTextFieldRow("Inc", "Inc", "°"),
+                  _buildTextFieldRow("Azi", "Azi", "°"),
+                  _buildTextFieldRow("WOB", "WOB", "lbf"),
+                  _buildTextFieldRow("Rot. Wt.", "Rot. Wt.", "lbf"),
+                  _buildTextFieldRow("S/O Wt.", "S/O Wt.", "lbf"),
+                  _buildTextFieldRow("P/U Wt.", "P/U Wt.", "lbf"),
+                  _buildTextFieldRow("RPM", "RPM", "rpm"),
+                  _buildTextFieldRow("ROP", "ROP", "ft/hr"),
+                  _buildTextFieldRow("Off-bottom TQ", "Off-bottom TQ", "ft-lb"),
+                  _buildTextFieldRow("On-bottom TQ", "On-bottom TQ", "ft-lb"),
+                  _buildTextFieldRow("Suction T.", "Suction T.", "°F"),
+                  _buildTextFieldRow("Bottom T.", "Bottom T.", "°F"),
                   _buildDropdownRow("Interval", selectedInterval, intervalOptions, (value) {
                     setState(() => selectedInterval = value!);
                   }),
-                  _buildTableRow("FIT", "FIT", "ppg"),
-                  _buildTableRow("Formation", "Formation", ""),
-                  _buildTableRow("Additional Footage", "Additional Footage", "ft"),
-                  _buildTableRow("NPT Time", "NPT Time", "hr"),
-                  _buildTableRow("NPT Cost", "NPT Cost", "\$"),
-                  _buildTableRow("Depth Drilled", "Depth Drilled", "ft"),
+                  _buildTextFieldRow("FIT", "FIT", "ppg"),
+                  _buildTextFieldRow("Formation", "Formation", ""),
+                  _buildTextFieldRow("Additional Footage", "Additional Footage", "ft"),
+                  _buildTextFieldRow("NPT Time", "NPT Time", "hr"),
+                  _buildTextFieldRow("NPT Cost", "NPT Cost", "\$"),
+                  _buildTextFieldRow("Depth Drilled", "Depth Drilled", "ft"),
                 ],
               ),
             ),
@@ -316,7 +294,7 @@ class _GeneralSectionState extends State<GeneralSection> {
     );
   }
 
-  TableRow _buildTableRow(String label, String fieldKey, String unit) {
+  TableRow _buildTextFieldRow(String label, String fieldKey, String unit) {
     final controller = fieldControllers[fieldKey] ?? TextEditingController();
 
     return TableRow(
@@ -339,16 +317,33 @@ class _GeneralSectionState extends State<GeneralSection> {
         // Value column
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: TextField(
-            controller: controller,
-            style: TextStyle(fontSize: 11),
-            textAlign: TextAlign.center,
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-              border: InputBorder.none,
-            ),
-          ),
+          child: Obx(() => c.isLocked.value
+              ? Container(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    controller.text.isNotEmpty ? controller.text : '-',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : Container(
+                  height: 28,
+                  child: TextField(
+                    controller: controller,
+                    style: TextStyle(fontSize: 11, height: 1.2),
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                      border: InputBorder.none,
+                      fillColor: Colors.white,
+                      filled: true,
+                    ),
+                  ),
+                )),
         ),
         // Unit column
         Container(
@@ -400,7 +395,7 @@ class _GeneralSectionState extends State<GeneralSection> {
                   ),
                 )
               : Container(
-                  height: 30,
+                  height: 28,
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey.shade300, width: 1),
                     borderRadius: BorderRadius.circular(4),
@@ -471,7 +466,7 @@ class _GeneralSectionState extends State<GeneralSection> {
         // Value column with time dropdown
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: c.isLocked.value
+          child: Obx(() => c.isLocked.value
               ? Container(
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(
@@ -484,7 +479,7 @@ class _GeneralSectionState extends State<GeneralSection> {
                   ),
                 )
               : Container(
-                  height: 30,
+                  height: 28,
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey.shade300, width: 1),
                     borderRadius: BorderRadius.circular(4),
@@ -529,7 +524,7 @@ class _GeneralSectionState extends State<GeneralSection> {
                       }).toList(),
                     ),
                   ),
-                ),
+                )),
         ),
         // Unit column
         Container(
@@ -569,7 +564,7 @@ class _GeneralSectionState extends State<GeneralSection> {
         // Value column with dropdown
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: c.isLocked.value
+          child: Obx(() => c.isLocked.value
               ? Container(
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(
@@ -581,38 +576,39 @@ class _GeneralSectionState extends State<GeneralSection> {
                     textAlign: TextAlign.center,
                   ),
                 )
-              : DropdownButtonFormField<String>(
-                  value: value,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(4),
-                      borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+              : Container(
+                  height: 28,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300, width: 1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: value,
+                      isExpanded: true,
+                      icon: Icon(Icons.arrow_drop_down, size: 16),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.black,
+                      ),
+                      onChanged: onChanged,
+                      items: options.map<DropdownMenuItem<String>>((String option) {
+                        return DropdownMenuItem<String>(
+                          value: option,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              option,
+                              style: TextStyle(fontSize: 11),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
-                  icon: Icon(Icons.arrow_drop_down, size: 16),
-                  isExpanded: true,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.black,
-                  ),
-                  onChanged: onChanged,
-                  items: options.map<DropdownMenuItem<String>>((String option) {
-                    return DropdownMenuItem<String>(
-                      value: option,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          option,
-                          style: TextStyle(fontSize: 11),
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                )),
         ),
         // Unit column
         Container(
@@ -746,7 +742,7 @@ class CasedHoleSection extends StatefulWidget {
 
 class _CasedHoleSectionState extends State<CasedHoleSection> {
   final c = Get.find<DashboardController>();
-  
+
   // Casing types dropdown
   final List<String> casingTypes = [
     '30° CSG',
@@ -756,7 +752,9 @@ class _CasedHoleSectionState extends State<CasedHoleSection> {
     '7° LINER'
   ];
   String selectedCasingType = '30° CSG';
-  
+
+  final ScrollController scrollController = ScrollController();
+
   // Data for the table (12 rows total, some pre-filled)
   List<List<TextEditingController>> tableData = [
     [
@@ -810,6 +808,17 @@ class _CasedHoleSectionState extends State<CasedHoleSection> {
         tableData.removeAt(index);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    for (var row in tableData) {
+      for (var controller in row) {
+        controller.dispose();
+      }
+    }
+    scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -916,8 +925,10 @@ class _CasedHoleSectionState extends State<CasedHoleSection> {
           Container(
             constraints: BoxConstraints(maxHeight: 350),
             child: Scrollbar(
+              controller: scrollController,
               thumbVisibility: true,
               child: SingleChildScrollView(
+                controller: scrollController,
                 scrollDirection: Axis.vertical,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -938,7 +949,6 @@ class _CasedHoleSectionState extends State<CasedHoleSection> {
                         5: FixedColumnWidth(80),  // Top (ft)
                         6: FixedColumnWidth(80),  // Shoe (ft)
                         7: FixedColumnWidth(80),  // Len. (ft)
-                        8: FixedColumnWidth(40),  // Actions
                       },
                       children: [
                         // Header row
@@ -955,17 +965,16 @@ class _CasedHoleSectionState extends State<CasedHoleSection> {
                             _buildTableHeaderCell("Top\n(ft)", TextAlign.center),
                             _buildTableHeaderCell("Shoe\n(ft)", TextAlign.center),
                             _buildTableHeaderCell("Len.\n(ft)", TextAlign.center),
-                            _buildTableHeaderCell("", TextAlign.center),
                           ],
                         ),
-                        
+
                         // Data rows
                         ...tableData.asMap().entries.map((entry) {
                           final index = entry.key;
                           final rowControllers = entry.value;
                           return _buildCasingDataRow(index, rowControllers);
                         }).toList(),
-                        
+
                         // Add empty rows to make total 12 rows
                         ...List.generate(max(0, 12 - tableData.length), (index) {
                           return _buildEmptyCasingRow(tableData.length + index);
@@ -1029,16 +1038,6 @@ class _CasedHoleSectionState extends State<CasedHoleSection> {
         _buildEditableCell(controllers[5], TextAlign.center),
         // Len. (ft)
         _buildEditableCell(controllers[6], TextAlign.center),
-        // Actions
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: IconButton(
-            onPressed: () => _removeCasing(rowIndex),
-            icon: Icon(Icons.remove, size: 16, color: Colors.red),
-            padding: EdgeInsets.zero,
-            constraints: BoxConstraints(),
-          ),
-        ),
       ],
     );
   }
@@ -1067,10 +1066,6 @@ class _CasedHoleSectionState extends State<CasedHoleSection> {
         _buildEmptyCell(),
         _buildEmptyCell(),
         _buildEmptyCell(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Icon(Icons.add, size: 16, color: Colors.grey.shade400),
-        ),
       ],
     );
   }
@@ -1078,7 +1073,7 @@ class _CasedHoleSectionState extends State<CasedHoleSection> {
   Widget _buildEditableCell(TextEditingController controller, TextAlign align) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: c.isLocked.value
+      child: Obx(() => c.isLocked.value
           ? Container(
               padding: EdgeInsets.symmetric(vertical: 6),
               child: Text(
@@ -1091,29 +1086,27 @@ class _CasedHoleSectionState extends State<CasedHoleSection> {
               ),
             )
           : Container(
-              height: 30,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300, width: 1),
-                borderRadius: BorderRadius.circular(4),
-              ),
+              height: 28,
               child: TextField(
                 controller: controller,
-                style: TextStyle(fontSize: 11),
+                style: TextStyle(fontSize: 11, height: 1.2),
                 textAlign: align,
                 decoration: InputDecoration(
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                   border: InputBorder.none,
+                  fillColor: Colors.white,
+                  filled: true,
                 ),
               ),
-            ),
+            )),
     );
   }
 
   Widget _buildEmptyCell() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: c.isLocked.value
+      child: Obx(() => c.isLocked.value
           ? Container(
               padding: EdgeInsets.symmetric(vertical: 6),
               child: Text(
@@ -1126,21 +1119,19 @@ class _CasedHoleSectionState extends State<CasedHoleSection> {
               ),
             )
           : Container(
-              height: 30,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300, width: 1),
-                borderRadius: BorderRadius.circular(4),
-              ),
+              height: 28,
               child: TextField(
-                style: TextStyle(fontSize: 11),
+                style: TextStyle(fontSize: 11, height: 1.2),
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                   border: InputBorder.none,
+                  fillColor: Colors.white,
+                  filled: true,
                 ),
               ),
-            ),
+            )),
     );
   }
 }
@@ -1198,6 +1189,17 @@ class _OpenHoleSectionState extends State<OpenHoleSection> {
         tableData.removeAt(index);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    for (var row in tableData) {
+      for (var controller in row) {
+        controller.dispose();
+      }
+    }
+    scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -1268,7 +1270,6 @@ class _OpenHoleSectionState extends State<OpenHoleSection> {
                         2: FixedColumnWidth(80),  // ID (in)
                         3: FixedColumnWidth(100), // MD (ft)
                         4: FixedColumnWidth(100), // Washout (%)
-                        5: FixedColumnWidth(60),  // Actions
                       },
                       children: [
                         // Header row
@@ -1282,7 +1283,6 @@ class _OpenHoleSectionState extends State<OpenHoleSection> {
                             _buildTableHeaderCell("ID\n(in)", TextAlign.center),
                             _buildTableHeaderCell("MD\n(ft)", TextAlign.center),
                             _buildTableHeaderCell("Washout\n(%)", TextAlign.center),
-                            _buildTableHeaderCell("", TextAlign.center),
                           ],
                         ),
 
@@ -1313,15 +1313,15 @@ class _OpenHoleSectionState extends State<OpenHoleSection> {
                 Flexible(
                   child: Row(
                     children: [
-                      Checkbox(
+                      Obx(() => Checkbox(
                         value: cementPlug,
-                        onChanged: (value) {
+                        onChanged: c.isLocked.value ? null : (value) {
                           setState(() {
                             cementPlug = value ?? false;
                           });
                         },
                         visualDensity: VisualDensity.compact,
-                      ),
+                      )),
                       Text(
                         "Cement Plug Vol.",
                         style: TextStyle(fontSize: 11),
@@ -1330,20 +1330,28 @@ class _OpenHoleSectionState extends State<OpenHoleSection> {
                       Expanded(
                         child: Container(
                           constraints: BoxConstraints(minWidth: 50),
-                          height: 30,
+                          height: 28,
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey.shade300, width: 1),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: TextField(
-                            controller: cementPlugVolController,
-                            style: TextStyle(fontSize: 11),
-                            decoration: InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                              border: InputBorder.none,
-                            ),
-                          ),
+                          child: Obx(() => c.isLocked.value
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  child: Text(
+                                    cementPlugVolController.text.isNotEmpty ? cementPlugVolController.text : '-',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                )
+                              : TextField(
+                                  controller: cementPlugVolController,
+                                  style: TextStyle(fontSize: 11),
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                    border: InputBorder.none,
+                                  ),
+                                )),
                         ),
                       ),
                     ],
@@ -1361,25 +1369,33 @@ class _OpenHoleSectionState extends State<OpenHoleSection> {
                       Expanded(
                         child: Container(
                           constraints: BoxConstraints(minWidth: 50),
-                          height: 30,
+                          height: 28,
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey.shade300, width: 1),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: TextField(
-                            controller: plugTopController,
-                            style: TextStyle(fontSize: 11),
-                            decoration: InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                              border: InputBorder.none,
-                            ),
-                          ),
+                          child: Obx(() => c.isLocked.value
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  child: Text(
+                                    plugTopController.text.isNotEmpty ? plugTopController.text : '-',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                )
+                              : TextField(
+                                  controller: plugTopController,
+                                  style: TextStyle(fontSize: 11),
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                    border: InputBorder.none,
+                                  ),
+                                )),
                         ),
                       ),
                       SizedBox(width: 8),
                       IconButton(
-                        onPressed: () {
+                        onPressed: c.isLocked.value ? null : () {
                           // Adjust length functionality
                         },
                         icon: Icon(Icons.tune, size: 20, color: Color(0xff0d9488)),
@@ -1437,27 +1453,6 @@ class _OpenHoleSectionState extends State<OpenHoleSection> {
         _buildEditableCell(controllers[2], TextAlign.center),
         // Washout (%)
         _buildEditableCell(controllers[3], TextAlign.center),
-        // Actions
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                onPressed: () => _removeRow(rowIndex),
-                icon: Icon(Icons.remove, size: 16, color: Colors.red),
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
-              ),
-              IconButton(
-                onPressed: _addRow,
-                icon: Icon(Icons.add, size: 16, color: Color(0xff0d9488)),
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -1483,15 +1478,6 @@ class _OpenHoleSectionState extends State<OpenHoleSection> {
         _buildEmptyCell(),
         _buildEmptyCell(),
         _buildEmptyCell(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: IconButton(
-            onPressed: _addRow,
-            icon: Icon(Icons.add, size: 16, color: Colors.grey.shade400),
-            padding: EdgeInsets.zero,
-            constraints: BoxConstraints(),
-          ),
-        ),
       ],
     );
   }
@@ -1499,7 +1485,7 @@ class _OpenHoleSectionState extends State<OpenHoleSection> {
   Widget _buildEditableCell(TextEditingController controller, TextAlign align) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: c.isLocked.value
+      child: Obx(() => c.isLocked.value
           ? Container(
               padding: EdgeInsets.symmetric(vertical: 6),
               child: Text(
@@ -1512,36 +1498,52 @@ class _OpenHoleSectionState extends State<OpenHoleSection> {
               ),
             )
           : Container(
-              height: 30,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300, width: 1),
-                borderRadius: BorderRadius.circular(4),
-              ),
+              height: 28,
               child: TextField(
                 controller: controller,
-                style: TextStyle(fontSize: 11),
+                style: TextStyle(fontSize: 11, height: 1.2),
                 textAlign: align,
                 decoration: InputDecoration(
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                   border: InputBorder.none,
+                  fillColor: Colors.white,
+                  filled: true,
                 ),
               ),
-            ),
+            )),
     );
   }
 
   Widget _buildEmptyCell() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Text(
-        '-',
-        style: TextStyle(
-          fontSize: 11,
-          color: Colors.grey.shade400,
-        ),
-        textAlign: TextAlign.center,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Obx(() => c.isLocked.value
+          ? Container(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                '-',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade400,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            )
+          : Container(
+              height: 28,
+              child: TextField(
+                style: TextStyle(fontSize: 11, height: 1.2),
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                  border: InputBorder.none,
+                  fillColor: Colors.white,
+                  filled: true,
+                ),
+              ),
+            )),
     );
   }
 }
@@ -1554,7 +1556,7 @@ class DrillStringSection extends StatefulWidget {
 
 class _DrillStringSectionState extends State<DrillStringSection> {
   final c = Get.find<DashboardController>();
-  
+
   // Data for the table
   List<List<TextEditingController>> tableData = [
     [
@@ -1562,6 +1564,7 @@ class _DrillStringSectionState extends State<DrillStringSection> {
       TextEditingController(text: '5.000'),
       TextEditingController(),
       TextEditingController(text: '4.276'),
+      TextEditingController(),
       TextEditingController(text: '7430.4'),
     ],
     [
@@ -1569,6 +1572,7 @@ class _DrillStringSectionState extends State<DrillStringSection> {
       TextEditingController(text: '6.500'),
       TextEditingController(),
       TextEditingController(text: '2.630'),
+      TextEditingController(),
       TextEditingController(text: '2.3'),
     ],
     [
@@ -1576,6 +1580,7 @@ class _DrillStringSectionState extends State<DrillStringSection> {
       TextEditingController(text: '4.000'),
       TextEditingController(),
       TextEditingController(text: '3.340'),
+      TextEditingController(),
       TextEditingController(text: '851.5'),
     ],
     [
@@ -1583,6 +1588,7 @@ class _DrillStringSectionState extends State<DrillStringSection> {
       TextEditingController(text: '4.000'),
       TextEditingController(),
       TextEditingController(text: '2.438'),
+      TextEditingController(),
       TextEditingController(text: '92.3'),
     ],
     [
@@ -1590,6 +1596,7 @@ class _DrillStringSectionState extends State<DrillStringSection> {
       TextEditingController(text: '4.750'),
       TextEditingController(),
       TextEditingController(text: '2.250'),
+      TextEditingController(),
       TextEditingController(text: '19.8'),
     ],
     [
@@ -1597,6 +1604,7 @@ class _DrillStringSectionState extends State<DrillStringSection> {
       TextEditingController(text: '4.000'),
       TextEditingController(),
       TextEditingController(text: '2.438'),
+      TextEditingController(),
       TextEditingController(text: '551.7'),
     ],
     [
@@ -1604,6 +1612,7 @@ class _DrillStringSectionState extends State<DrillStringSection> {
       TextEditingController(text: '4.750'),
       TextEditingController(),
       TextEditingController(text: '3.340'),
+      TextEditingController(),
       TextEditingController(text: '31.1'),
     ],
     [
@@ -1611,15 +1620,18 @@ class _DrillStringSectionState extends State<DrillStringSection> {
       TextEditingController(text: '4.750'),
       TextEditingController(),
       TextEditingController(text: '2.000'),
+      TextEditingController(),
       TextEditingController(text: '3.0'),
     ],
   ];
-  
+
   final TextEditingController totalLengthController = TextEditingController(text: '8982.0');
+  final ScrollController scrollController = ScrollController();
 
   void _addRow() {
     setState(() {
       tableData.add([
+        TextEditingController(),
         TextEditingController(),
         TextEditingController(),
         TextEditingController(),
@@ -1684,8 +1696,10 @@ class _DrillStringSectionState extends State<DrillStringSection> {
           Container(
             constraints: BoxConstraints(maxHeight: 250),
             child: Scrollbar(
+              controller: scrollController,
               thumbVisibility: true,
               child: SingleChildScrollView(
+                controller: scrollController,
                 scrollDirection: Axis.vertical,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -1703,8 +1717,9 @@ class _DrillStringSectionState extends State<DrillStringSection> {
                         2: FixedColumnWidth(80),  // OD (in)
                         3: FixedColumnWidth(100), // Wt. (lb/ft)
                         4: FixedColumnWidth(80),  // ID (in)
-                        5: FixedColumnWidth(100), // Len. (ft)
-                        6: FixedColumnWidth(60),  // Actions
+                        5: FixedColumnWidth(80),  // Grade
+                        6: FixedColumnWidth(100), // Len. (ft)
+                        7: FixedColumnWidth(40),  // Empty
                       },
                       children: [
                         // Header row
@@ -1718,18 +1733,19 @@ class _DrillStringSectionState extends State<DrillStringSection> {
                             _buildTableHeaderCell("OD\n(in)", TextAlign.center),
                             _buildTableHeaderCell("Wt.\n(lb/ft)", TextAlign.center),
                             _buildTableHeaderCell("ID\n(in)", TextAlign.center),
+                            _buildTableHeaderCell("Grade", TextAlign.center),
                             _buildTableHeaderCell("Len.\n(ft)", TextAlign.center),
                             _buildTableHeaderCell("", TextAlign.center),
                           ],
                         ),
-                        
+
                         // Data rows
                         ...tableData.asMap().entries.map((entry) {
                           final index = entry.key;
                           final rowControllers = entry.value;
                           return _buildDrillStringRow(index, rowControllers);
                         }).toList(),
-                        
+
                         // Add empty rows
                         ...List.generate(10 - tableData.length, (index) {
                           return _buildEmptyDrillStringRow(tableData.length + index);
@@ -1779,12 +1795,12 @@ class _DrillStringSectionState extends State<DrillStringSection> {
                     ),
                     Container(
                       width: 100,
-                      height: 30,
+                      height: 28,
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey.shade300, width: 1),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: c.isLocked.value
+                      child: Obx(() => c.isLocked.value
                           ? Container(
                               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               child: Text(
@@ -1806,10 +1822,10 @@ class _DrillStringSectionState extends State<DrillStringSection> {
                               textAlign: TextAlign.center,
                               decoration: InputDecoration(
                                 isDense: true,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                 border: InputBorder.none,
                               ),
-                            ),
+                            )),
                     ),
                   ],
                 ),
@@ -1862,29 +1878,12 @@ class _DrillStringSectionState extends State<DrillStringSection> {
         _buildEditableCell(controllers[2], TextAlign.center),
         // ID (in)
         _buildEditableCell(controllers[3], TextAlign.center),
-        // Len. (ft)
+        // Grade
         _buildEditableCell(controllers[4], TextAlign.center),
-        // Actions
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                onPressed: () => _removeRow(rowIndex),
-                icon: Icon(Icons.remove, size: 16, color: Colors.red),
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
-              ),
-              IconButton(
-                onPressed: _addRow,
-                icon: Icon(Icons.add, size: 16, color: Color(0xff0d9488)),
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
-              ),
-            ],
-          ),
-        ),
+        // Len. (ft)
+        _buildEditableCell(controllers[5], TextAlign.center),
+        // Empty
+        _buildEmptyCell(),
       ],
     );
   }
@@ -1911,15 +1910,8 @@ class _DrillStringSectionState extends State<DrillStringSection> {
         _buildEmptyCell(),
         _buildEmptyCell(),
         _buildEmptyCell(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: IconButton(
-            onPressed: _addRow,
-            icon: Icon(Icons.add, size: 16, color: Colors.grey.shade400),
-            padding: EdgeInsets.zero,
-            constraints: BoxConstraints(),
-          ),
-        ),
+        _buildEmptyCell(),
+        _buildEmptyCell(),
       ],
     );
   }
@@ -1927,7 +1919,7 @@ class _DrillStringSectionState extends State<DrillStringSection> {
   Widget _buildEditableCell(TextEditingController controller, TextAlign align) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: c.isLocked.value
+      child: Obx(() => c.isLocked.value
           ? Container(
               padding: EdgeInsets.symmetric(vertical: 6),
               child: Text(
@@ -1940,36 +1932,52 @@ class _DrillStringSectionState extends State<DrillStringSection> {
               ),
             )
           : Container(
-              height: 30,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300, width: 1),
-                borderRadius: BorderRadius.circular(4),
-              ),
+              height: 28,
               child: TextField(
                 controller: controller,
-                style: TextStyle(fontSize: 11),
+                style: TextStyle(fontSize: 11, height: 1.2),
                 textAlign: align,
                 decoration: InputDecoration(
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                   border: InputBorder.none,
+                  fillColor: Colors.white,
+                  filled: true,
                 ),
               ),
-            ),
+            )),
     );
   }
 
   Widget _buildEmptyCell() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Text(
-        '-',
-        style: TextStyle(
-          fontSize: 11,
-          color: Colors.grey.shade400,
-        ),
-        textAlign: TextAlign.center,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Obx(() => c.isLocked.value
+          ? Container(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                '-',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade400,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            )
+          : Container(
+              height: 28,
+              child: TextField(
+                style: TextStyle(fontSize: 11, height: 1.2),
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                  border: InputBorder.none,
+                  fillColor: Colors.white,
+                  filled: true,
+                ),
+              ),
+            )),
     );
   }
 }
@@ -1991,8 +1999,23 @@ class RightPortion extends StatelessWidget {
 }
 
 // ==================== BIT SECTION ====================
-class BitSection extends StatelessWidget {
+class BitSection extends StatefulWidget {
+  @override
+  _BitSectionState createState() => _BitSectionState();
+}
+
+class _BitSectionState extends State<BitSection> {
   final c = Get.find<DashboardController>();
+  
+  // Data for the table
+  final Map<String, TextEditingController> bitControllers = {
+    'Mft': TextEditingController(text: 'VAREL'),
+    'Type': TextEditingController(text: 'MT-TCI'),
+    'No. of Bits': TextEditingController(text: '1'),
+    'Size': TextEditingController(text: '22.000'),
+    'Depth-in': TextEditingController(text: '65.0'),
+    'Depth': TextEditingController(text: '96.0'),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -2040,15 +2063,69 @@ class BitSection extends StatelessWidget {
           // Table
           Padding(
             padding: const EdgeInsets.all(12),
-            child: Column(
+            child: Table(
+              border: TableBorder.all(
+                color: Colors.grey.shade300,
+                width: 1,
+              ),
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              columnWidths: const {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(3),
+                2: FlexColumnWidth(1),
+              },
               children: [
-                _buildBitRow("Type", "PDC"),
-                SizedBox(height: 6),
-                _buildBitRow("Size (in)", "8.5"),
-                SizedBox(height: 6),
-                _buildBitRow("Serial #", "12345"),
-                SizedBox(height: 6),
-                _buildBitRow("Run #", "1"),
+                // Header row
+                TableRow(
+                  decoration: BoxDecoration(
+                    color: Color(0xfff0f9ff),
+                  ),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                      child: Text(
+                        "Field",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xff0d9488),
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                      child: Text(
+                        "Value",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xff0d9488),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                      child: Text(
+                        "",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xff0d9488),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+                // Data rows
+                _buildBitTableRow("Mft", "Mft", ""),
+                _buildBitTableRow("Type", "Type", ""),
+                _buildBitTableRow("No. of Bits", "No. of Bits", ""),
+                _buildBitTableRow("Size", "Size", "in"),
+                _buildBitTableRow("Depth-in", "Depth-in", "ft"),
+                _buildBitTableRow("Depth", "Depth", "ft"),
               ],
             ),
           ),
@@ -2057,65 +2134,70 @@ class BitSection extends StatelessWidget {
     );
   }
 
-  Widget _buildBitRow(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+  TableRow _buildBitTableRow(String label, String fieldKey, String unit) {
+    final controller = bitControllers[fieldKey] ?? TextEditingController();
+
+    return TableRow(
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+        color: Colors.white,
+      ),
+      children: [
+        // Field column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xff2c3e50),
+            ),
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xff2c3e50),
-                ),
-              ),
+        // Value column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Obx(() => c.isLocked.value
+              ? Container(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    controller.text.isNotEmpty ? controller.text : '-',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : Container(
+                  height: 28,
+                  child: TextField(
+                    controller: controller,
+                    style: TextStyle(fontSize: 11, height: 1.2),
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                      border: InputBorder.none,
+                      fillColor: Colors.white,
+                      filled: true,
+                    ),
+                  ),
+                )),
+        ),
+        // Unit column
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text(
+            unit,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
             ),
+            textAlign: TextAlign.center,
           ),
-          Expanded(
-            flex: 3,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 4),
-              child: Obx(() => c.isLocked.value
-                  ? Container(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        value,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    )
-                  : Container(
-                      height: 30,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300, width: 1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: TextField(
-                        controller: TextEditingController(text: value),
-                        style: TextStyle(fontSize: 11),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    )),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -2223,9 +2305,8 @@ class _NozzleSectionState extends State<NozzleSection> {
                 defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                 columnWidths: const {
                   0: FixedColumnWidth(40),  // No.
-                  1: FixedColumnWidth(70),  // #
-                  2: FixedColumnWidth(100),  // Size (1/32in)
-                  3: FixedColumnWidth(40),  // Actions
+                  1: FixedColumnWidth(90),  // #
+                  2: FixedColumnWidth(120),  // Size (1/32in)
                 },
                 children: [
                   // Header row
@@ -2237,7 +2318,6 @@ class _NozzleSectionState extends State<NozzleSection> {
                       _buildNozzleHeaderCell("#", TextAlign.center),
                       _buildNozzleHeaderCell("No.", TextAlign.center),
                       _buildNozzleHeaderCell("Size\n(1/32in)", TextAlign.center),
-                      _buildNozzleHeaderCell("", TextAlign.center),
                     ],
                   ),
                   
@@ -2268,12 +2348,12 @@ class _NozzleSectionState extends State<NozzleSection> {
                 ),
                 Container(
                   width: 80,
-                  height: 30,
+                  height: 28,
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey.shade300, width: 1),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: c.isLocked.value
+                  child: Obx(() => c.isLocked.value
                       ? Container(
                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                           child: Text(
@@ -2295,10 +2375,10 @@ class _NozzleSectionState extends State<NozzleSection> {
                           textAlign: TextAlign.center,
                           decoration: InputDecoration(
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                             border: InputBorder.none,
                           ),
-                        ),
+                        )),
                 ),
               ],
             ),
@@ -2345,28 +2425,6 @@ class _NozzleSectionState extends State<NozzleSection> {
         _buildEditableCell(controllers[0], TextAlign.center),
         // Size (1/32in)
         _buildEditableCell(controllers[1], TextAlign.center),
-        // Actions
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (rowIndex >= 3)
-                IconButton(
-                  onPressed: () => _removeRow(rowIndex),
-                  icon: Icon(Icons.remove, size: 16, color: Colors.red),
-                  padding: EdgeInsets.zero,
-                  constraints: BoxConstraints(),
-                ),
-              IconButton(
-                onPressed: _addRow,
-                icon: Icon(Icons.add, size: 16, color: Color(0xff0d9488)),
-                padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -2374,7 +2432,7 @@ class _NozzleSectionState extends State<NozzleSection> {
   Widget _buildEditableCell(TextEditingController controller, TextAlign align) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: c.isLocked.value
+      child: Obx(() => c.isLocked.value
           ? Container(
               padding: EdgeInsets.symmetric(vertical: 6),
               child: Text(
@@ -2387,22 +2445,20 @@ class _NozzleSectionState extends State<NozzleSection> {
               ),
             )
           : Container(
-              height: 30,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300, width: 1),
-                borderRadius: BorderRadius.circular(4),
-              ),
+              height: 28,
               child: TextField(
                 controller: controller,
-                style: TextStyle(fontSize: 11),
+                style: TextStyle(fontSize: 11, height: 1.2),
                 textAlign: align,
                 decoration: InputDecoration(
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                   border: InputBorder.none,
+                  fillColor: Colors.white,
+                  filled: true,
                 ),
               ),
-            ),
+            )),
     );
   }
 }
@@ -2415,29 +2471,30 @@ class TimeDistributionSection extends StatefulWidget {
 
 class _TimeDistributionSectionState extends State<TimeDistributionSection> {
   final c = Get.find<DashboardController>();
-  
+
   // Activity options for dropdown
   final List<String> activityOptions = [
-    'NLDR BOP',
-    'Install Wellhead',
-    'Pressure Test',
-    'Others',
-    'Circulation',
-    'Tripping',
-    'Drilling Cement',
+    'Rig-up/Service',
     'Drilling',
-    'Reaming',
-    'Completion',
+    'Circulating',
+    'Tripping',
+    'Survey',
+    'Logging',
+    'Run Casing',
+    'Testing',
+    'Coring/Reaming',
     'Cementing'
   ];
-  
+
+  final ScrollController scrollController = ScrollController();
+
   // Data for the table
   List<List<dynamic>> tableData = [
-    ['1', 'NLDR BOP', '2.00'],
-    ['2', 'Install Wellhead', '2.30'],
-    ['3', 'Pressure Test', '3.00'],
-    ['4', 'Others', '2.00'],
-    ['5', 'Circulation', '1.30'],
+    ['1', 'Rig-up/Service', '2.00'],
+    ['2', 'Drilling', '2.30'],
+    ['3', 'Circulating', '3.00'],
+    ['4', 'Tripping', '2.00'],
+    ['5', 'Survey', '1.30'],
     ['6', 'Tripping', '4.00'],
     ['7', 'Drilling Cement', '6.40'],
   ];
@@ -2462,6 +2519,12 @@ class _TimeDistributionSectionState extends State<TimeDistributionSection> {
         }
       });
     }
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -2511,8 +2574,10 @@ class _TimeDistributionSectionState extends State<TimeDistributionSection> {
           Container(
             constraints: BoxConstraints(maxHeight: 250),
             child: Scrollbar(
+              controller: scrollController,
               thumbVisibility: true,
               child: SingleChildScrollView(
+                controller: scrollController,
                 scrollDirection: Axis.vertical,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -2525,10 +2590,9 @@ class _TimeDistributionSectionState extends State<TimeDistributionSection> {
                       ),
                       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                       columnWidths: const {
-                        0: FixedColumnWidth(40),  // #
-                        1: FixedColumnWidth(120), // Activity
-                        2: FixedColumnWidth(70),  // Time (hr)
-                        3: FixedColumnWidth(40),  // Actions
+                        0: FixedColumnWidth(50),  // #
+                        1: FixedColumnWidth(130), // Activity
+                        2: FixedColumnWidth(80),  // Time (hr)
                       },
                       children: [
                         // Header row
@@ -2540,10 +2604,9 @@ class _TimeDistributionSectionState extends State<TimeDistributionSection> {
                             _buildTimeHeaderCell("#", TextAlign.center),
                             _buildTimeHeaderCell("Activity", TextAlign.left),
                             _buildTimeHeaderCell("Time\n(hr)", TextAlign.center),
-                            _buildTimeHeaderCell("", TextAlign.center),
                           ],
                         ),
-                        
+
                         // Data rows
                         ...tableData.asMap().entries.map((entry) {
                           final index = entry.key;
@@ -2555,15 +2618,6 @@ class _TimeDistributionSectionState extends State<TimeDistributionSection> {
                   ),
                 ),
               ),
-            ),
-          ),
-
-          // Add button
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: IconButton(
-              onPressed: _addRow,
-              icon: Icon(Icons.add_circle, color: Color(0xff0d9488), size: 24),
             ),
           ),
         ],
@@ -2609,7 +2663,7 @@ class _TimeDistributionSectionState extends State<TimeDistributionSection> {
         // Activity with dropdown
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: c.isLocked.value
+          child: Obx(() => c.isLocked.value
               ? Container(
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(
@@ -2622,7 +2676,7 @@ class _TimeDistributionSectionState extends State<TimeDistributionSection> {
                   ),
                 )
               : Container(
-                  height: 30,
+                  height: 28,
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey.shade300, width: 1),
                     borderRadius: BorderRadius.circular(4),
@@ -2658,12 +2712,12 @@ class _TimeDistributionSectionState extends State<TimeDistributionSection> {
                       }).toList(),
                     ),
                   ),
-                ),
+                )),
         ),
         // Time (hr)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: c.isLocked.value
+          child: Obx(() => c.isLocked.value
               ? Container(
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(
@@ -2676,35 +2730,23 @@ class _TimeDistributionSectionState extends State<TimeDistributionSection> {
                   ),
                 )
               : Container(
-                  height: 30,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300, width: 1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                  height: 28,
                   child: TextField(
                     controller: timeController,
-                    style: TextStyle(fontSize: 11),
+                    style: TextStyle(fontSize: 11, height: 1.2),
                     textAlign: TextAlign.center,
                     onChanged: (value) {
                       tableData[rowIndex][2] = value;
                     },
                     decoration: InputDecoration(
                       isDense: true,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                       border: InputBorder.none,
+                      fillColor: Colors.white,
+                      filled: true,
                     ),
                   ),
-                ),
-        ),
-        // Actions
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: IconButton(
-            onPressed: () => _removeRow(rowIndex),
-            icon: Icon(Icons.remove, size: 16, color: Colors.red),
-            padding: EdgeInsets.zero,
-            constraints: BoxConstraints(),
-          ),
+                )),
         ),
       ],
     );
