@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
 class DailyReportTopBar extends StatelessWidget {
   const DailyReportTopBar({super.key});
@@ -7,7 +8,7 @@ class DailyReportTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 46,
-      color: const Color(0xff1976d2),
+      decoration: BoxDecoration(gradient: AppTheme.headerGradient),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Stack(
         alignment: Alignment.center,
@@ -34,6 +35,16 @@ class DailyReportTopBar extends StatelessWidget {
               fontWeight: FontWeight.w600,
               fontSize: 14,
               letterSpacing: 0.5,
+            ),
+          ),
+
+          /// 🔹 RIGHT ALIGNED CLOSE BUTTON
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+              tooltip: 'Close',
             ),
           ),
         ],

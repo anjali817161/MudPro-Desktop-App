@@ -31,7 +31,25 @@ class MudController extends GetxController {
       'Funnel Visc. (sec/qt)',
       'PV (cp)',
       'YP (lb/100ft²)',
-    ];
+      'Gel str 10s (lb/100ft²)',
+      'Gel str 10min (lb/100ft²)',
+      'Gel str 30min (lb/100ft²)',
+    
+   
+      'API Flitrate (mL/30min)',
+      'API Cake Thickness (1/32in)',
+        'T. for HTHP (°F)',
+           'HTHP Filtrate (mL/30min)',
+      'HTHP Cake Thickness (1/32in)',
+      'Solids (%)',
+      'Oil (%)',
+
+      'Water (%)',
+      'Oil/Water Ratio',
+      'Sand Content (%)',
+      'Alkalinity Mud (pom) (cc/cc)',
+      'Excess Lime (lb/bbl)',
+      ];
 
     for (var r in rows) {
       propertyTable[r] =

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/controller/dashboard_controller.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/tabular_database.dart';
+import 'package:mudpro_desktop_app/modules/services/api_service.dart';
 
 class WellTabContent extends StatelessWidget {
   final c = Get.find<DashboardController>();
@@ -707,26 +708,55 @@ class MiddlePortion extends StatelessWidget {
                 ),
               ),
             ),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     print('Calculate ID tapped');
+            //   },
+            //   style: ElevatedButton.styleFrom(
+            //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            //     backgroundColor: Color(0xff0d9488),
+            //     shape: RoundedRectangleBorder(
+            //       borderRadius: BorderRadius.circular(6),
+            //     ),
+            //   ),
+            //   child: Text(
+            //     'Calculate ID',
+            //     style: TextStyle(
+            //       fontSize: 12,
+            //       fontWeight: FontWeight.w600,
+            //       color: Colors.white,
+            //     ),
+            //   ),
+            // ),
+
             ElevatedButton(
-              onPressed: () {
-                print('Calculate ID tapped');
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                backgroundColor: Color(0xff0d9488),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              child: Text(
-                'Calculate ID',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+  onPressed: () async {
+    try {
+      final data = await HealthService.checkHealth();
+      debugPrint("Health data: $data");
+
+      Get.snackbar(
+        'Success',
+        'Backend is reachable',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      debugPrint('Backend error: $e');
+
+      Get.snackbar(
+        'Error',
+        e.toString().replaceAll('Exception:', '').trim(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  },
+  child: const Text("Check Backend"),
+)
+
           ],
         ),
       ],

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/left_sidebar.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/report_dashboard.dart';
+import 'package:mudpro_desktop_app/modules/daily_report/tabs/alert/alert_page.dart';
+import 'package:mudpro_desktop_app/modules/daily_report/tabs/concentration_tab/concentration_tab.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/daily_cost/tab_bar/dailycost_tab_view.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/details_tab.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/daily_cost/daily_cost_productview.dart';
-import 'package:mudpro_desktop_app/modules/daily_report/tabs/concentration_tab.dart';
+import 'package:mudpro_desktop_app/modules/daily_report/tabs/survey/survey_page.dart';
+import 'package:mudpro_desktop_app/modules/daily_report/tabs/time_distribution/time_distribution_page.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/total_cost/daily_total_cost.dart';
-import 'package:mudpro_desktop_app/modules/daily_report/tabs/total_cost_tab.dart';
-import 'package:mudpro_desktop_app/modules/daily_report/tabs/survey_tab.dart';
-import 'package:mudpro_desktop_app/modules/daily_report/tabs/alert_tab.dart';
 
 class DailyReportBody extends StatefulWidget {
   const DailyReportBody({super.key});
@@ -37,13 +37,13 @@ class _DailyReportBodyState extends State<DailyReportBody> {
       case 3:
         return const DailyTotalCostPage();
       case 4:
-        return const ConcentrationTab();
+        return const ConcentrationPage();
       case 5:
-        return const Text("Time Distribution Tab");
+        return const TimeDistributionPage();
       case 6:
-        return const SurveyTab();
+        return const SurveyPage();
       case 7:
-        return const AlertTab();
+        return const AlertMainTabPage();
       default:
         return const DailyDashboard();
     }

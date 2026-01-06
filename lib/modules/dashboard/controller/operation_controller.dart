@@ -24,6 +24,7 @@ class OperationController extends GetxController {
   final List<OperationType> dropdownItems = OperationType.values;
 
   RxList<OperationType?> dropdownValues = <OperationType?>[].obs;
+  RxList<bool> isDropdownOpen = <bool>[].obs;
 
   final Map<OperationType, String> labels = {
     OperationType.consumeServices: "Consume Services",
@@ -88,8 +89,10 @@ final RxList<String> returnLostDropdownValue =
     dropdownValues.assignAll(
       List.generate(
         labels.length,
-        (index) => dropdownItems[index],
+        (index) => index < 2 ? dropdownItems[index] : null,
       ),
     );
+
+    isDropdownOpen.assignAll(List.generate(labels.length, (_) => false));
   }
 }

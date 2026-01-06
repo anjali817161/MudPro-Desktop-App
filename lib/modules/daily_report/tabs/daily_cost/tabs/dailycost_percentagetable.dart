@@ -103,7 +103,7 @@ class PercentCostPage extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
-                              color: AppTheme.textPrimary,
+                              color: Colors.white,
                               fontSize: 13,
                             ),
                           ),
@@ -122,7 +122,7 @@ class PercentCostPage extends StatelessWidget {
                               "Group",
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.textPrimary,
+                                color: Colors.white,
                                 fontSize: 13,
                               ),
                             ),
@@ -147,7 +147,7 @@ class PercentCostPage extends StatelessWidget {
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimary,
+                                    color: Colors.white,
                                     fontSize: 13,
                                   ),
                                 ),
@@ -312,18 +312,38 @@ class PercentCostPage extends StatelessWidget {
                                             ),
                                           ),
                                           
-                                          // Percentage Cell
+                                          // Percentage Cell (Editable)
                                           Expanded(
                                             child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                              child: Text(
-                                                row.percent.value.toStringAsFixed(1),
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              child: TextField(
+                                                controller: TextEditingController(
+                                                  text: row.percent.value.toStringAsFixed(1),
+                                                ),
+                                                keyboardType: TextInputType.numberWithOptions(decimal: true),
                                                 textAlign: TextAlign.right,
                                                 style: AppTheme.bodyLarge.copyWith(
-                                                  color: index % 3 == 0 
-                                                    ? AppTheme.successColor 
+                                                  color: index % 3 == 0
+                                                    ? AppTheme.successColor
                                                     : AppTheme.textPrimary,
                                                 ),
+                                                decoration: InputDecoration(
+                                                  isDense: true,
+                                                  contentPadding: const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 6,
+                                                  ),
+                                                  border: InputBorder.none,
+                                                  focusedBorder: InputBorder.none,
+                                                  enabledBorder: InputBorder.none,
+                                                  hintText: "0.0",
+                                                  hintStyle: AppTheme.bodyLarge.copyWith(
+                                                    color: Colors.grey.shade400,
+                                                  ),
+                                                ),
+                                                onChanged: (val) {
+                                                  row.percent.value = double.tryParse(val) ?? 0;
+                                                },
                                               ),
                                             ),
                                           ),
@@ -386,37 +406,79 @@ class PercentCostPage extends StatelessWidget {
                                       width: 200,
                                       child: Row(
                                         children: [
-                                          // Total Amount
+                                          // Total Amount (Editable)
                                           Expanded(
                                             child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                               decoration: BoxDecoration(
                                                 border: Border(
                                                   right: BorderSide(color: Colors.grey.shade200),
                                                 ),
                                               ),
-                                              child: Text(
-                                                controller.total.toStringAsFixed(2),
+                                              child: TextField(
+                                                controller: TextEditingController(
+                                                  text: controller.total.toStringAsFixed(2),
+                                                ),
+                                                keyboardType: TextInputType.numberWithOptions(decimal: true),
                                                 textAlign: TextAlign.right,
                                                 style: AppTheme.titleMedium.copyWith(
                                                   color: AppTheme.primaryColor,
                                                   fontSize: 14,
                                                 ),
+                                                decoration: InputDecoration(
+                                                  isDense: true,
+                                                  contentPadding: const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 6,
+                                                  ),
+                                                  border: InputBorder.none,
+                                                  focusedBorder: InputBorder.none,
+                                                  enabledBorder: InputBorder.none,
+                                                  hintText: "0.00",
+                                                  hintStyle: AppTheme.titleMedium.copyWith(
+                                                    color: Colors.grey.shade400,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                onChanged: (val) {
+                                                  // Optional: Handle changes if needed, e.g., update a separate total variable
+                                                },
                                               ),
                                             ),
                                           ),
                                           
-                                          // Total Percentage
+                                          // Total Percentage (Editable)
                                           Expanded(
                                             child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                              child: Text(
-                                                "100.0",
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              child: TextField(
+                                                controller: TextEditingController(
+                                                  text: "100.0",
+                                                ),
+                                                keyboardType: TextInputType.numberWithOptions(decimal: true),
                                                 textAlign: TextAlign.right,
                                                 style: AppTheme.titleMedium.copyWith(
                                                   color: AppTheme.primaryColor,
                                                   fontSize: 14,
                                                 ),
+                                                decoration: InputDecoration(
+                                                  isDense: true,
+                                                  contentPadding: const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 6,
+                                                  ),
+                                                  border: InputBorder.none,
+                                                  focusedBorder: InputBorder.none,
+                                                  enabledBorder: InputBorder.none,
+                                                  hintText: "100.0",
+                                                  hintStyle: AppTheme.titleMedium.copyWith(
+                                                    color: Colors.grey.shade400,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                onChanged: (val) {
+                                                  // Optional: Handle changes if needed
+                                                },
                                               ),
                                             ),
                                           ),

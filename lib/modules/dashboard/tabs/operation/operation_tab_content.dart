@@ -20,6 +20,7 @@ import 'package:mudpro_desktop_app/theme/app_theme.dart';
 class OperationPage extends StatelessWidget {
   OperationPage({super.key});
   final controller = Get.find<OperationController>();
+  final ScrollController scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -98,119 +99,163 @@ Widget _buildLeftPanel() {
         
         // Operations List - Modified for smaller rows
         Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(8),
-            itemCount: controller.labels.length,
-            separatorBuilder: (_, __) => const Divider(
-              height: 1,
-              thickness: 0.5,
-              color: Color(0xffE2E8F0),
-            ),
-            itemBuilder: (context, index) {
-              return Obx(() {
-                final isSelected = controller.selectedRowIndex.value == index;
-                
-                // Container with minimum interactive height
-                return Container(
-                  height: 48, // Minimum interactive dimension
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(6),
-                    border: isSelected ? Border.all(
-                      color: AppTheme.primaryColor.withOpacity(0.3),
-                      width: 1,
-                    ) : null,
-                  ),
-                  margin: const EdgeInsets.symmetric(vertical: 0.5),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6, // Adjusted vertical padding
+          child: Scrollbar(
+            controller: scrollController,
+            child: ListView.separated(
+              controller: scrollController,
+              padding: const EdgeInsets.all(8),
+              itemCount: controller.labels.length,
+              separatorBuilder: (_, __) => const Divider(
+                height: 1,
+                thickness: 0.5,
+                color: Color(0xffE2E8F0),
+              ),
+              itemBuilder: (context, index) {
+                return Obx(() {
+                  final isSelected = controller.selectedRowIndex.value == index;
+
+                  // Container with reduced height
+                  return Container(
+                    height: 36, // Reduced height
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(6),
+                      border: isSelected ? Border.all(
+                        color: AppTheme.primaryColor.withOpacity(0.3),
+                        width: 1,
+                      ) : null,
                     ),
-                    child: Row(
-                      children: [
-                        // Selection chevron
-                        GestureDetector(
-                          onTap: () => controller.selectedRowIndex.value = index,
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            alignment: Alignment.center,
-                            child: Icon(
-                              Icons.chevron_right_rounded,
-                              size: 16,
-                              color: isSelected
-                                ? AppTheme.primaryColor
-                                : AppTheme.textSecondary,
+                    margin: const EdgeInsets.symmetric(vertical: 0.5),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4, // Adjusted vertical padding
+                      ),
+                      child: Row(
+                        children: [
+                          // Selection chevron
+                          GestureDetector(
+                            onTap: () => controller.selectedRowIndex.value = index,
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.chevron_right_rounded,
+                                size: 16,
+                                color: isSelected
+                                  ? AppTheme.primaryColor
+                                  : AppTheme.textSecondary,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
+                          const SizedBox(width: 4),
 
-                        // Dropdown with default item height
-                        Expanded(
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<OperationType>(
-                              isExpanded: true,
-                              isDense: true,
-                              icon: Padding(
-                                padding: const EdgeInsets.only(left: 4),
-                                child: Icon(
-                                  Icons.arrow_drop_down_rounded,
-                                  size: 18,
-                                  color: AppTheme.textSecondary,
-                                ),
-                              ),
-                              dropdownColor: Colors.white,
-                              value: controller.dropdownValues[index],
-                              onChanged: (v) {
-                                controller.dropdownValues[index] = v;
-                                controller.selectedRowIndex.value = index;
-                              },
-                              menuMaxHeight: 200,
-                              itemHeight: null, // Use default height
-                              style: AppTheme.bodySmall.copyWith(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.textPrimary,
-                              ),
-                              items: [
-                                ...controller.dropdownItems.map(
-                                  (e) => DropdownMenuItem(
-                                    value: e,
-                                    child: Text(
-                                      controller.labels[e]!,
-                                      style: AppTheme.bodySmall.copyWith(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppTheme.textPrimary,
+                          // Dropdown or text based on open state
+                          Expanded(
+                            child: controller.isDropdownOpen[index]
+                              ? DropdownButtonHideUnderline(
+                                  child: DropdownButton<OperationType?>(
+                                    isExpanded: true,
+                                    isDense: true,
+                                    icon: Padding(
+                                      padding: const EdgeInsets.only(left: 4),
+                                      child: Icon(
+                                        Icons.arrow_drop_down_rounded,
+                                        size: 18,
+                                        color: AppTheme.textSecondary,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
                                     ),
+                                    dropdownColor: Colors.white,
+                                    value: controller.dropdownValues[index],
+                                    onChanged: (v) {
+                                      controller.dropdownValues[index] = v;
+                                      controller.selectedRowIndex.value = index;
+                                      if (v == null) {
+                                        controller.isDropdownOpen[index] = false;
+                                      }
+                                    },
+                                    menuMaxHeight: 200,
+                                    itemHeight: null, // Use default height
+                                    style: AppTheme.bodySmall.copyWith(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppTheme.textPrimary,
+                                    ),
+                                    items: [
+                                      DropdownMenuItem<OperationType?>(
+                                        value: null,
+                                        child: Text(
+                                          "",
+                                          style: AppTheme.bodySmall.copyWith(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                      ...controller.dropdownItems.map(
+                                        (e) => DropdownMenuItem(
+                                          value: e,
+                                          child: Text(
+                                            controller.labels[e]!,
+                                            style: AppTheme.bodySmall.copyWith(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppTheme.textPrimary,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : GestureDetector(
+                                  onTap: () => controller.isDropdownOpen[index] = true,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          controller.dropdownValues[index] != null
+                                            ? controller.labels[controller.dropdownValues[index]]!
+                                            : "",
+                                          style: AppTheme.bodySmall.copyWith(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.arrow_drop_down_rounded,
+                                        size: 18,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
                           ),
-                        ),
 
-                        // Selection Indicator
-                        if (isSelected)
-                          Container(
-                            width: 6,
-                            height: 6,
-                            margin: const EdgeInsets.only(left: 6),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppTheme.primaryColor,
+                          // Selection Indicator
+                          if (isSelected)
+                            Container(
+                              width: 6,
+                              height: 6,
+                              margin: const EdgeInsets.only(left: 6),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppTheme.primaryColor,
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              });
-            },
+                  );
+                });
+              },
+            ),
           ),
         ),
         
@@ -262,10 +307,10 @@ Widget _buildLeftPanel() {
       child: Obx(() {
         final selectedOp =
             controller.dropdownValues[controller.selectedRowIndex.value];
-        
+
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
-          child: _getViewForOperation(selectedOp!),
+          child: selectedOp != null ? _getViewForOperation(selectedOp) : _buildPlaceholderView(),
         );
       }),
     );

@@ -1,19 +1,9 @@
-# TODO List for Table and Dropdown Fixes
+# TODO for Modifying concentration_table_history.dart
 
-## Task 1: Remove Border from Text Fields in Editable Table
-- [x] Edit lib/modules/dashboard/widgets/editable_table.dart to remove the border from TextFormField containers when unlocked
-
-## Task 2: Investigate and Fix Dropdown Behavior
-- [x] Analyze dropdown components in table sections (e.g., pump_dopdown_Cell.dart, well_tab_content.dart)
-- [x] Identify why dropdowns are not working as expected
-- [x] Implement fixes for dropdown functionality
-
-## Task 3: Convert Specific Dropdowns to Text Fields
-- [x] Convert "Operator Rep.", "Contractor Rep.", "FIT", "Formation" dropdowns to text fields in well_tab_content.dart
-
-## Task 4: Make Middle and Right Section Tables Editable
-- [x] Fix CasedHoleSection, OpenHoleSection, DrillStringSection tables to be editable when unlocked
-- [x] Fix BitSection, NozzleSection, TimeDistributionSection tables to be editable when unlocked
-
-## Task 5: Fix Empty Rows Functionality
-- [ ] Ensure empty rows in all tables can be edited and new data can be added
+1. [x] Add necessary imports: 'package:get/get.dart' and EditableCell.
+2. [x] Add state variables: List<List<RxString>> fixedData and scrollableData.
+3. [x] Initialize data in initState: fixedData with default values, scrollableData empty.
+4. [x] Change fixed header height from 32.0 to 64.0.
+5. [x] Update fixed data rows to use EditableCell instead of _fixedCell.
+6. [x] Update scrollable data rows to use EditableCell instead of _scrollCell.
+7. [x] Test the changes for proper alignment and editability.

@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 class DailyTotalCostTableTab extends StatelessWidget {
   const DailyTotalCostTableTab({super.key});
 
-  static const rowHeight = 28.0; // Slightly smaller row height for 100+ rows
+  static const rowHeight = 28.0; // Data row height
+  static const headerHeight = 40.0; // Increased header height
 
   static const colWidths = [
     50.0,  // No (reduced)
@@ -88,7 +89,7 @@ class DailyTotalCostTableTab extends StatelessWidget {
     ];
 
     return Container(
-      height: rowHeight,
+      height: headerHeight, // Increased height
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -107,15 +108,26 @@ class DailyTotalCostTableTab extends StatelessWidget {
         children: List.generate(headers.length, (i) {
           return Container(
             width: colWidths[i],
-            height: rowHeight,
+            height: headerHeight,
             padding: EdgeInsets.symmetric(horizontal: 6),
             alignment: Alignment.center,
+            decoration: BoxDecoration(
+              border: Border(
+                right: i < headers.length - 1
+                    ? BorderSide(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      )
+                    : BorderSide.none,
+              ),
+            ),
             child: Text(
               headers[i],
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12, // Slightly larger font
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
+                letterSpacing: 0.3,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -134,6 +146,11 @@ class DailyTotalCostTableTab extends StatelessWidget {
       height: rowHeight,
       decoration: BoxDecoration(
         color: index.isOdd ? Colors.white : Color(0xffF8F9FA),
+        border: Border(
+          top: index == 1
+              ? BorderSide.none // No top border for first data row
+              : BorderSide(color: Colors.grey.shade100, width: 0.5),
+        ),
       ),
       child: Row(
         children: List.generate(colWidths.length, (i) {
@@ -142,6 +159,16 @@ class DailyTotalCostTableTab extends StatelessWidget {
             height: rowHeight,
             padding: EdgeInsets.symmetric(horizontal: 6),
             alignment: Alignment.center,
+            decoration: BoxDecoration(
+              border: Border(
+                right: i < colWidths.length - 1
+                    ? BorderSide(
+                        color: Colors.grey.shade200,
+                        width: 0.5,
+                      )
+                    : BorderSide.none,
+              ),
+            ),
             child: _buildCellContent(i, index, hasSampleData),
           );
         }),
@@ -190,7 +217,7 @@ class DailyTotalCostTableTab extends StatelessWidget {
       textAlign: _getTextAlignment(colIndex),
       decoration: InputDecoration(
         isDense: true,
-        contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         border: InputBorder.none,
         focusedBorder: InputBorder.none,
         enabledBorder: InputBorder.none,
@@ -218,18 +245,18 @@ class DailyTotalCostTableTab extends StatelessWidget {
 
   String _getHintText(int colIndex) {
     switch (colIndex) {
-      case 0: return 'No';
-      case 1: return 'Date';
-      case 2: return 'Rpt';
-      case 3: return '0.00';
-      case 4: return '0.00';
-      case 5: return '0.00';
-      case 6: return '0.00';
-      case 7: return '0.00';
-      case 8: return '0.00';
-      case 9: return '0.00';
-      case 10: return '0.00';
-      case 11: return '0.00';
+      case 0: return '';
+      case 1: return '';
+      case 2: return '';
+      case 3: return '';
+      case 4: return '';
+      case 5: return '';
+      case 6: return '';
+      case 7: return '';
+      case 8: return '';
+      case 9: return '';
+      case 10: return '';
+      case 11: return '';
       default: return '';
     }
   }
