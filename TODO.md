@@ -1,9 +1,22 @@
-# TODO for Modifying concentration_table_history.dart
+# TODO for Daily Report Top Bar Sub-Tabs Implementation
 
-1. [x] Add necessary imports: 'package:get/get.dart' and EditableCell.
-2. [x] Add state variables: List<List<RxString>> fixedData and scrollableData.
-3. [x] Initialize data in initState: fixedData with default values, scrollableData empty.
-4. [x] Change fixed header height from 32.0 to 64.0.
-5. [x] Update fixed data rows to use EditableCell instead of _fixedCell.
-6. [x] Update scrollable data rows to use EditableCell instead of _scrollCell.
-7. [x] Test the changes for proper alignment and editability.
+## Objective
+Modify the daily report to ensure that clicking on top bar tabs only changes the sub-tabs, with each top tab having its own set of sub-tabs. The dashboard structure remains consistent.
+
+## Tasks
+- [x] Modify `daily_report_body.dart` to always display the sub-tabs bar with sub-tabs specific to the selected main tab
+- [x] Update the content to always show `SubTabContent` for the selected main tab and sub-tab
+- [x] Remove the sidebar logic as it's no longer needed
+- [x] Remove the side tab selection logic
+- [x] Test the implementation to ensure sub-tabs change correctly when clicking top tabs
+
+## Files to Edit
+- `lib/modules/daily_report/daily_report_body.dart`
+
+## Followup Steps
+- [x] Verify that the sub-tabs update correctly for each top tab
+- [x] Ensure the content displays the appropriate SubTabContent
+- [x] Check for any UI inconsistencies
+
+## Summary
+The implementation has been completed successfully. The daily report now displays sub-tabs for each top tab, and clicking on top tabs changes only the sub-tabs without affecting the dashboard structure. The content is always SubTabContent based on the selected main tab and sub-tab.

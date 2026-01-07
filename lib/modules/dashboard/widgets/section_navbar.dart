@@ -15,9 +15,9 @@ class _SectionNavBarState extends State<SectionNavBar> with TickerProviderStateM
     {"name": "Pump", "icon": Icons.settings},
     {"name": "Operation", "icon": Icons.build},
     {"name": "Pit", "icon": Icons.inbox},
-    {"name": "Safety", "icon": Icons.security},
+
     {"name": "Remarks", "icon": Icons.comment},
-    {"name": "JSA", "icon": Icons.checklist},
+  
   ];
   
   final c = Get.find<DashboardController>();

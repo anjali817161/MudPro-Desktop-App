@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controller/operation_controller.dart';
 import '../../controller/dashboard_controller.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
@@ -8,25 +7,51 @@ class ConsumeServicesView extends StatelessWidget {
   ConsumeServicesView({super.key});
 
   final dashboardController = Get.find<DashboardController>();
-  final scrollController = ScrollController();
+  final RxString selectedMethod = "Used".obs;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
       child: SingleChildScrollView(
-        controller: scrollController,
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// ================= ENHANCED HEADER =================
-              // _buildHeader(),
-              // const SizedBox(height: 24),
+              /// ================= COMPACT RADIO BUTTONS =================
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Input Method",
+                      style: AppTheme.caption.copyWith(
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 32,
+                      child: Row(
+                        children: [
+                          buildCompactRadio("Used", Icons.trending_up_rounded, "Used"),
+                          const SizedBox(width: 12),
+                          buildCompactRadio("Final", Icons.flag_rounded, "Final"),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
 
-              /// ================= PACKAGE TABLE =================
-              _buildAdvancedTableCard(
+              /// ================= PACKAGE TABLE (20 ROWS, SHOW 5) =================
+              _buildCompactTableCard(
                 title: "Package",
                 icon: Icons.inventory_2_rounded,
                 headers: [
@@ -40,13 +65,21 @@ class ConsumeServicesView extends StatelessWidget {
                   "Cost (\$)",
                 ],
                 color: AppTheme.primaryColor,
-                rowCount: 15,
+                totalRowCount: 20, // Total 20 rows
+                visibleRowCount: 5, // Show only 5 at a time
+                dropdownOptions: [
+                  "Basic Package",
+                  "Premium Package",
+                  "Standard Package",
+                  "Enterprise Package",
+                  "Custom Package"
+                ],
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-              /// ================= SERVICES TABLE =================
-              _buildAdvancedTableCard(
+              /// ================= SERVICES TABLE (20 ROWS, SHOW 5) =================
+              _buildCompactTableCard(
                 title: "Services",
                 icon: Icons.build_circle_rounded,
                 headers: [
@@ -58,13 +91,21 @@ class ConsumeServicesView extends StatelessWidget {
                   "Cost (\$)",
                 ],
                 color: AppTheme.successColor,
-                rowCount: 12,
+                totalRowCount: 20, // Total 20 rows
+                visibleRowCount: 5, // Show only 5 at a time
+                dropdownOptions: [
+                  "Standard Service",
+                  "Premium Service",
+                  "24/7 Support",
+                  "Maintenance",
+                  "Consulting"
+                ],
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-              /// ================= ENGINEERING TABLE =================
-              _buildAdvancedTableCard(
+              /// ================= ENGINEERING TABLE (20 ROWS, SHOW 5) =================
+              _buildCompactTableCard(
                 title: "Engineering",
                 icon: Icons.engineering_rounded,
                 headers: [
@@ -76,11 +117,19 @@ class ConsumeServicesView extends StatelessWidget {
                   "Cost (\$)",
                 ],
                 color: AppTheme.infoColor,
-                rowCount: 10,
+                totalRowCount: 20, // Total 20 rows
+                visibleRowCount: 5, // Show only 5 at a time
+                dropdownOptions: [
+                  "Engineering Service",
+                  "Technical Support",
+                  "System Design",
+                  "Development",
+                  "Testing"
+                ],
               ),
 
               /// ================= FOOTER SUMMARY =================
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               _buildFooterSummary(),
               const SizedBox(height: 20),
             ],
@@ -90,128 +139,98 @@ class ConsumeServicesView extends StatelessWidget {
     );
   }
 
-  // ----------------- ENHANCED HEADER -----------------
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryColor.withOpacity(0.9),
-            AppTheme.primaryColor,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget buildCompactRadio(String label, IconData icon, String value) {
+    return Obx(() => InkWell(
+      onTap: dashboardController.isLocked.value 
+          ? null 
+          : () => selectedMethod.value = value,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selectedMethod.value == value
+              ? AppTheme.primaryColor.withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: selectedMethod.value == value
+                ? AppTheme.primaryColor
+                : Colors.grey.shade300,
+            width: 1,
+          ),
         ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.shopping_cart_checkout_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Consume Services",
-                        style: AppTheme.titleMedium.copyWith(
-                          fontSize: 20,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              margin: const EdgeInsets.only(right: 6),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selectedMethod.value == value
+                      ? AppTheme.primaryColor
+                      : Colors.grey.shade400,
+                  width: 2,
+                ),
+              ),
+              child: selectedMethod.value == value
+                  ? Center(
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppTheme.primaryColor,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Track and manage service consumption",
-                        style: AppTheme.bodySmall.copyWith(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-          
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 1,
+                    )
+                  : null,
+            ),
+            Icon(
+              icon,
+              size: 14,
+              color: selectedMethod.value == value
+                  ? AppTheme.primaryColor
+                  : AppTheme.textSecondary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: AppTheme.bodySmall.copyWith(
+                fontSize: 12,
+                color: selectedMethod.value == value
+                    ? AppTheme.primaryColor
+                    : AppTheme.textSecondary,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  "Total Estimated Cost",
-                  style: AppTheme.caption.copyWith(
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "\$45,280.50",
-                  style: AppTheme.titleMedium.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
+    ));
   }
 
-  // ----------------- ADVANCED TABLE CARD -----------------
-  Widget _buildAdvancedTableCard({
+  // ----------------- COMPACT TABLE CARD -----------------
+  Widget _buildCompactTableCard({
     required String title,
     required IconData icon,
     required List<String> headers,
     required Color color,
-    required int rowCount,
+    required int totalRowCount, // Total rows in table
+    required int visibleRowCount, // Rows visible at once
+    required List<String> dropdownOptions,
   }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
         border: Border.all(
@@ -220,54 +239,55 @@ class ConsumeServicesView extends StatelessWidget {
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           /// TABLE HEADER
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: color.withOpacity(0.95),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
               ),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(
                     icon,
                     color: Colors.white,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Text(
                   title,
                   style: AppTheme.bodyLarge.copyWith(
-                    fontSize: 16,
+                    fontSize: 14,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    "$rowCount Items",
+                    "$totalRowCount Rows",
                     style: AppTheme.caption.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
-                      fontSize: 11,
+                      fontSize: 10,
                     ),
                   ),
                 ),
@@ -275,86 +295,104 @@ class ConsumeServicesView extends StatelessWidget {
             ),
           ),
 
-          /// SCROLLABLE TABLE CONTENT
+          /// SCROLLABLE TABLE CONTENT (SHOWS 5 ROWS AT A TIME)
           SizedBox(
-            height: 380, // Increased height
+            height: 260, // Height for 5 rows + header
             child: Scrollbar(
               thumbVisibility: true,
-              controller: ScrollController(),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: Obx(() => Table(
-                    defaultColumnWidth: const FixedColumnWidth(140),
-                    border: TableBorder(
-                      horizontalInside: BorderSide(
-                        color: Colors.grey.shade200,
-                        width: 1,
-                      ),
-                      verticalInside: BorderSide(
-                        color: Colors.grey.shade200,
-                        width: 1,
-                      ),
-                      left: BorderSide(
-                        color: Colors.grey.shade300,
-                        width: 1,
-                      ),
-                      right: BorderSide(
-                        color: Colors.grey.shade300,
-                        width: 1,
-                      ),
-                      top: BorderSide(
-                        color: Colors.grey.shade300,
-                        width: 1,
-                      ),
-                      bottom: BorderSide(
-                        color: Colors.grey.shade300,
-                        width: 1,
-                      ),
-                    ),
-                    columnWidths: _generateColumnWidths(headers.length),
+                child: SizedBox(
+                  width: headers.length * 110, // Dynamic width based on columns
+                  child: Column(
                     children: [
-                      /// ENHANCED HEADER ROW
-                      TableRow(
+                      /// HEADER ROW
+                      Container(
+                        height: 40,
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.08),
+                          color: color.withOpacity(0.06),
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Colors.grey.shade200,
+                              width: 1,
+                            ),
+                          ),
                         ),
-                        children: headers.map((header) {
-                          return _buildEnhancedHeaderCell(header);
-                        }).toList(),
+                        child: Row(
+                          children: headers.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final header = entry.value;
+                            final isPriceColumn = header.contains('\$');
+                            
+                            return Container(
+                              width: _getColumnWidth(index, headers.length),
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              alignment: isPriceColumn 
+                                  ? Alignment.centerRight 
+                                  : Alignment.centerLeft,
+                              child: Text(
+                                header,
+                                style: AppTheme.bodySmall.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: color,
+                                  letterSpacing: 0.2,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
+                        ),
                       ),
 
-                      /// DATA ROWS
-                      ...List.generate(rowCount, (rowIndex) {
-                        return TableRow(
+                      /// DATA ROWS (SHOW 5 VISIBLE ROWS, BUT TABLE HAS 20)
+                      ...List.generate(visibleRowCount, (rowIndex) {
+                        return Container(
+                          height: 44, // Row height
                           decoration: BoxDecoration(
                             color: rowIndex % 2 == 0 
                                 ? Colors.white 
-                                : Colors.grey.shade50,
+                                : Colors.grey.shade50.withOpacity(0.5),
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.grey.shade100,
+                                width: 0.5,
+                              ),
+                            ),
                           ),
-                          children: headers.asMap().entries.map((entry) {
-                            final columnIndex = entry.key;
-                            return _buildEnhancedDataCell(
-                              rowIndex: rowIndex,
-                              columnIndex: columnIndex,
-                              totalColumns: headers.length,
-                              isEditable: !dashboardController.isLocked.value,
-                              color: color,
-                            );
-                          }).toList(),
+                          child: Row(
+                            children: headers.asMap().entries.map((entry) {
+                              final columnIndex = entry.key;
+                              final isFirstColumn = columnIndex == 0;
+                              final isLastColumn = columnIndex == headers.length - 1;
+                              
+                              return Container(
+                                width: _getColumnWidth(columnIndex, headers.length),
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                alignment: _getColumnAlignment(columnIndex, headers),
+                                child: isFirstColumn
+                                    ? _buildSimpleDropdown(dropdownOptions, rowIndex, color)
+                                    : _buildEmptyCell(
+                                        columnIndex, 
+                                        headers, 
+                                        color, 
+                                        isLastColumn,
+                                      ),
+                              );
+                            }).toList(),
+                          ),
                         );
                       }),
                     ],
-                  )),
+                  ),
                 ),
               ),
             ),
           ),
 
-          /// TABLE FOOTER
+          /// TABLE FOOTER WITH SCROLL INFO
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.grey.shade50,
               border: Border(
@@ -364,64 +402,35 @@ class ConsumeServicesView extends StatelessWidget {
                 ),
               ),
               borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(12),
-                bottomRight: Radius.circular(12),
+                bottomLeft: Radius.circular(8),
+                bottomRight: Radius.circular(8),
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Showing $rowCount entries",
+                  "Showing $visibleRowCount of $totalRowCount rows",
                   style: AppTheme.caption.copyWith(
                     color: AppTheme.textSecondary,
+                    fontSize: 10,
                   ),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.arrow_back_ios_rounded,
-                        size: 14,
-                        color: AppTheme.textSecondary,
-                      ),
-                      splashRadius: 20,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: color.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    "Scroll to see more",
+                    style: AppTheme.caption.copyWith(
+                      color: color,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
                     ),
-                    const SizedBox(width: 8),
-                    ...List.generate(3, (index) {
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        width: 30,
-                        height: 30,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: index == 0 ? color : Colors.transparent,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: index == 0 ? color : Colors.grey.shade300,
-                          ),
-                        ),
-                        child: Text(
-                          (index + 1).toString(),
-                          style: AppTheme.caption.copyWith(
-                            color: index == 0 ? Colors.white : AppTheme.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 14,
-                        color: AppTheme.textSecondary,
-                      ),
-                      splashRadius: 20,
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -431,103 +440,88 @@ class ConsumeServicesView extends StatelessWidget {
     );
   }
 
-  // ----------------- ENHANCED HEADER CELL -----------------
-  Widget _buildEnhancedHeaderCell(String text) {
-    final isPriceColumn = text.contains('\$');
-    
-    return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      alignment: isPriceColumn ? Alignment.centerRight : Alignment.center,
-      decoration: BoxDecoration(
-        border: Border(
-          right: BorderSide(
-            color: Colors.grey.shade300,
-            width: 0.5,
-          ),
-        ),
-      ),
-      child: Text(
-        text,
+  // ----------------- SIMPLE DROPDOWN (NO BORDER) -----------------
+  Widget _buildSimpleDropdown(List<String> options, int rowIndex, Color color) {
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: options[rowIndex % options.length],
+        icon: Icon(Icons.arrow_drop_down, size: 20, color: color),
+        iconSize: 16,
+        elevation: 0,
         style: AppTheme.bodySmall.copyWith(
           fontSize: 11,
-          fontWeight: FontWeight.w700,
           color: AppTheme.textPrimary,
-          letterSpacing: 0.3,
+          fontWeight: FontWeight.w500,
         ),
-        textAlign: isPriceColumn ? TextAlign.right : TextAlign.center,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
+        isExpanded: true,
+        isDense: true,
+        items: options.map((String option) {
+          return DropdownMenuItem<String>(
+            value: option,
+            child: Text(
+              option,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodySmall.copyWith(
+                fontSize: 11,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          );
+        }).toList(),
+        onChanged: dashboardController.isLocked.value 
+            ? null 
+            : (String? newValue) {
+                // Handle dropdown change
+              },
       ),
     );
   }
 
-  // ----------------- ENHANCED DATA CELL -----------------
-  Widget _buildEnhancedDataCell({
-    required int rowIndex,
-    required int columnIndex,
-    required int totalColumns,
-    required bool isEditable,
-    required Color color,
-  }) {
-    final sampleData = _generateSampleData(rowIndex, columnIndex, totalColumns);
-    final isPriceColumn = sampleData.contains('\$') || columnIndex >= totalColumns - 2;
-    final isFirstColumn = columnIndex == 0;
+  // ----------------- EMPTY CELL (NO BORDERS, NO DATA) -----------------
+  Widget _buildEmptyCell(
+    int columnIndex, 
+    List<String> headers, 
+    Color color,
+    bool isLastColumn,
+  ) {
+    final isPriceColumn = headers[columnIndex].contains('\$');
     
-    return Container(
-      height: 56, // Increased cell height
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      alignment: isPriceColumn ? Alignment.centerRight : Alignment.centerLeft,
-      child: isEditable && columnIndex > 0
-          ? TextField(
-              controller: TextEditingController(text: sampleData),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                hintText: "Enter value...",
-                hintStyle: AppTheme.bodySmall.copyWith(
-                  color: Colors.grey.shade400,
-                  fontSize: 11,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
-                ),
-                filled: true,
-                fillColor: Colors.transparent,
-              ),
-              style: AppTheme.bodySmall.copyWith(
-                fontSize: 12,
-                color: AppTheme.textPrimary,
-                fontWeight: isPriceColumn ? FontWeight.w500 : FontWeight.w400,
-              ),
-              textAlign: isPriceColumn ? TextAlign.right : TextAlign.left,
-            )
-          : Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-              child: Text(
-                sampleData,
-                style: AppTheme.bodySmall.copyWith(
-                  fontSize: 12,
-                  color: isFirstColumn ? color : AppTheme.textPrimary,
-                  fontWeight: isFirstColumn ? FontWeight.w600 : 
-                            isPriceColumn ? FontWeight.w500 : FontWeight.w400,
-                ),
-                textAlign: isPriceColumn ? TextAlign.right : TextAlign.left,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
-              ),
-            ),
+    return Text(
+      "", // Empty text
+      style: AppTheme.bodySmall.copyWith(
+        fontSize: 11,
+        color: isLastColumn ? color : AppTheme.textSecondary,
+        fontWeight: isLastColumn ? FontWeight.w600 : FontWeight.w400,
+      ),
     );
+  }
+
+  // ----------------- GET COLUMN WIDTH -----------------
+  double _getColumnWidth(int index, int totalColumns) {
+    if (index == 0) return 140; // Name column with dropdown
+    if (index == 1) return 80;  // Code column
+    if (index == 2) return 70;  // Unit column
+    if (index == totalColumns - 1) return 100; // Cost column
+    return 90; // Other columns
+  }
+
+  // ----------------- GET COLUMN ALIGNMENT -----------------
+  Alignment _getColumnAlignment(int index, List<String> headers) {
+    final header = headers[index];
+    final isPriceColumn = header.contains('\$');
+    
+    if (index == 0) return Alignment.centerLeft;
+    if (isPriceColumn) return Alignment.centerRight;
+    return Alignment.centerLeft;
   }
 
   // ----------------- FOOTER SUMMARY -----------------
   Widget _buildFooterSummary() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: Colors.grey.shade200,
           width: 1,
@@ -539,39 +533,33 @@ class ConsumeServicesView extends StatelessWidget {
           _buildSummaryItem(
             icon: Icons.summarize_rounded,
             title: "Total Records",
-            value: "37 Items",
+            value: "60 Items", // 20 × 3 tables
             color: AppTheme.successColor,
           ),
           _buildSummaryItem(
             icon: Icons.monetization_on_rounded,
             title: "Package Cost",
-            value: "\$24,750.00",
+            value: "\$0.00",
             color: AppTheme.primaryColor,
           ),
           _buildSummaryItem(
             icon: Icons.handyman_rounded,
             title: "Services Cost",
-            value: "\$10,200.00",
+            value: "\$0.00",
             color: AppTheme.successColor,
           ),
           _buildSummaryItem(
             icon: Icons.engineering_rounded,
             title: "Engineering Cost",
-            value: "\$10,330.50",
+            value: "\$0.00",
             color: AppTheme.infoColor,
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.primaryColor,
-                  AppTheme.primaryColor.withOpacity(0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(8),
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -579,16 +567,17 @@ class ConsumeServicesView extends StatelessWidget {
                 Text(
                   "Grand Total",
                   style: AppTheme.caption.copyWith(
-                    color: Colors.white.withOpacity(0.9),
+                    color: AppTheme.primaryColor.withOpacity(0.8),
+                    fontSize: 10,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "\$45,280.50",
+                  "\$0.00",
                   style: AppTheme.titleMedium.copyWith(
-                    color: Colors.white,
+                    color: AppTheme.primaryColor,
                     fontWeight: FontWeight.w700,
-                    fontSize: 18,
+                    fontSize: 16,
                   ),
                 ),
               ],
@@ -607,106 +596,43 @@ class ConsumeServicesView extends StatelessWidget {
     required Color color,
   }) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
+                shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                size: 16,
+                size: 14,
                 color: color,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Text(
               title,
               style: AppTheme.caption.copyWith(
                 color: AppTheme.textSecondary,
+                fontSize: 10,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(
           value,
-          style: AppTheme.bodyLarge.copyWith(
+          style: AppTheme.bodySmall.copyWith(
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimary,
-            fontSize: 14,
+            fontSize: 12,
           ),
         ),
       ],
     );
-  }
-
-  // ----------------- HELPER: GENERATE SAMPLE DATA -----------------
-  String _generateSampleData(int rowIndex, int columnIndex, int totalColumns) {
-    final packages = [
-      "Basic Package", "Premium Package", "Standard Package", "Enterprise Package",
-      "Starter Kit", "Professional Suite", "Ultimate Bundle", "Custom Package"
-    ];
-    
-    final services = [
-      "Standard Service", "Premium Service", "24/7 Support", "Maintenance",
-      "Consulting", "Training", "Implementation", "Custom Development"
-    ];
-    
-    final engineering = [
-      "Engineering Service", "Technical Support", "System Design", "Architecture",
-      "Development", "Testing", "Deployment", "Optimization"
-    ];
-    
-    if (columnIndex == 0) {
-      if (totalColumns == 8) {
-        return packages[rowIndex % packages.length];
-      } else if (rowIndex < 8) {
-        return services[rowIndex % services.length];
-      } else {
-        return engineering[rowIndex % engineering.length];
-      }
-    } else if (columnIndex == 1) {
-      final prefix = totalColumns == 8 ? "PKG-" : 
-                    rowIndex < 8 ? "SRV-" : "ENG-";
-      return "$prefix${(rowIndex + 1).toString().padLeft(3, '0')}";
-    } else if (columnIndex == 2) {
-      final units = ["Pcs", "Hrs", "Days", "Units"];
-      return units[rowIndex % units.length];
-    } else if (columnIndex == 3) {
-      final price = (100 + (rowIndex * 50) + (columnIndex * 10)).toDouble();
-      return "\$${price.toStringAsFixed(2)}";
-    } else if (columnIndex == totalColumns - 1) {
-      final cost = (1000 + (rowIndex * 200) + (columnIndex * 50)).toDouble();
-      return "\$${cost.toStringAsFixed(2)}";
-    } else {
-      final value = (10 + (rowIndex * 5) + columnIndex).toString();
-      return value;
-    }
-  }
-
-  // ----------------- HELPER: GENERATE COLUMN WIDTHS -----------------
-  Map<int, TableColumnWidth> _generateColumnWidths(int columnCount) {
-    final Map<int, TableColumnWidth> widths = {};
-    
-    for (int i = 0; i < columnCount; i++) {
-      if (i == 0) {
-        widths[i] = const FixedColumnWidth(160); // Name column
-      } else if (i == 1) {
-        widths[i] = const FixedColumnWidth(100); // Code column
-      } else if (i == 2) {
-        widths[i] = const FixedColumnWidth(80); // Unit column
-      } else if (i == columnCount - 1) {
-        widths[i] = const FixedColumnWidth(120); // Cost column
-      } else {
-        widths[i] = const FixedColumnWidth(110); // Other columns
-      }
-    }
-    
-    return widths;
   }
 }

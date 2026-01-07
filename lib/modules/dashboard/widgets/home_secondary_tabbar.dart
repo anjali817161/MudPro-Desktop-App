@@ -26,19 +26,35 @@ class _SecondaryTabBarState extends State<HomeSecondaryTabbar> with TickerProvid
 
   // All tabs now use the same blue active color
   final List<Map<String, dynamic>> tabs = [
-    {"name": "New Report", "icon": Icons.add_circle_outline},
-    {"name": "Open Folder", "icon": Icons.folder_open},
-    {"name": "Save", "icon": Icons.save},
-    {"name": "Save as", "icon": Icons.save_as},
-    {"name": "Carry-over pad", "icon": Icons.copy_all},
-    {"name": "New Report", "icon": Icons.insert_drive_file},
-    {"name": "Carry-over", "icon": Icons.forward},
-    {"name": "Lock", "icon": Icons.lock},
-    {"name": "Calculate", "icon": Icons.calculate},
-    {"name": "Options", "icon": Icons.settings},
-    {"name": "Mud company", "icon": Icons.business},
-    {"name": "Upload", "icon": Icons.upload},
-    {"name": "Batch Upload", "icon": Icons.cloud_upload},
+    {"icon": Icons.add_circle_outline},
+    {"icon": Icons.folder_open},
+    {"icon": Icons.save},
+    {"icon": Icons.save_as},
+    {"icon": Icons.copy_all},
+    {"icon": Icons.insert_drive_file},
+    {"icon": Icons.forward},
+    {"icon": Icons.lock},
+    {"icon": Icons.play_circle_fill},
+    {"icon": Icons.settings},
+    {"icon": Icons.business},
+    {"icon": Icons.upload},
+    {"icon": Icons.cloud_upload},
+  ];
+
+  final List<String> tooltips = [
+    "New Report",
+    "Open Folder",
+    "Save",
+    "Save as",
+    "Carry-over pad",
+    "New Report",
+    "Carry-over",
+    "Lock",
+    "Calculate",
+    "Options",
+    "Mud company",
+    "Upload",
+    "Batch Upload",
   ];
 
   @override
@@ -93,7 +109,7 @@ class _SecondaryTabBarState extends State<HomeSecondaryTabbar> with TickerProvid
                         onEnter: (_) => setState(() => _hoveredIndex = index),
                         onExit: (_) => setState(() => _hoveredIndex = -1),
                         child: Tooltip(
-                          message: tabs[index]["name"] as String,
+                          message: tooltips[index],
                           waitDuration: const Duration(milliseconds: 300),
                           decoration: BoxDecoration(
                             gradient: AppTheme.primaryGradient,
@@ -112,7 +128,7 @@ class _SecondaryTabBarState extends State<HomeSecondaryTabbar> with TickerProvid
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                               margin: const EdgeInsets.only(left: 2),
                               decoration: BoxDecoration(
-                                gradient: isActive 
+                                gradient: isActive
                                     ? AppTheme.primaryGradient
                                     : _hoveredIndex == index
                                         ? LinearGradient(
@@ -127,7 +143,7 @@ class _SecondaryTabBarState extends State<HomeSecondaryTabbar> with TickerProvid
                                 color: isActive || _hoveredIndex == index ? null : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: isActive 
+                                  color: isActive
                                       ? AppTheme.primaryColor.withOpacity(0.3)
                                       : _hoveredIndex == index
                                           ? AppTheme.primaryColor.withOpacity(0.15)
@@ -152,30 +168,15 @@ class _SecondaryTabBarState extends State<HomeSecondaryTabbar> with TickerProvid
                                           ]
                                         : null,
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    transform: Matrix4.identity()
-                                      ..scale(_hoveredIndex == index ? 1.15 : 1.0),
-                                    child: Icon(
-                                      tabs[index]["icon"] as IconData,
-                                      size: 16,
-                                      color: isActive ? Colors.white : AppTheme.primaryColor,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    tabs[index]["name"] as String,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                                      color: isActive ? Colors.white : AppTheme.textPrimary,
-                                      letterSpacing: isActive ? 0.3 : 0.2,
-                                    ),
-                                  ),
-                                ],
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                transform: Matrix4.identity()
+                                  ..scale(_hoveredIndex == index ? 1.15 : 1.0),
+                                child: Icon(
+                                  tabs[index]["icon"] as IconData,
+                                  size: 16,
+                                  color: isActive ? Colors.white : AppTheme.primaryColor,
+                                ),
                               ),
                             ),
                           ),

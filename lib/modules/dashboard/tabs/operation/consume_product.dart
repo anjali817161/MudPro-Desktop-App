@@ -218,9 +218,9 @@ class ConsumeProductView extends StatelessWidget {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                _buildEnhancedRadio("Used", Icons.trending_up_rounded, "Used"),
+                                buildEnhancedRadio("Used", Icons.trending_up_rounded, "Used"),
                                 const SizedBox(width: 20),
-                                _buildEnhancedRadio("Final", Icons.flag_rounded, "Final"),
+                                buildEnhancedRadio("Final", Icons.flag_rounded, "Final"),
                               ],
                             ),
                           ],
@@ -271,9 +271,9 @@ class ConsumeProductView extends StatelessWidget {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              _buildEnhancedRadio("Used", Icons.trending_up_rounded, "Used"),
+                              buildEnhancedRadio("Used", Icons.trending_up_rounded, "Used"),
                               const SizedBox(width: 20),
-                              _buildEnhancedRadio("Final", Icons.flag_rounded, "Final"),
+                              buildEnhancedRadio("Final", Icons.flag_rounded, "Final"),
                             ],
                           ),
                         ],
@@ -336,7 +336,7 @@ class ConsumeProductView extends StatelessWidget {
     ));
   }
 
-  Widget _buildEnhancedRadio(String label, IconData icon, String value) {
+  Widget buildEnhancedRadio(String label, IconData icon, String value) {
     return Obx(() => InkWell(
       onTap: dashboardController.isLocked.value 
           ? null 
