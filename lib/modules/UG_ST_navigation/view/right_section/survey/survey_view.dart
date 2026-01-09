@@ -87,7 +87,7 @@ final demo3DWellPath = [
                   case 3:
                     return  DoglegChart(points: demoDoglegData,);
                   case 4:
-                    return  Survey3DChart(points: demo3DWellPath,);
+                    return  Chart3DPage();
                   default:
                     return SurveyDataTab();
                 }

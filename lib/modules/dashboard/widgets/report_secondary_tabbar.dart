@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/controller/dashboard_controller.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/base_secondary_tababr.dart';
-import 'package:mudpro_desktop_app/modules/report/report_manager/report_manager_view.dart';
+import 'package:mudpro_desktop_app/modules/report/tabs/recap_home_page.dart';
+import 'package:mudpro_desktop_app/modules/report/tabs/report_manager_view.dart';
 import 'package:mudpro_desktop_app/modules/well_comparision/view/well_comparision_view.dart';
 
 class ReportSecondaryTabbar extends StatelessWidget {
@@ -33,7 +34,8 @@ class ReportSecondaryTabbar extends StatelessWidget {
             controller.openOverlay(WellComparisonPage());
             break;
           case 2:
-            controller.openOverlay(const Text("Recap Page"));
+           
+              Get.to(() => RecapHomePage());
             break;
           case 3:
             controller.openOverlay(const Text("Cost Of Pad"));

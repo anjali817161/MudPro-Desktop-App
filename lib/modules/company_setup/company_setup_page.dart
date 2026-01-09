@@ -208,7 +208,7 @@ class _CompanySetupPageState extends State<CompanySetupPage>
           fontWeight: FontWeight.w500,
         ),
         tabs: const [
-          Tab(text: 'Mud Company'),
+          Tab(text: 'Engineers'),
           Tab(text: 'Product'),
           Tab(text: 'Services'),
           Tab(text: 'Operator'),

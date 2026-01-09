@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mudpro_desktop_app/modules/daily_report/home_tabs/dailyreport_options/dailyreport_options_left_pannel.dart';
+import 'package:mudpro_desktop_app/modules/daily_report/home_tabs/dailyreport_options/tabs/option_detail_report.dart';
+import 'package:mudpro_desktop_app/modules/daily_report/home_tabs/dailyreport_options/tabs/summary_tab.dart';
+import 'package:mudpro_desktop_app/modules/daily_report/home_tabs/dailyreport_options/tabs/option_report_tab.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/controller/options_controller.dart';
 import 'package:mudpro_desktop_app/modules/options/options_left_pannel.dart';
 import 'package:mudpro_desktop_app/modules/options/tabs/language_tab.dart';
@@ -7,8 +11,8 @@ import 'package:mudpro_desktop_app/modules/options/tabs/option_report_page.dart'
 import 'package:mudpro_desktop_app/modules/options/tabs/unit_tab.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
-class OptionsPage extends StatelessWidget {
-  OptionsPage({super.key});
+class DailyreportOptionsPage extends StatelessWidget {
+  DailyreportOptionsPage({super.key});
 
   final OptionsController controller = Get.put(OptionsController());
 
@@ -78,7 +82,7 @@ class OptionsPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const OptionsLeftPanel(),
+                  child: const DailyreportOptionsLeftPannel(),
                 ),
                 
                 // Right Panel
@@ -87,17 +91,13 @@ class OptionsPage extends StatelessWidget {
                     final selectedTab = controller.selectedTab.value;
                     switch (selectedTab) {
                       case 0:
-                        return const UnitRightPanel();
+                        return ReportOptionSummaryPage();
                       case 1:
-                        return  OptionsReportPage();
+                        return DailyReportOptionPage();
                       case 2:
-                        return  LanguageTab();
-                      case 3:
-                        return  OptionsReportPage();
-                      case 4:
-                        return  OptionsReportPage();
+                        return DetailReportPage();
                       default:
-                        return const UnitRightPanel();
+                        return  ReportOptionSummaryPage();
                     }
                   }),
                 ),

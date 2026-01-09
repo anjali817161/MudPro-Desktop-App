@@ -73,16 +73,20 @@ class HorizontalCostChart extends StatelessWidget {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final chartHeight = constraints.maxHeight - 30;
-                // बार्स की height कम की गई है: 0.7 से 0.5 कर दिया
-                final barHeight = chartHeight / data.length * 0.5;
-                // Spacing बढ़ाया गया है: 0.3 से 0.5 कर दिया
-                final spacing = chartHeight / data.length * 0.5;
+                // Calculate grid sections based on data length
+                final gridSections = data.length;
+                final sectionHeight = constraints.maxHeight / gridSections;
+                
+                // Bar height remains fixed
+                final barHeight = 30.0;
+                
+                // Calculate bar position to center it in each grid section
+                final barTopOffset = (sectionHeight - barHeight) / 2;
 
                 return Stack(
                   children: [
-                    // Grid Background
-                    _buildGridBackground(constraints.maxWidth),
+                    // Grid Background - matches data length
+                    _buildGridBackground(constraints.maxHeight, gridSections),
 
                     // Vertical Axis
                     Positioned(
@@ -95,7 +99,7 @@ class HorizontalCostChart extends StatelessWidget {
                       ),
                     ),
 
-                    // Bars with reduced height
+                    // Bars aligned with grid sections
                     ...List.generate(data.length, (index) {
                       final item = data[index];
                       final color = CostData.chartColors[index % CostData.chartColors.length];
@@ -103,7 +107,7 @@ class HorizontalCostChart extends StatelessWidget {
 
                       return Positioned(
                         left: 50,
-                        top: index * (barHeight + spacing),
+                        top: (index * sectionHeight) + barTopOffset,
                         child: TweenAnimationBuilder<double>(
                           duration: Duration(milliseconds: 800 + index * 100),
                           curve: Curves.easeOutBack,
@@ -122,8 +126,8 @@ class HorizontalCostChart extends StatelessWidget {
                                   end: Alignment.centerRight,
                                 ),
                                 borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(barHeight / 2),
-                                  bottomRight: Radius.circular(barHeight / 2),
+                                  topRight: Radius.circular(barHeight / 5),
+                                  bottomRight: Radius.circular(barHeight / 5),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
@@ -190,54 +194,34 @@ class HorizontalCostChart extends StatelessWidget {
                       );
                     }),
 
-                    // Y-Axis Labels
+                    // Y-Axis Labels - aligned with grid lines
                     Positioned(
                       left: 0,
                       top: 0,
-                      bottom: 0,
                       child: SizedBox(
                         width: 40,
+                        height: constraints.maxHeight,
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${maxValue.toInt()}%',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.textSecondary,
+                          children: List.generate(gridSections + 1, (index) {
+                            final percentage = maxValue * (1 - index / gridSections);
+                            return Expanded(
+                              child: Align(
+                                alignment: index == 0 ? Alignment.topCenter : 
+                                          index == gridSections ? Alignment.bottomCenter :
+                                          Alignment.center,
+                                child: Text(
+                                  '${percentage.toInt()}%',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: index == 0 || index == gridSections 
+                                        ? FontWeight.w600 
+                                        : FontWeight.normal,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
                               ),
-                            ),
-                            Text(
-                              '${(maxValue * 0.75).toInt()}%',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              '${(maxValue * 0.5).toInt()}%',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              '${(maxValue * 0.25).toInt()}%',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              '0%',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ],
+                            );
+                          }),
                         ),
                       ),
                     ),
@@ -247,7 +231,7 @@ class HorizontalCostChart extends StatelessWidget {
             ),
           ),
 
-          // Legend (if needed)
+          // Legend
           if (showValues && data.length > 0) ...[
             const SizedBox(height: 16),
             Wrap(
@@ -296,16 +280,16 @@ class HorizontalCostChart extends StatelessWidget {
     );
   }
 
-  Widget _buildGridBackground(double width) {
+  Widget _buildGridBackground(double totalHeight, int sections) {
     return Column(
-      children: List.generate(5, (index) {
+      children: List.generate(sections, (index) {
         return Expanded(
           child: Container(
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(
                   color: Colors.grey.shade200,
-                  width: index % 2 == 0 ? 0.5 : 0.3,
+                  width: 0.5,
                 ),
               ),
             ),

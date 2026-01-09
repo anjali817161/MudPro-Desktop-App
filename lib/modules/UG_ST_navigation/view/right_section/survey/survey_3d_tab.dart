@@ -1,870 +1,791 @@
 import 'package:flutter/material.dart';
-import 'package:vector_math/vector_math_64.dart' as vm;
-import 'package:mudpro_desktop_app/modules/UG_ST_navigation/model/UG_ST_model.dart';
-import 'package:mudpro_desktop_app/theme/app_theme.dart';
+import 'package:get/get.dart';
+import 'package:flutter_cube/flutter_cube.dart';
+import 'dart:math' as math;
 
-class Survey3DChart extends StatefulWidget {
-  final List<Well3DPoint> points;
-
-  const Survey3DChart({super.key, required this.points});
-
-  static final demoPoints = <Well3DPoint>[
-    Well3DPoint(0, 0, 0),
-    Well3DPoint(150, 0, 300),
-    Well3DPoint(300, 100, 600),
-    Well3DPoint(450, 200, 900),
-    Well3DPoint(550, 350, 1200),
-    Well3DPoint(600, 500, 1500),
-    Well3DPoint(620, 650, 1800),
-    Well3DPoint(600, 800, 2100),
-    Well3DPoint(550, 950, 2400),
-    Well3DPoint(450, 1100, 2700),
-    Well3DPoint(300, 1250, 3000),
-    Well3DPoint(150, 1400, 3300),
-    Well3DPoint(0, 1500, 3600),
-  ];
-
+// Controller for managing 3D chart state
+class Chart3DController extends GetxController {
+  late Object chartObject;
+  late Scene scene;
+  
+  // Chart data points
+  final chartData = <ChartPoint>[].obs;
+  final selectedChartType = 'Surface'.obs;
+  
+  // Rotation angles
+  final rotationX = (-0.4).obs;
+  final rotationY = (0.6).obs;
+  
+  // Auto rotation
+  final isAutoRotating = false.obs;
+  
   @override
-  State<Survey3DChart> createState() => _Survey3DChartState();
+  void onInit() {
+    super.onInit();
+    generateDemoData();
+    initializeScene();
+  }
+  
+  void generateDemoData() {
+    // Demo data points for 3D visualization
+    chartData.value = [
+      ChartPoint(x: 0, y: 2000, z: 0, label: '-20000'),
+      ChartPoint(x: 1, y: 3500, z: 0, label: '-10000'),
+      ChartPoint(x: 2, y: 5000, z: 0, label: '0'),
+      ChartPoint(x: 3, y: 4000, z: 0, label: '5000'),
+      ChartPoint(x: 4, y: 6000, z: 0, label: '10000'),
+      ChartPoint(x: 5, y: 8000, z: 0, label: '15000'),
+    ];
+  }
+  
+  void initializeScene() {
+    scene = Scene();
+    chartObject = Object(fileName: "");
+    scene.world.add(chartObject);
+    scene.camera.position.setValues(0, 5, 10);
+    scene.camera.target.setValues(0, 0, 0);
+  }
+  
+  void rotateLeft() {
+    rotationY.value -= 0.1;
+  }
+  
+  void rotateRight() {
+    rotationY.value += 0.1;
+  }
+  
+  void rotateUp() {
+    rotationX.value -= 0.1;
+  }
+  
+  void rotateDown() {
+    rotationX.value += 0.1;
+  }
+  
+  void toggleAutoRotation() {
+    isAutoRotating.value = !isAutoRotating.value;
+  }
+  
+  void resetRotation() {
+    rotationX.value = -0.4;
+    rotationY.value = 0.6;
+    isAutoRotating.value = false;
+  }
+  
+  void changeChartType(String type) {
+    selectedChartType.value = type;
+  }
 }
 
-class _Survey3DChartState extends State<Survey3DChart> {
-  double rotX = -0.6;
-  double rotY = 0.8;
-  double zoom = 0.8;
-  double panX = 0.0;
-  double panY = 0.0;
+class ChartPoint {
+  final double x;
+  final double y;
+  final double z;
+  final String label;
+  
+  ChartPoint({
+    required this.x,
+    required this.y,
+    required this.z,
+    required this.label,
+  });
+}
 
+// Main 3D Chart Page
+class Chart3DPage extends StatelessWidget {
+  final Chart3DController controller = Get.put(Chart3DController());
+  
+  Chart3DPage({Key? key}) : super(key: key);
+  
   @override
   Widget build(BuildContext context) {
-    final data = widget.points.isNotEmpty
-        ? widget.points
-        : Survey3DChart.demoPoints;
-
-    return Container(
-      decoration: AppTheme.elevatedCardDecoration.copyWith(
-        border: Border.all(color: Colors.grey.shade200),
+    // Start auto rotation if enabled
+    if (controller.isAutoRotating.value) {
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (controller.isAutoRotating.value) {
+          controller.rotationY.value += 0.02;
+        }
+      });
+    }
+    
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('3D Interactive Chart'),
+        backgroundColor: Colors.grey[900],
+        elevation: 0,
       ),
-      padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+        child: Row(
           children: [
-          // ================= HEADER =================
-          Row(
-            children: [
-              Icon(Icons.rotate_90_degrees_ccw, size: 20, color: AppTheme.primaryColor),
-              const SizedBox(width: 8),
-              Text(
-                "3D Well Trajectory",
-                style: AppTheme.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryColor,
+            // Main 3D Chart Area
+            Expanded(
+              child: Container(
+                height: MediaQuery.of(context).size.height - 100,
+                color: Colors.black,
+                child: Center(
+                  child: Obx(() {
+                    // Trigger rebuild for auto rotation
+                    if (controller.isAutoRotating.value) {
+                      Future.delayed(const Duration(milliseconds: 50), () {
+                        if (controller.isAutoRotating.value && context.mounted) {
+                          controller.rotationY.value += 0.02;
+                        }
+                      });
+                    }
+                    
+                    return Custom3DChart(
+                      data: controller.chartData,
+                      rotationX: controller.rotationX.value,
+                      rotationY: controller.rotationY.value,
+                      chartType: controller.selectedChartType.value,
+                    );
+                  }),
                 ),
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
+            ),
+            
+            // Right Side Control Panel
+            Container(
+              width: 80,
+              color: Colors.grey[900],
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppTheme.primaryColor,
-                      ),
+                    const SizedBox(height: 20),
+                    // Rotation Controls
+                    _buildControlButton(
+                      icon: Icons.arrow_upward,
+                      label: 'Up',
+                      color: Colors.blue,
+                      onTap: () => controller.rotateUp(),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      "3D View",
-                      style: AppTheme.caption.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // ================= CHART INFO =================
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.cardColor,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, size: 14, color: AppTheme.infoColor),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "Interactive 3D visualization of well trajectory with X, Y, Z coordinates",
-                    style: AppTheme.caption.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.rotate_right, size: 12, color: AppTheme.primaryColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        "${(rotX * 180 / 3.14).toStringAsFixed(0)}°, ${(rotY * 180 / 3.14).toStringAsFixed(0)}°",
-                        style: AppTheme.caption.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // ================= 3D CHART CONTAINER =================
-          Container(
-            height: 500,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade800),
-            ),
-            child: Stack(
-                children: [
-                  // 3D Chart
-                  CustomPaint(
-                    painter: _Well3DPainter(
-                      points: data,
-                      rotX: rotX,
-                      rotY: rotY,
-                      zoom: zoom,
-                      panX: panX,
-                      panY: panY,
-                    ),
-                    size: Size.infinite,
-                  ),
-
-                  // Axis Labels
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Row(
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _axisLabel("X: East/West", AppTheme.accentColor),
-                        const SizedBox(width: 8),
-                        _axisLabel("Y: North/South", AppTheme.secondaryColor),
-                        const SizedBox(width: 8),
-                        _axisLabel("Z: Depth", AppTheme.primaryColor),
+                        _buildSmallButton(
+                          icon: Icons.arrow_back,
+                          color: Colors.blue,
+                          onTap: () => controller.rotateLeft(),
+                        ),
+                        const SizedBox(width: 4),
+                        _buildSmallButton(
+                          icon: Icons.arrow_forward,
+                          color: Colors.blue,
+                          onTap: () => controller.rotateRight(),
+                        ),
                       ],
                     ),
-                  ),
-
-                  // Coordinates Display
-                  Positioned(
-                    bottom: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        "Scale: 1:1000 • Points: ${data.length}",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                      ),
+                    const SizedBox(height: 8),
+                    _buildControlButton(
+                      icon: Icons.arrow_downward,
+                      label: 'Down',
+                      color: Colors.blue,
+                      onTap: () => controller.rotateDown(),
                     ),
-                  ),
-
-                  // ===== ENHANCED ROTATION CONTROLS =====
-                  Positioned(
-                    right: 10,
-                    top: 50,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        children: [
-                          // Rotation Controls
-                          Text(
-                            "Rotation",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          
-                          // X Rotation
-                          Row(
-                            children: [
-                              _controlButton(
-                                Icons.arrow_upward,
-                                "X-",
-                                () => setState(() {
-                                  rotX = (rotX - 0.2) % (2 * 3.14159);
-                                  _constrainChart();
-                                }),
-                              ),
-                              const SizedBox(width: 4),
-                              _controlButton(
-                                Icons.arrow_downward,
-                                "X+",
-                                () => setState(() {
-                                  rotX = (rotX + 0.2) % (2 * 3.14159);
-                                  _constrainChart();
-                                }),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          
-                          // Y Rotation
-                          Row(
-                            children: [
-                              _controlButton(
-                                Icons.arrow_back,
-                                "Y-",
-                                () => setState(() {
-                                  rotY = (rotY - 0.2) % (2 * 3.14159);
-                                  _constrainChart();
-                                }),
-                              ),
-                              const SizedBox(width: 4),
-                              _controlButton(
-                                Icons.arrow_forward,
-                                "Y+",
-                                () => setState(() {
-                                  rotY = (rotY + 0.2) % (2 * 3.14159);
-                                  _constrainChart();
-                                }),
-                              ),
-                            ],
-                          ),
-                          
-                          const SizedBox(height: 12),
-                          Container(
-                            height: 1,
-                            width: 60,
-                            color: Colors.grey.shade600,
-                          ),
-                          const SizedBox(height: 12),
-                          
-                          // Zoom Controls
-                          Text(
-                            "Zoom",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          
-                          Row(
-                            children: [
-                              _controlButton(
-                                Icons.zoom_in,
-                                "",
-                                () => setState(() {
-                                  zoom = (zoom * 1.2).clamp(0.1, 3.0);
-                                  _constrainChart();
-                                }),
-                              ),
-                              const SizedBox(width: 4),
-                              _controlButton(
-                                Icons.zoom_out,
-                                "",
-                                () => setState(() {
-                                  zoom = (zoom / 1.2).clamp(0.1, 3.0);
-                                  _constrainChart();
-                                }),
-                              ),
-                            ],
-                          ),
-                          
-                          const SizedBox(height: 12),
-                          Container(
-                            height: 1,
-                            width: 60,
-                            color: Colors.grey.shade600,
-                          ),
-                          const SizedBox(height: 12),
-                          
-                          // Reset Button
-                          _controlButton(
-                            Icons.refresh,
-                            "Reset",
-                            () => setState(() {
-                              rotX = -0.6;
-                              rotY = 0.8;
-                              zoom = 0.8;
-                              panX = 0.0;
-                              panY = 0.0;
-                            }),
-                            color: AppTheme.warningColor,
-                          ),
-                        ],
-                      ),
+                    const SizedBox(height: 24),
+                    
+                    // Auto Rotation
+                    Obx(() => _buildControlButton(
+                      icon: controller.isAutoRotating.value 
+                          ? Icons.pause 
+                          : Icons.play_arrow,
+                      label: 'Auto',
+                      color: controller.isAutoRotating.value 
+                          ? Colors.orange 
+                          : Colors.green,
+                      onTap: () => controller.toggleAutoRotation(),
+                    )),
+                    const SizedBox(height: 16),
+                    
+                    _buildControlButton(
+                      icon: Icons.refresh,
+                      label: 'Reset',
+                      color: Colors.red,
+                      onTap: () => controller.resetRotation(),
                     ),
-                  ),
-
-                  // Pan Controls (for touch/mouse)
-                  Positioned(
-                    bottom: 10,
-                    right: 10,
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.grab,
-                      child: GestureDetector(
-                        onPanUpdate: (details) {
-                          setState(() {
-                            panX += details.delta.dx * 0.01;
-                            panY += details.delta.dy * 0.01;
-                            _constrainChart();
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.7),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Icon(
-                            Icons.pan_tool,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                    const SizedBox(height: 24),
+                    
+                    // Chart Type Controls
+                    _buildControlButton(
+                      icon: Icons.grid_3x3,
+                      label: 'Pipe',
+                      color: Colors.purple,
+                      onTap: () => controller.changeChartType('Surface'),
                     ),
-                  ),
-                ],
-              ),
-
-            ),
-
-          const SizedBox(height: 16),
-
-          // ================= VIEW PRESETS =================
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "View Presets",
-                  style: AppTheme.caption.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _viewPresetButton("Top View", Icons.north, () => setState(() {
-                      rotX = 0;
-                      rotY = 0;
-                      zoom = 0.8;
-                    })),
-                    _viewPresetButton("Side View", Icons.east, () => setState(() {
-                      rotX = 0;
-                      rotY = 1.57;
-                      zoom = 0.8;
-                    })),
-                    _viewPresetButton("Front View", Icons.south, () => setState(() {
-                      rotX = 1.57;
-                      rotY = 0;
-                      zoom = 0.8;
-                    })),
-                    _viewPresetButton("Isometric", Icons.rotate_90_degrees_ccw, () => setState(() {
-                      rotX = -0.6;
-                      rotY = 0.8;
-                      zoom = 0.8;
-                    })),
+                    const SizedBox(height: 16),
+                    _buildControlButton(
+                      icon: Icons.show_chart,
+                      label: 'Line',
+                      color: Colors.cyan,
+                      onTap: () => controller.changeChartType('Line'),
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // ================= COORDINATE SYSTEM =================
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildSmallButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color, width: 1.5),
+        ),
+        child: Icon(icon, color: color, size: 18),
+      ),
+    );
+  }
+  
+  Widget _buildControlButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
-              color: AppTheme.infoColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: AppTheme.infoColor.withOpacity(0.3)),
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: color, width: 2),
             ),
-            child: Row(
-              children: [
-                Icon(Icons.compass_calibration, size: 16, color: AppTheme.infoColor),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "X: East-West (+E/-W) | Y: North-South (+N/-S) | Z: Vertical Depth (TVD)",
-                    style: AppTheme.caption.copyWith(
-                      color: AppTheme.infoColor,
-                    ),
-                  ),
-                ),
-              ],
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
       ),
-    )
     );
-  }
-
-  Widget _axisLabel(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 9,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget _controlButton(IconData icon, String label, VoidCallback onPressed, {Color? color}) {
-    return InkWell(
-      onTap: onPressed,
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: color ?? AppTheme.primaryColor,
-          borderRadius: BorderRadius.circular(4),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Center(
-          child: label.isEmpty
-              ? Icon(icon, size: 14, color: Colors.white)
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, size: 12, color: Colors.white),
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 7,
-                      ),
-                    ),
-                  ],
-                ),
-        ),
-      ),
-    );
-  }
-
-  Widget _viewPresetButton(String label, IconData icon, VoidCallback onPressed) {
-    return InkWell(
-      onTap: onPressed,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.grey.shade300),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: AppTheme.primaryColor),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: AppTheme.caption.copyWith(
-                color: AppTheme.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _constrainChart() {
-    // Keep zoom within reasonable bounds
-    zoom = zoom.clamp(0.1, 3.0);
-    
-    // Keep pan within bounds
-    panX = panX.clamp(-100.0, 100.0);
-    panY = panY.clamp(-100.0, 100.0);
   }
 }
 
-class _Well3DPainter extends CustomPainter {
-  final List<Well3DPoint> points;
-  final double rotX;
-  final double rotY;
-  final double zoom;
-  final double panX;
-  final double panY;
+// Custom 3D Chart Widget
+class Custom3DChart extends StatefulWidget {
+  final RxList<ChartPoint> data;
+  final double rotationX;
+  final double rotationY;
+  final String chartType;
+  
+  const Custom3DChart({
+    Key? key,
+    required this.data,
+    required this.rotationX,
+    required this.rotationY,
+    required this.chartType,
+  }) : super(key: key);
+  
+  @override
+  State<Custom3DChart> createState() => _Custom3DChartState();
+}
 
-  _Well3DPainter({
-    required this.points,
-    required this.rotX,
-    required this.rotY,
-    required this.zoom,
-    required this.panX,
-    required this.panY,
+class _Custom3DChartState extends State<Custom3DChart> {
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: Chart3DPainter(
+        data: widget.data,
+        rotationX: widget.rotationX,
+        rotationY: widget.rotationY,
+        chartType: widget.chartType,
+      ),
+      size: Size.infinite,
+    );
+  }
+}
+
+// Custom Painter for 3D Chart
+class Chart3DPainter extends CustomPainter {
+  final RxList<ChartPoint> data;
+  final double rotationX;
+  final double rotationY;
+  final String chartType;
+  
+  Chart3DPainter({
+    required this.data,
+    required this.rotationX,
+    required this.rotationY,
+    required this.chartType,
   });
-
+  
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2 + panX, size.height / 2 + panY);
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    final scale = math.min(size.width, size.height) / 18; // Smaller scale
     
-    // Calculate bounds to ensure chart stays within canvas
-    final bounds = Rect.fromCenter(
-      center: center,
-      width: size.width * 0.8,
-      height: size.height * 0.8,
-    );
-
-    // Create transformation matrix for 3D rotation
-    final transform = vm.Matrix4.identity()
-      ..rotateX(rotX)
-      ..rotateY(rotY)
-      ..scale(zoom);
-
-    /// ===== BACKGROUND GRID =====
-    _drawGrid(canvas, size, center);
-
-    /// ===== 3D AXES =====
-    _draw3DAxes(canvas, size, center, transform);
-
-    /// ===== WELL PATH =====
-    _drawWellPath(canvas, size, center, transform, bounds);
-
-    /// ===== START AND END POINTS =====
-    if (points.isNotEmpty) {
-      _drawSpecialPoints(canvas, size, center, transform, bounds);
-    }
-  }
-
-  void _drawGrid(Canvas canvas, Size size, Offset center) {
-    final gridPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.2)
-      ..strokeWidth = 0.5;
-
-    // Vertical lines
-    for (int i = -10; i <= 10; i++) {
-      final x = center.dx + i * 40;
-      if (x >= 0 && x <= size.width) {
-        canvas.drawLine(
-          Offset(x, 0),
-          Offset(x, size.height),
-          gridPaint,
-        );
-      }
-    }
-
-    // Horizontal lines
-    for (int i = -10; i <= 10; i++) {
-      final y = center.dy + i * 40;
-      if (y >= 0 && y <= size.height) {
-        canvas.drawLine(
-          Offset(0, y),
-          Offset(size.width, y),
-          gridPaint,
-        );
-      }
-    }
-  }
-
-  void _draw3DAxes(Canvas canvas, Size size, Offset center, vm.Matrix4 transform) {
-    final axisLength = 80.0;
+    // Draw 3D grid walls (like in image)
+    _draw3DGridWalls(canvas, centerX, centerY, scale);
     
-    // X Axis (Red - East/West)
-    final xAxis = transform.transform3(vm.Vector3(axisLength, 0, 0));
-    canvas.drawLine(
-      center,
-      Offset(center.dx + xAxis.x, center.dy + xAxis.y),
-      Paint()
-        ..color = AppTheme.accentColor
-        ..strokeWidth = 2,
-    );
-    canvas.drawCircle(
-      Offset(center.dx + xAxis.x, center.dy + xAxis.y),
-      3,
-      Paint()..color = AppTheme.accentColor,
-    );
-
-    // Y Axis (Green - North/South)
-    final yAxis = transform.transform3(vm.Vector3(0, axisLength, 0));
-    canvas.drawLine(
-      center,
-      Offset(center.dx + yAxis.x, center.dy + yAxis.y),
-      Paint()
-        ..color = AppTheme.secondaryColor
-        ..strokeWidth = 2,
-    );
-    canvas.drawCircle(
-      Offset(center.dx + yAxis.x, center.dy + yAxis.y),
-      3,
-      Paint()..color = AppTheme.secondaryColor,
-    );
-
-    // Z Axis (Blue - Depth)
-    final zAxis = transform.transform3(vm.Vector3(0, 0, axisLength));
-    canvas.drawLine(
-      center,
-      Offset(center.dx + zAxis.x, center.dy + zAxis.y),
-      Paint()
-        ..color = AppTheme.primaryColor
-        ..strokeWidth = 2,
-    );
-    canvas.drawCircle(
-      Offset(center.dx + zAxis.x, center.dy + zAxis.y),
-      3,
-      Paint()..color = AppTheme.primaryColor,
-    );
+    // Draw axes
+    _draw3DAxes(canvas, centerX, centerY, scale);
+    
+    // Always draw the pipe/cylinder graph (main dynamic graph)
+    _drawPipeGraph(canvas, centerX, centerY, scale);
+    
+    // Draw chart based on type (additional visualization)
+    if (chartType == 'Line') {
+      _draw3DLine(canvas, centerX, centerY, scale);
+    }
+    
+    // Draw labels
+    _drawLabels(canvas, centerX, centerY, scale);
   }
-
-  void _drawWellPath(Canvas canvas, Size size, Offset center, vm.Matrix4 transform, Rect bounds) {
-    final pathPaint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
-
-    final fillPaint = Paint()
-      ..color = AppTheme.primaryColor.withOpacity(0.3)
+  
+  Offset project3D(double x, double y, double z, double cx, double cy, double scale) {
+    // Apply rotation
+    final cosX = math.cos(rotationX);
+    final sinX = math.sin(rotationX);
+    final cosY = math.cos(rotationY);
+    final sinY = math.sin(rotationY);
+    
+    // Rotate around Y axis
+    final x1 = x * cosY - z * sinY;
+    final z1 = x * sinY + z * cosY;
+    
+    // Rotate around X axis
+    final y1 = y * cosX - z1 * sinX;
+    final z2 = y * sinX + z1 * cosX;
+    
+    // Project to 2D with perspective
+    final perspective = 1 / (1 + z2 * 0.05);
+    final projX = cx + x1 * scale * perspective;
+    final projY = cy - y1 * scale * perspective;
+    
+    return Offset(projX, projY);
+  }
+  
+  void _draw3DGridWalls(Canvas canvas, double cx, double cy, double scale) {
+    final wallPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.15)
       ..style = PaintingStyle.fill;
-
-    final path = Path();
-    List<Offset> screenPoints = [];
-
-    for (int i = 0; i < points.length; i++) {
-      final p = points[i];
-
-      // Normalize values for better scaling
-      final v = vm.Vector3(
-        p.x / 50, // Scale factor for X
-        p.y / 50, // Scale factor for Y
-        -p.z / 50, // Invert Z for depth (negative is down)
+    
+    final gridPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.4)
+      ..strokeWidth = 0.5
+      ..style = PaintingStyle.stroke;
+    
+    // Back wall (X-Y plane at z=5)
+    final backWall = Path();
+    backWall.moveTo(
+      project3D(-5, -3, 5, cx, cy, scale).dx,
+      project3D(-5, -3, 5, cx, cy, scale).dy,
+    );
+    backWall.lineTo(
+      project3D(5, -3, 5, cx, cy, scale).dx,
+      project3D(5, -3, 5, cx, cy, scale).dy,
+    );
+    backWall.lineTo(
+      project3D(5, 5, 5, cx, cy, scale).dx,
+      project3D(5, 5, 5, cx, cy, scale).dy,
+    );
+    backWall.lineTo(
+      project3D(-5, 5, 5, cx, cy, scale).dx,
+      project3D(-5, 5, 5, cx, cy, scale).dy,
+    );
+    backWall.close();
+    canvas.drawPath(backWall, wallPaint);
+    
+    // Draw grid lines on back wall
+    for (int i = -4; i <= 4; i++) {
+      // Vertical lines
+      canvas.drawLine(
+        project3D(i.toDouble(), -3, 5, cx, cy, scale),
+        project3D(i.toDouble(), 5, 5, cx, cy, scale),
+        gridPaint,
       );
-
-      final tv = transform.transform3(v);
+      // Horizontal lines
+      canvas.drawLine(
+        project3D(-5, i.toDouble(), 5, cx, cy, scale),
+        project3D(5, i.toDouble(), 5, cx, cy, scale),
+        gridPaint,
+      );
+    }
+    
+    // Right wall (Y-Z plane at x=5)
+    final rightWall = Path();
+    rightWall.moveTo(
+      project3D(5, -3, -5, cx, cy, scale).dx,
+      project3D(5, -3, -5, cx, cy, scale).dy,
+    );
+    rightWall.lineTo(
+      project3D(5, -3, 5, cx, cy, scale).dx,
+      project3D(5, -3, 5, cx, cy, scale).dy,
+    );
+    rightWall.lineTo(
+      project3D(5, 5, 5, cx, cy, scale).dx,
+      project3D(5, 5, 5, cx, cy, scale).dy,
+    );
+    rightWall.lineTo(
+      project3D(5, 5, -5, cx, cy, scale).dx,
+      project3D(5, 5, -5, cx, cy, scale).dy,
+    );
+    rightWall.close();
+    canvas.drawPath(rightWall, wallPaint);
+    
+    // Draw grid lines on right wall
+    for (int i = -4; i <= 4; i++) {
+      // Vertical lines
+      canvas.drawLine(
+        project3D(5, -3, i.toDouble(), cx, cy, scale),
+        project3D(5, 5, i.toDouble(), cx, cy, scale),
+        gridPaint,
+      );
+      // Horizontal lines
+      canvas.drawLine(
+        project3D(5, i.toDouble(), -5, cx, cy, scale),
+        project3D(5, i.toDouble(), 5, cx, cy, scale),
+        gridPaint,
+      );
+    }
+    
+    // Floor (X-Z plane at y=-3)
+    final floor = Path();
+    floor.moveTo(
+      project3D(-5, -3, -5, cx, cy, scale).dx,
+      project3D(-5, -3, -5, cx, cy, scale).dy,
+    );
+    floor.lineTo(
+      project3D(5, -3, -5, cx, cy, scale).dx,
+      project3D(5, -3, -5, cx, cy, scale).dy,
+    );
+    floor.lineTo(
+      project3D(5, -3, 5, cx, cy, scale).dx,
+      project3D(5, -3, 5, cx, cy, scale).dy,
+    );
+    floor.lineTo(
+      project3D(-5, -3, 5, cx, cy, scale).dx,
+      project3D(-5, -3, 5, cx, cy, scale).dy,
+    );
+    floor.close();
+    canvas.drawPath(floor, wallPaint);
+    
+    // Draw grid lines on floor
+    for (int i = -4; i <= 4; i++) {
+      canvas.drawLine(
+        project3D(i.toDouble(), -3, -5, cx, cy, scale),
+        project3D(i.toDouble(), -3, 5, cx, cy, scale),
+        gridPaint,
+      );
+      canvas.drawLine(
+        project3D(-5, -3, i.toDouble(), cx, cy, scale),
+        project3D(5, -3, i.toDouble(), cx, cy, scale),
+        gridPaint,
+      );
+    }
+  }
+  
+  void _draw3DAxes(Canvas canvas, double cx, double cy, double scale) {
+    final axisPaint = Paint()
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    
+    // X axis - Red
+    axisPaint.color = Colors.red;
+    canvas.drawLine(
+      project3D(-5, -3, 0, cx, cy, scale),
+      project3D(5, -3, 0, cx, cy, scale),
+      axisPaint,
+    );
+    
+    // Y axis - Green (vertical cylinder in image)
+    axisPaint.color = Colors.green;
+    canvas.drawLine(
+      project3D(0, -3, 0, cx, cy, scale),
+      project3D(0, 5, 0, cx, cy, scale),
+      axisPaint,
+    );
+    
+    // Draw cylinder for Y axis
+    _drawCylinder(canvas, cx, cy, scale);
+    
+    // Z axis - Blue
+    axisPaint.color = Colors.blue;
+    canvas.drawLine(
+      project3D(0, -3, -5, cx, cy, scale),
+      project3D(0, -3, 5, cx, cy, scale),
+      axisPaint,
+    );
+  }
+  
+  void _drawCylinder(Canvas canvas, double cx, double cy, double scale) {
+    final cylinderPaint = Paint()
+      ..color = Colors.white.withOpacity(0.7)
+      ..style = PaintingStyle.fill;
+    
+    final edgePaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+    
+    // Draw cylinder segments
+    final segments = 16;
+    for (int i = 0; i < segments; i++) {
+      final angle1 = (i / segments) * 2 * math.pi;
+      final angle2 = ((i + 1) / segments) * 2 * math.pi;
       
-      // Apply scaling and ensure within bounds
-      final screenX = center.dx + tv.x * zoom * 50;
-      final screenY = center.dy + tv.y * zoom * 50;
+      final r = 0.15;
       
-      // Clamp to bounds
-      final clampedX = screenX.clamp(bounds.left, bounds.right);
-      final clampedY = screenY.clamp(bounds.top, bounds.bottom);
+      // Bottom circle
+      final x1 = r * math.cos(angle1);
+      final z1 = r * math.sin(angle1);
+      final x2 = r * math.cos(angle2);
+      final z2 = r * math.sin(angle2);
       
-      final screen = Offset(clampedX, clampedY);
-      screenPoints.add(screen);
-
-      if (i == 0) {
-        path.moveTo(screen.dx, screen.dy);
-      } else {
-        path.lineTo(screen.dx, screen.dy);
+      // Draw side face
+      final path = Path();
+      path.moveTo(
+        project3D(x1, -3, z1, cx, cy, scale).dx,
+        project3D(x1, -3, z1, cx, cy, scale).dy,
+      );
+      path.lineTo(
+        project3D(x2, -3, z2, cx, cy, scale).dx,
+        project3D(x2, -3, z2, cx, cy, scale).dy,
+      );
+      path.lineTo(
+        project3D(x2, 5, z2, cx, cy, scale).dx,
+        project3D(x2, 5, z2, cx, cy, scale).dy,
+      );
+      path.lineTo(
+        project3D(x1, 5, z1, cx, cy, scale).dx,
+        project3D(x1, 5, z1, cx, cy, scale).dy,
+      );
+      path.close();
+      
+      canvas.drawPath(path, cylinderPaint);
+      canvas.drawPath(path, edgePaint);
+    }
+  }
+  
+  void _drawPipeGraph(Canvas canvas, double cx, double cy, double scale) {
+    // This is the main dynamic pipe/cylinder graph like in the image
+    final pipePaint = Paint()
+      ..color = Colors.white.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
+    
+    final edgePaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    
+    // Draw connecting pipes between data points
+    for (int i = 0; i < data.length - 1; i++) {
+      final p1 = data[i];
+      final p2 = data[i + 1];
+      
+      final x1 = p1.x - 2.5;
+      final y1 = -3 + (p1.y / 1000) * 0.6; // Smaller height scale
+      final x2 = p2.x - 2.5;
+      final y2 = -3 + (p2.y / 1000) * 0.6;
+      
+      final z = 0.0;
+      
+      // Draw pipe segment connecting two points
+      _drawPipeSegment(canvas, cx, cy, scale, x1, y1, z, x2, y2, z, pipePaint, edgePaint);
+    }
+    
+    // Draw spheres at data points
+    final spherePaint = Paint()
+      ..color = Colors.cyanAccent
+      ..style = PaintingStyle.fill;
+    
+    for (var point in data) {
+      final x = point.x - 2.5;
+      final y = -3 + (point.y / 1000) * 0.6;
+      final z = 0.0;
+      
+      final projected = project3D(x, y, z, cx, cy, scale);
+      
+      // Draw 3D sphere at junction
+      for (int r = 8; r > 0; r--) {
+        final alpha = (1 - r / 8) * 0.8;
+        canvas.drawCircle(
+          projected,
+          r.toDouble(),
+          Paint()
+            ..color = Colors.cyanAccent.withOpacity(alpha)
+            ..style = PaintingStyle.fill,
+        );
       }
-
-      // Draw points with gradient color based on depth
-      final depthRatio = p.z / 4000;
-      final pointColor = Color.lerp(
-        AppTheme.secondaryColor,
-        AppTheme.primaryColor,
-        depthRatio.clamp(0.0, 1.0),
-      )!;
-
-      canvas.drawCircle(
-        screen,
-        i == 0 || i == points.length - 1 ? 5 : 3,
-        Paint()
-          ..color = pointColor
-          ..style = PaintingStyle.fill,
-      );
+    }
+  }
+  
+  void _drawPipeSegment(
+    Canvas canvas,
+    double cx,
+    double cy,
+    double scale,
+    double x1,
+    double y1,
+    double z1,
+    double x2,
+    double y2,
+    double z2,
+    Paint fillPaint,
+    Paint edgePaint,
+  ) {
+    final segments = 12;
+    final radius = 0.1; // Pipe radius
+    
+    // Calculate direction vector
+    final dx = x2 - x1;
+    final dy = y2 - y1;
+    final dz = z2 - z1;
+    final length = math.sqrt(dx * dx + dy * dy + dz * dz);
+    
+    if (length < 0.01) return;
+    
+    // Draw pipe as a series of quads around the line
+    for (int i = 0; i < segments; i++) {
+      final angle1 = (i / segments) * 2 * math.pi;
+      final angle2 = ((i + 1) / segments) * 2 * math.pi;
       
-      canvas.drawCircle(
-        screen,
-        i == 0 || i == points.length - 1 ? 5 : 3,
-        Paint()
-          ..color = Colors.white
-          ..strokeWidth = 1
-          ..style = PaintingStyle.stroke,
+      // Calculate perpendicular offsets
+      final ox1 = radius * math.cos(angle1);
+      final oz1 = radius * math.sin(angle1);
+      final ox2 = radius * math.cos(angle2);
+      final oz2 = radius * math.sin(angle2);
+      
+      // Create quad face
+      final path = Path();
+      path.moveTo(
+        project3D(x1 + ox1, y1, z1 + oz1, cx, cy, scale).dx,
+        project3D(x1 + ox1, y1, z1 + oz1, cx, cy, scale).dy,
       );
-    }
-
-    // Draw the path
-    canvas.drawPath(path, pathPaint);
-
-    // Add gradient fill below path
-    if (screenPoints.length > 1) {
-      final fillPath = Path()..addPath(path, Offset.zero);
-      fillPath.lineTo(screenPoints.last.dx, bounds.bottom);
-      fillPath.lineTo(screenPoints.first.dx, bounds.bottom);
-      fillPath.close();
-      canvas.drawPath(fillPath, fillPaint);
+      path.lineTo(
+        project3D(x1 + ox2, y1, z1 + oz2, cx, cy, scale).dx,
+        project3D(x1 + ox2, y1, z1 + oz2, cx, cy, scale).dy,
+      );
+      path.lineTo(
+        project3D(x2 + ox2, y2, z2 + oz2, cx, cy, scale).dx,
+        project3D(x2 + ox2, y2, z2 + oz2, cx, cy, scale).dy,
+      );
+      path.lineTo(
+        project3D(x2 + ox1, y2, z2 + oz1, cx, cy, scale).dx,
+        project3D(x2 + ox1, y2, z2 + oz1, cx, cy, scale).dy,
+      );
+      path.close();
+      
+      canvas.drawPath(path, fillPaint);
+      canvas.drawPath(path, edgePaint);
     }
   }
-
-  void _drawSpecialPoints(Canvas canvas, Size size, Offset center, vm.Matrix4 transform, Rect bounds) {
-    // Start Point
-    final first = points.first;
-    final v1 = vm.Vector3(first.x / 50, first.y / 50, -first.z / 50);
-    final tv1 = transform.transform3(v1);
-    final startPoint = Offset(
-      (center.dx + tv1.x * zoom * 50).clamp(bounds.left, bounds.right),
-      (center.dy + tv1.y * zoom * 50).clamp(bounds.top, bounds.bottom),
-    );
-
-    // End Point
-    final last = points.last;
-    final v2 = vm.Vector3(last.x / 50, last.y / 50, -last.z / 50);
-    final tv2 = transform.transform3(v2);
-    final endPoint = Offset(
-      (center.dx + tv2.x * zoom * 50).clamp(bounds.left, bounds.right),
-      (center.dy + tv2.y * zoom * 50).clamp(bounds.top, bounds.bottom),
-    );
-
-    // Draw start point label
-    canvas.drawCircle(
-      startPoint,
-      6,
-      Paint()..color = AppTheme.successColor,
-    );
-    canvas.drawCircle(
-      startPoint,
-      6,
-      Paint()
-        ..color = Colors.white
-        ..strokeWidth = 2
-        ..style = PaintingStyle.stroke,
-    );
-
-    // Draw end point label
-    canvas.drawCircle(
-      endPoint,
-      6,
-      Paint()..color = AppTheme.errorColor,
-    );
-    canvas.drawCircle(
-      endPoint,
-      6,
-      Paint()
-        ..color = Colors.white
-        ..strokeWidth = 2
-        ..style = PaintingStyle.stroke,
-    );
-
-    // Add text labels
-    _drawTextWithBackground(
-      canvas,
-      "Start",
-      startPoint.translate(10, -10),
-      AppTheme.successColor,
-    );
-    _drawTextWithBackground(
-      canvas,
-      "Target",
-      endPoint.translate(10, -10),
-      AppTheme.errorColor,
-    );
+  
+  void _draw3DLine(Canvas canvas, double cx, double cy, double scale) {
+    final linePaint = Paint()
+      ..color = Colors.yellowAccent
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    
+    final pointPaint = Paint()
+      ..color = Colors.yellow
+      ..style = PaintingStyle.fill;
+    
+    // Draw line graph overlay
+    final path = Path();
+    for (int i = 0; i < data.length; i++) {
+      final point = data[i];
+      final x = point.x - 2.5;
+      final y = -3 + (point.y / 1000) * 0.6;
+      final z = 0.5; // Offset to be visible alongside pipe
+      
+      final projected = project3D(x, y, z, cx, cy, scale);
+      
+      if (i == 0) {
+        path.moveTo(projected.dx, projected.dy);
+      } else {
+        path.lineTo(projected.dx, projected.dy);
+      }
+      
+      // Draw point marker
+      canvas.drawCircle(projected, 4, pointPaint);
+      canvas.drawCircle(projected, 4, Paint()
+        ..color = Colors.yellow
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5);
+    }
+    
+    canvas.drawPath(path, linePaint);
   }
-
-  void _drawTextWithBackground(Canvas canvas, String text, Offset position, Color color) {
-    final textSpan = TextSpan(
-      text: text,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 9,
-        fontWeight: FontWeight.w600,
-      ),
-    );
+  
+  void _drawLabels(Canvas canvas, double cx, double cy, double scale) {
     final textPainter = TextPainter(
-      text: textSpan,
       textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
     );
-    textPainter.layout();
-
-    // Draw background
-    final bgRect = Rect.fromCenter(
-      center: position,
-      width: textPainter.width + 8,
-      height: textPainter.height + 4,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(bgRect, const Radius.circular(4)),
-      Paint()..color = color.withOpacity(0.8),
-    );
-
-    // Draw text
-    textPainter.paint(
-      canvas,
-      position.translate(-textPainter.width / 2, -textPainter.height / 2),
-    );
+    
+    // Draw Y-axis labels (left side)
+    for (int i = 0; i <= 8; i += 2) {
+      final y = -3 + (i / 10) * 6; // Adjusted for smaller scale
+      final pos = project3D(-5.5, y, 0, cx, cy, scale);
+      
+      textPainter.text = TextSpan(
+        text: '${i * 1000}',
+        style: const TextStyle(color: Colors.white70, fontSize: 9),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(pos.dx - 25, pos.dy - 5));
+    }
+    
+    // Draw X-axis labels (bottom)
+    for (int i = 0; i < data.length; i++) {
+      final point = data[i];
+      final x = point.x - 2.5;
+      final pos = project3D(x, -3.5, 0, cx, cy, scale);
+      
+      textPainter.text = TextSpan(
+        text: point.label,
+        style: const TextStyle(color: Colors.white70, fontSize: 9),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(pos.dx - 20, pos.dy + 5));
+    }
+    
+    // Draw Z-axis labels
+    final zLabels = ['0', '5000', '10000', '15000'];
+    for (int i = 0; i < 4; i++) {
+      final z = -3 + i * 2.0;
+      final pos = project3D(0, -3.5, z, cx, cy, scale);
+      
+      textPainter.text = TextSpan(
+        text: zLabels[i],
+        style: const TextStyle(color: Colors.white70, fontSize: 9),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(pos.dx - 15, pos.dy + 5));
+    }
   }
-
+  
   @override
-  bool shouldRepaint(covariant _Well3DPainter old) =>
-      old.rotX != rotX ||
-      old.rotY != rotY ||
-      old.zoom != zoom ||
-      old.panX != panX ||
-      old.panY != panY ||
-      old.points != points;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+

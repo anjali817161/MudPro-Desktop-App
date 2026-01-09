@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/left_sidebar.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/wellbore_dashboard.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/alert/alert_page.dart';
@@ -239,7 +240,8 @@ class SubTabContent extends StatelessWidget {
             ],
           ),
         );
-      // Add cases 1 and 2 similarly
+      // case 2: // Options
+      //   return DailyreportOptionsPage();
       default:
         return Container();
     }

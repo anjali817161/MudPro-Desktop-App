@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mudpro_desktop_app/modules/daily_report/home_tabs/dailyreport_options/dailyreport_options_page.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/left_sidebar.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/report_subtabs.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/wellbore_dashboard.dart';
@@ -79,7 +80,7 @@ class _DailyReportBodyState extends State<DailyReportBody> {
   void _navigateToOptions(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => OptionsPage()),
+      MaterialPageRoute(builder: (context) => DailyreportOptionsPage()),
     );
   }
 

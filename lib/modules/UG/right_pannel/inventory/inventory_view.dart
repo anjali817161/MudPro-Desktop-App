@@ -199,45 +199,37 @@ class InventoryView extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // ================= RIGHT : INVENTORY PICKUP =================
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(6),
-                      color: AppTheme.cardColor,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Inventory Pickup',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primaryColor,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Inventory Pickup',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 32,
+                        child: Obx(() => ElevatedButton(
+                          onPressed: c.isLocked.value ? null : () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          height: 32,
-                          child: Obx(() => ElevatedButton(
-                            onPressed: c.isLocked.value ? null : () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primaryColor,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                            child: const Text(
-                              'Apply',
-                              style: TextStyle(fontSize: 11),
-                            ),
-                          )),
-                        ),
-                      ],
-                    ),
+                          child: const Text(
+                            'Apply',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        )),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -335,45 +327,37 @@ class InventoryView extends StatelessWidget {
                   // ================= RIGHT : INVENTORY PICKUP =================
                   Expanded(
                     flex: 1,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(6),
-                        color: AppTheme.cardColor,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Inventory Pickup',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.primaryColor,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Inventory Pickup',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 32,
+                          child: Obx(() => ElevatedButton(
+                            onPressed: c.isLocked.value ? null : () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 90),
-                          SizedBox(
-                            height: 32,
-                            child: Obx(() => ElevatedButton(
-                              onPressed: c.isLocked.value ? null : () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.primaryColor,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
-                              child: const Text(
-                                'Apply',
-                                style: TextStyle(fontSize: 11),
-                              ),
-                            )),
-                          ),
-                        ],
-                      ),
+                            child: const Text(
+                              'Apply',
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          )),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -389,8 +373,7 @@ class InventoryView extends StatelessWidget {
     final c = Get.find<UgController>();
     return Row(
       children: [
-        SizedBox(
-          width: 150,
+        Expanded(
           child: Text(
             label,
             style: TextStyle(
