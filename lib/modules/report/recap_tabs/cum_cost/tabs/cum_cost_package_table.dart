@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class ServiceRecapPage extends StatefulWidget {
-  const ServiceRecapPage({super.key});
+class CumCostPackageRecapPage extends StatefulWidget {
+  const CumCostPackageRecapPage({super.key});
 
   @override
-  State<ServiceRecapPage> createState() => _ServiceRecapPageState();
+  State<CumCostPackageRecapPage> createState() => _CumCostPackageRecapPageState();
 }
 
-class _ServiceRecapPageState extends State<ServiceRecapPage> {
+class _CumCostPackageRecapPageState extends State<CumCostPackageRecapPage> {
   // Scroll controllers for the table
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _headerHorizontalController = ScrollController();
@@ -45,7 +45,8 @@ class _ServiceRecapPageState extends State<ServiceRecapPage> {
 
   // Table Sub-columns (Chemical Products)
   final List<String> subColumns = [
-    // 'Mud Supervisor-2'
+    'Daily Cost',
+    'Cum. Cost',
   ];
 
   int get totalSubCols => subColumns.length;
@@ -291,7 +292,7 @@ class _ServiceRecapPageState extends State<ServiceRecapPage> {
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
             child: Text(
-              'Daily Cost Service Table',
+              'Cumulative Cost - Service',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -330,8 +331,9 @@ class _ServiceRecapPageState extends State<ServiceRecapPage> {
                       // Left Fixed Header Cells
                       _fixedCell('No', 60, bold: true, isHeader: true),
                       _fixedCell('Date', 100, bold: true, isHeader: true),
-                      _fixedCell('MD (ft)', 80, bold: true, isHeader: true),
                       _fixedCell('Rpt #', 79, bold: true, isHeader: true),
+                     _fixedCell('MD (ft)', 80, bold: true, isHeader: true),
+
                       // Right Scrollable Header Cells
                       Expanded(
                         child: SingleChildScrollView(
@@ -340,7 +342,7 @@ class _ServiceRecapPageState extends State<ServiceRecapPage> {
                           child: Row(
                             children: subColumns.map((sub) {
                               return _scrollCell(
-                                '$sub\n(lb/bbl)',
+                                '$sub\n()',
                                 subColW,
                                 bold: true,
                                 isHeader: true,

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'dart:async';
 
 class DashboardController extends GetxController {
   var activePrimaryTab = 0.obs;
@@ -11,6 +12,10 @@ class DashboardController extends GetxController {
   var reports = <String>[].obs;
   var selectedReport = 11.obs; // #12 selected
   var casings = <List<String>>[].obs;
+
+  // Debouncing for frequent updates
+  Timer? _debounceTimer;
+  final Duration _debounceDuration = const Duration(milliseconds: 100);
 
   void toggleLock() => isLocked.toggle();
 
@@ -41,9 +46,22 @@ class DashboardController extends GetxController {
   }
 
   void setPrimaryTab(int index) {
-  activePrimaryTab.value = index;
-  activeSecondaryTab.value = -1; // reset secondary to no active tab
-}
+    _debounce(() {
+      activePrimaryTab.value = index;
+      activeSecondaryTab.value = -1; // reset secondary to no active tab
+    });
+  }
+
+  void _debounce(Function action) {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    _debounceTimer = Timer(_debounceDuration, () => action());
+  }
+
+  @override
+  void onClose() {
+    _debounceTimer?.cancel();
+    super.onClose();
+  }
 
  // 👇 All actions kept here (clean separation)
   void createNewReport(BuildContext context) {}

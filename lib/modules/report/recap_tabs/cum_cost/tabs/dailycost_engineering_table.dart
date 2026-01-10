@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class ServiceRecapPage extends StatefulWidget {
-  const ServiceRecapPage({super.key});
+class DailyCostEngineeringTable extends StatefulWidget {
+  const DailyCostEngineeringTable({super.key});
 
   @override
-  State<ServiceRecapPage> createState() => _ServiceRecapPageState();
+  State<DailyCostEngineeringTable> createState() => _DailyCostEngineeringTableState();
 }
 
-class _ServiceRecapPageState extends State<ServiceRecapPage> {
+class _DailyCostEngineeringTableState extends State<DailyCostEngineeringTable> {
   // Scroll controllers for the table
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _headerHorizontalController = ScrollController();
@@ -45,7 +45,7 @@ class _ServiceRecapPageState extends State<ServiceRecapPage> {
 
   // Table Sub-columns (Chemical Products)
   final List<String> subColumns = [
-    // 'Mud Supervisor-2'
+    'Mud Supervisor-2'
   ];
 
   int get totalSubCols => subColumns.length;
@@ -291,7 +291,7 @@ class _ServiceRecapPageState extends State<ServiceRecapPage> {
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
             child: Text(
-              'Daily Cost Service Table',
+              'Daily Cost Engineering Table',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,

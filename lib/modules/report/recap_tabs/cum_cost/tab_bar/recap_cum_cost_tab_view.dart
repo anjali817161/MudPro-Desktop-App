@@ -4,6 +4,9 @@ import 'package:mudpro_desktop_app/modules/daily_report/tabs/daily_cost/daily_co
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/daily_cost/tabs/daily_cost_others_tab.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/daily_cost/tabs/dailycost_percentagetable.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/daily_cost/tabs/dailycost_table_usage.dart';
+import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tabs/cum_cost_package_table.dart';
+import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tabs/cum_cost_recap_graph.dart';
+import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tabs/cum_cost_service_table.dart';
 import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tabs/dailycost_allcategories_table.dart';
 import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tabs/dailycost_engineering_table.dart';
 import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tabs/dailycost_package_table.dart';
@@ -12,14 +15,14 @@ import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/ta
 import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tabs/dailycost_service_table.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
-class RecapDailycostTabView extends StatefulWidget {
-  const RecapDailycostTabView({super.key});
+class RecapCumcostTabView extends StatefulWidget {
+  const RecapCumcostTabView({super.key});
 
   @override
-  State<RecapDailycostTabView> createState() => _RecapDailycostTabViewState();
+  State<RecapCumcostTabView> createState() => _RecapCumcostTabViewState();
 }
 
-class _RecapDailycostTabViewState extends State<RecapDailycostTabView> with SingleTickerProviderStateMixin {
+class _RecapCumcostTabViewState extends State<RecapCumcostTabView> with SingleTickerProviderStateMixin {
   TabController? _tabController;
 
   @override
@@ -239,6 +242,16 @@ class _RecapDailycostTabViewState extends State<RecapDailycostTabView> with Sing
                             ],
                           ),
                         ),
+                          Tab(
+                          icon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.category, size: 16),
+                              SizedBox(width: 6),
+                              Text("Table-Premixed Mud"),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -253,21 +266,19 @@ class _RecapDailycostTabViewState extends State<RecapDailycostTabView> with Sing
               controller: _tabController,
               children:  [
                 /// ✅ service TAB
-                ServiceRecapPage(),
+                CumCostServiceRecapPage(),
 
                 /// CATEGORIES TAB
-                 DailyCostGraphsPage(),
+                 CumCostGraphTab(),
 
-                 DailyCostEngineeringTable(),
+              //    DailyCostEngineeringTable(),
 
-              DailyCostProductTable(),
+              // DailyCostProductTable(),
 
-              DailyCostPackageTable(),
+              CumCostPackageRecapPage(),
 
-              DailyCostAllCategoriesTable(),
+              // DailyCostAllCategoriesTable(),
 
-                // /// PERCENTAGE TAB
-                // PercentCostPage(),
               ],
               
             ),

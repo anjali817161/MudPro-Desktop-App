@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class ServiceRecapPage extends StatefulWidget {
-  const ServiceRecapPage({super.key});
+class DailyCostPackageTable extends StatefulWidget {
+  const DailyCostPackageTable({super.key});
 
   @override
-  State<ServiceRecapPage> createState() => _ServiceRecapPageState();
+  State<DailyCostPackageTable> createState() => _DailyCostPackageTableState();
 }
 
-class _ServiceRecapPageState extends State<ServiceRecapPage> {
+class _DailyCostPackageTableState extends State<DailyCostPackageTable> {
   // Scroll controllers for the table
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _headerHorizontalController = ScrollController();
@@ -291,7 +291,7 @@ class _ServiceRecapPageState extends State<ServiceRecapPage> {
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
             child: Text(
-              'Daily Cost Service Table',
+              'Daily Cost Package Table',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
