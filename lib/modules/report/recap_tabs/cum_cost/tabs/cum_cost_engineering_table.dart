@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class DailyCostAllCategoriesTable extends StatefulWidget {
-  const DailyCostAllCategoriesTable({super.key});
+class CumCostEngineeringTable extends StatefulWidget {
+  const CumCostEngineeringTable({super.key});
 
   @override
-  State<DailyCostAllCategoriesTable> createState() => _DailyCostAllCategoriesTableState();
+  State<CumCostEngineeringTable> createState() => _CumCostEngineeringTableState();
 }
 
-class _DailyCostAllCategoriesTableState extends State<DailyCostAllCategoriesTable> {
+class _CumCostEngineeringTableState extends State<CumCostEngineeringTable> {
   // Scroll controllers for the table
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _headerHorizontalController = ScrollController();
@@ -45,11 +45,9 @@ class _DailyCostAllCategoriesTableState extends State<DailyCostAllCategoriesTabl
 
   // Table Sub-columns (Chemical Products)
   final List<String> subColumns = [
-   'Product',
-   'Premixed Mud',
-   'Package',
-   'Service',
-   'Engineering',
+    'Mud Supervisor-2',
+    'Daily cost',
+    'Cum. cost'
   ];
 
   int get totalSubCols => subColumns.length;
@@ -295,7 +293,7 @@ class _DailyCostAllCategoriesTableState extends State<DailyCostAllCategoriesTabl
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
             child: Text(
-              'Daily Cost - All Categories',
+              'Cumulative Cost Engineering Table',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -344,7 +342,7 @@ class _DailyCostAllCategoriesTableState extends State<DailyCostAllCategoriesTabl
                           child: Row(
                             children: subColumns.map((sub) {
                               return _scrollCell(
-                                '$sub\n(lb/bbl)',
+                                '$sub',
                                 subColW,
                                 bold: true,
                                 isHeader: true,

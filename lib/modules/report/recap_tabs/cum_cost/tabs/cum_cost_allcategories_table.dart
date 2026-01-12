@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class CumCostPackageRecapPage extends StatefulWidget {
-  const CumCostPackageRecapPage({super.key});
+class CUmCostAllCategoriesTable extends StatefulWidget {
+  const CUmCostAllCategoriesTable({super.key});
 
   @override
-  State<CumCostPackageRecapPage> createState() => _CumCostPackageRecapPageState();
+  State<CUmCostAllCategoriesTable> createState() => _CUmCostAllCategoriesTableState();
 }
 
-class _CumCostPackageRecapPageState extends State<CumCostPackageRecapPage> {
+class _CUmCostAllCategoriesTableState extends State<CUmCostAllCategoriesTable> {
   // Scroll controllers for the table
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _headerHorizontalController = ScrollController();
@@ -45,8 +45,13 @@ class _CumCostPackageRecapPageState extends State<CumCostPackageRecapPage> {
 
   // Table Sub-columns (Chemical Products)
   final List<String> subColumns = [
-    'Daily Cost',
-    'Cum. Cost',
+   'Product',
+   'Premixed Mud',
+   'Package',
+   'Service',
+   'Engineering',
+   'Daily Cost',
+   'Cum. Cost',
   ];
 
   int get totalSubCols => subColumns.length;
@@ -292,7 +297,7 @@ class _CumCostPackageRecapPageState extends State<CumCostPackageRecapPage> {
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
             child: Text(
-              'Cumulative Cost - Package',
+              'Cumulative Cost - All Categories Bulk Setup Fee',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -331,9 +336,8 @@ class _CumCostPackageRecapPageState extends State<CumCostPackageRecapPage> {
                       // Left Fixed Header Cells
                       _fixedCell('No', 60, bold: true, isHeader: true),
                       _fixedCell('Date', 100, bold: true, isHeader: true),
+                      _fixedCell('MD (ft)', 80, bold: true, isHeader: true),
                       _fixedCell('Rpt #', 79, bold: true, isHeader: true),
-                     _fixedCell('MD (ft)', 80, bold: true, isHeader: true),
-
                       // Right Scrollable Header Cells
                       Expanded(
                         child: SingleChildScrollView(

@@ -4,41 +4,32 @@ import 'package:mudpro_desktop_app/modules/daily_report/tabs/daily_cost/daily_co
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/daily_cost/tabs/daily_cost_others_tab.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/daily_cost/tabs/dailycost_percentagetable.dart';
 import 'package:mudpro_desktop_app/modules/daily_report/tabs/daily_cost/tabs/dailycost_table_usage.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tabs/cum_cost_Premixedmud_tab.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tabs/cum_cost_allcategories_table.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tabs/cum_cost_engineering_table.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tabs/cum_cost_package_table.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tabs/cum_cost_product_table.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tabs/cum_cost_recap_graph.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tabs/cum_cost_service_table.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tabs/dailycost_allcategories_table.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tabs/dailycost_engineering_table.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tabs/dailycost_package_table.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tabs/dailycost_product_table.dart';
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tabs/dailycost_recap_graph.dart' hide AppTheme;
-import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tabs/dailycost_service_table.dart';
+import 'package:mudpro_desktop_app/modules/report/recap_tabs/cost_dist/cost_dist_productview.dart';
+import 'package:mudpro_desktop_app/modules/report/recap_tabs/cost_dist/tabs/cost_dist_others_tab.dart';
+import 'package:mudpro_desktop_app/modules/report/recap_tabs/cost_dist/tabs/cost_dist_table.dart';
+import 'package:mudpro_desktop_app/modules/report/recap_tabs/cost_dist/tabs/recap_summary_table.dart';
+import 'package:mudpro_desktop_app/modules/report/recap_tabs/mud_prop/tabs/mud_prop_graph_tab.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
-class RecapCumcostTabView extends StatefulWidget {
-  const RecapCumcostTabView({super.key});
+class MudPropTabView extends StatefulWidget {
+  const MudPropTabView({super.key});
 
   @override
-  State<RecapCumcostTabView> createState() => _RecapCumcostTabViewState();
+  State<MudPropTabView> createState() => _MudPropTabViewState();
 }
 
-class _RecapCumcostTabViewState extends State<RecapCumcostTabView> with SingleTickerProviderStateMixin {
-  TabController? _tabController;
+class _MudPropTabViewState extends State<MudPropTabView> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController?.dispose();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
   void dispose() {
-    _tabController?.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -81,7 +72,7 @@ class _RecapCumcostTabViewState extends State<RecapCumcostTabView> with SingleTi
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Daily Cost Analysis",
+                          "Mud Properties",
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
@@ -89,14 +80,14 @@ class _RecapCumcostTabViewState extends State<RecapCumcostTabView> with SingleTi
                             letterSpacing: 0.5,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Real-time cost tracking and distribution analysis",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
+                        // const SizedBox(height: 4),
+                        // Text(
+                        //   "Real-time cost tracking and distribution analysis",
+                        //   style: TextStyle(
+                        //     fontSize: 13,
+                        //     color: AppTheme.textSecondary,
+                        //   ),
+                        // ),
                       ],
                     ),
                     Row(
@@ -192,16 +183,6 @@ class _RecapCumcostTabViewState extends State<RecapCumcostTabView> with SingleTi
                             children: [
                               Icon(Icons.inventory, size: 16),
                               SizedBox(width: 6),
-                              Text("Table-Service"),
-                            ],
-                          ),
-                        ),
-                        Tab(
-                          icon: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.category, size: 16),
-                              SizedBox(width: 6),
                               Text("Graph"),
                             ],
                           ),
@@ -210,49 +191,20 @@ class _RecapCumcostTabViewState extends State<RecapCumcostTabView> with SingleTi
                           icon: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.table_chart, size: 16),
-                              SizedBox(width: 6),
-                              Text("Table-Engineering"),
-                            ],
-                          ),
-                        ),
-                        Tab(
-                          icon: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.precision_manufacturing, size: 16),
-                              SizedBox(width: 6),
-                              Text("Table-Product"),
-                            ],
-                          ),
-                        ),
-                        Tab(
-                          icon: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.pattern, size: 16),
-                              SizedBox(width: 6),
-                              Text("Table-Package"),
-                            ],
-                          ),
-                        ),
-                        Tab(
-                          icon: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
                               Icon(Icons.category, size: 16),
                               SizedBox(width: 6),
-                              Text("Table-All Categories"),
+                              Text("Table - Water"),
                             ],
                           ),
                         ),
-                          Tab(
+                       
+                        Tab(
                           icon: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.category, size: 16),
+                             
                               SizedBox(width: 6),
-                              Text("Table-Premixed Mud"),
+                              Text("Table - Oil/Synthetic"),
                             ],
                           ),
                         ),
@@ -269,24 +221,18 @@ class _RecapCumcostTabViewState extends State<RecapCumcostTabView> with SingleTi
             child: TabBarView(
               controller: _tabController,
               children:  [
-                /// ✅ service TAB
-                CumCostServiceRecapPage(),
+                /// ✅ PRODUCTS TAB
+                MudPropertiesGraphPage(),
 
-                /// CATEGORIES TABE
-                 CumCostGraphTab(),
+                /// CATEGORIES TAB
+                 CostDistOtherTab(),
 
-                 CumCostEngineeringTable(),
+                /// USAGE TABLE TAB
+                CostSummaryRecapPage(),
 
-              CumCostProductTable(),
-
-              CumCostPackageRecapPage(),
-
-              CUmCostAllCategoriesTable(),
-
-              CumCostPremixedMudTable(),
-
+                /// PERCENTAGE TAB
+                ReportRecapTable(),
               ],
-              
             ),
           ),
         ],

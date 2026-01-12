@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class DailyCostEngineeringTable extends StatefulWidget {
-  const DailyCostEngineeringTable({super.key});
+class CumCostPremixedMudTable extends StatefulWidget {
+  const CumCostPremixedMudTable({super.key});
 
   @override
-  State<DailyCostEngineeringTable> createState() => _DailyCostEngineeringTableState();
+  State<CumCostPremixedMudTable> createState() => _CumCostPremixedMudTableState();
 }
 
-class _DailyCostEngineeringTableState extends State<DailyCostEngineeringTable> {
+class _CumCostPremixedMudTableState extends State<CumCostPremixedMudTable> {
   // Scroll controllers for the table
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _headerHorizontalController = ScrollController();
@@ -45,7 +45,9 @@ class _DailyCostEngineeringTableState extends State<DailyCostEngineeringTable> {
 
   // Table Sub-columns (Chemical Products)
   final List<String> subColumns = [
-    'Mud Supervisor-2'
+    'Mud Supervisor-2',
+    'Daily cost',
+    'Cum. cost'
   ];
 
   int get totalSubCols => subColumns.length;
@@ -291,7 +293,7 @@ class _DailyCostEngineeringTableState extends State<DailyCostEngineeringTable> {
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
             child: Text(
-              'Daily Cost Engineering Table',
+              'Cumulative Cost Engineering Table',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -340,7 +342,7 @@ class _DailyCostEngineeringTableState extends State<DailyCostEngineeringTable> {
                           child: Row(
                             children: subColumns.map((sub) {
                               return _scrollCell(
-                                '$sub\n(lb/bbl)',
+                                '$sub',
                                 subColW,
                                 bold: true,
                                 isHeader: true,

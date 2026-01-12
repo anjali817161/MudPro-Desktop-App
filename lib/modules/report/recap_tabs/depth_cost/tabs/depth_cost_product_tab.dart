@@ -334,7 +334,7 @@ class _DepthCostProductTableState extends State<DepthCostProductTable> {
   }) {
     initializeData();
 
-    const double tableHeight = 394.0;
+    const double tableHeight = 334.0;
     final double dataHeight = tableHeight - (rowH * 2);
 
     return Column(
@@ -409,8 +409,7 @@ class _DepthCostProductTableState extends State<DepthCostProductTable> {
               ),
 
               // Data Rows with reduced height
-              SizedBox(
-                height: dataHeight, // Height for data rows only (header + total row subtracted)
+              Expanded(
                 child: Row(
                   children: [
                     // Left Fixed Data Columns

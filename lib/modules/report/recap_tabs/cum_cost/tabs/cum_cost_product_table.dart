@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 
-class DailyCostProductTable extends StatefulWidget {
-  const DailyCostProductTable({super.key});
+class CumCostProductTable extends StatefulWidget {
+  const CumCostProductTable({super.key});
 
   @override
-  State<DailyCostProductTable> createState() => _DailyCostProductTableState();
+  State<CumCostProductTable> createState() => _CumCostProductTableState();
 }
 
-class _DailyCostProductTableState extends State<DailyCostProductTable> {
-  // Scroll controllers for both tables
+class _CumCostProductTableState extends State<CumCostProductTable> {
+ // Scroll controllers for both tables
   final ScrollController _table1HorizontalController = ScrollController();
   final ScrollController _table1HeaderHorizontalController = ScrollController();
+  final ScrollController _table1TotalHorizontalController = ScrollController();
   final ScrollController _sharedVerticalController = ScrollController();
   final ScrollController _table2HorizontalController = ScrollController();
   final ScrollController _table2HeaderHorizontalController = ScrollController();
+  final ScrollController _table2TotalHorizontalController = ScrollController();
 
   @override
   void initState() {
@@ -33,6 +35,22 @@ class _DailyCostProductTableState extends State<DailyCostProductTable> {
     _table2HeaderHorizontalController.addListener(() {
       _table2HorizontalController.jumpTo(_table2HeaderHorizontalController.offset);
     });
+
+    // Synchronize table 1 total horizontal scrolling
+    _table1HorizontalController.addListener(() {
+      _table1TotalHorizontalController.jumpTo(_table1HorizontalController.offset);
+    });
+    _table1TotalHorizontalController.addListener(() {
+      _table1HorizontalController.jumpTo(_table1TotalHorizontalController.offset);
+    });
+
+    // Synchronize table 2 total horizontal scrolling
+    _table2HorizontalController.addListener(() {
+      _table2TotalHorizontalController.jumpTo(_table2HorizontalController.offset);
+    });
+    _table2TotalHorizontalController.addListener(() {
+      _table2HorizontalController.jumpTo(_table2TotalHorizontalController.offset);
+    });
   }
 
   static const double rowH = 32.0;
@@ -42,9 +60,17 @@ class _DailyCostProductTableState extends State<DailyCostProductTable> {
   List<List<String>> table1LeftRowData = List.generate(50, (index) => List.generate(4, (_) => ''));
   List<List<String>> table1RightRowData = List.generate(50, (index) => List.generate(50, (_) => ''));
 
+  // Total data for Table 1
+  List<String> table1LeftTotalData = List.generate(4, (_) => '');
+  List<String> table1RightTotalData = List.generate(50, (_) => '');
+
   // Data for Table 2
   List<List<String>> table2LeftRowData = List.generate(50, (index) => List.generate(4, (_) => ''));
   List<List<String>> table2RightRowData = List.generate(50, (index) => List.generate(60, (_) => ''));
+
+  // Total data for Table 2
+  List<String> table2LeftTotalData = List.generate(4, (_) => '');
+  List<String> table2RightTotalData = List.generate(60, (_) => '');
 
   // Table 1 Sub-columns (Chemical Products)
   final List<String> table1SubColumns = [
@@ -317,15 +343,99 @@ class _DailyCostProductTableState extends State<DailyCostProductTable> {
     );
   }
 
+  Widget _totalFixedCell(int colIndex, double w, List<String> totalData) {
+    return Container(
+      width: w,
+      height: rowH,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xffE2E8F0), width: 0.5),
+        color: const Color(0xffF8F9FA),
+      ),
+      child: TextField(
+        controller: TextEditingController(text: totalData[colIndex]),
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Color(0xff2D3748),
+        ),
+        textAlign: TextAlign.center,
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          border: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          hintText: colIndex == 0 ? 'Total' : '',
+          hintStyle: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade400,
+          ),
+        ),
+        onChanged: (value) {
+          setState(() {
+            totalData[colIndex] = value;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _totalScrollCell(int colIndex, double w, List<String> totalData) {
+    return Container(
+      width: w,
+      height: rowH,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xffE2E8F0), width: 0.5),
+        color: const Color(0xffF8F9FA),
+      ),
+      child: TextField(
+        controller: TextEditingController(text: totalData[colIndex]),
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: Color(0xff2D3748),
+        ),
+        textAlign: TextAlign.center,
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          border: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          hintText: '0.00',
+          hintStyle: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade400,
+          ),
+        ),
+        onChanged: (value) {
+          setState(() {
+            totalData[colIndex] = value;
+          });
+        },
+      ),
+    );
+  }
+
   Widget _buildTable({
     required String title,
     required List<String> subColumns,
     required int totalSubCols,
     required double scrollableWidth,
     required ScrollController horizontalController,
+    required ScrollController headerHorizontalController,
+    required ScrollController totalHorizontalController,
     required ScrollController verticalController,
     required List<List<String>> leftRowData,
     required List<List<String>> rightRowData,
+    required List<String> leftTotalData,
+    required List<String> rightTotalData,
     required VoidCallback initializeData,
   }) {
     initializeData();
@@ -389,7 +499,7 @@ class _DailyCostProductTableState extends State<DailyCostProductTable> {
                         child: Row(
                           children: subColumns.map((sub) {
                             return _scrollCell(
-                              '$sub\n(lb/bbl)',
+                              '$sub',
                               subColW,
                               bold: true,
                               isHeader: true,
@@ -471,6 +581,37 @@ class _DailyCostProductTableState extends State<DailyCostProductTable> {
                   ),
                 ),
               ),
+
+              // Total Row
+              Container(
+                height: rowH,
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xffE2E8F0), width: 0.5),
+                  color: const Color(0xffEEEEEE),
+                ),
+                child: Row(
+                  children: [
+                    // Left Fixed Total Cells
+                    _totalFixedCell(0, 60, leftTotalData),
+                    _totalFixedCell(1, 100, leftTotalData),
+                    _totalFixedCell(2, 80, leftTotalData),
+                    _totalFixedCell(3, 79, leftTotalData),
+                    // Right Scrollable Total Cells
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: totalHorizontalController,
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: List.generate(
+                            totalSubCols,
+                            (colIndex) => _totalScrollCell(colIndex, subColW, rightTotalData),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -509,29 +650,37 @@ class _DailyCostProductTableState extends State<DailyCostProductTable> {
         children: [
           // First Table - Chemical Products
           _buildTable(
-            title: 'Chemical Products Cost',
+            title: 'Cumulative Cost - Products',
             subColumns: table1SubColumns,
             totalSubCols: table1TotalSubCols,
             scrollableWidth: table1ScrollableWidth,
             horizontalController: _table1HorizontalController,
+            headerHorizontalController: _table1HeaderHorizontalController,
+            totalHorizontalController: _table1TotalHorizontalController,
             verticalController: _sharedVerticalController,
             leftRowData: table1LeftRowData,
             rightRowData: table1RightRowData,
+            leftTotalData: table1LeftTotalData,
+            rightTotalData: table1RightTotalData,
             initializeData: _initializeTable1Data,
           ),
-          
+
           const SizedBox(height: 32.0),
-          
+
           // Second Table - Equipment & Services
           _buildTable(
-            title: 'Equipment & Services Cost',
+            title: 'Cumulative Cost - Group',
             subColumns: table2SubColumns,
             totalSubCols: table2TotalSubCols,
             scrollableWidth: table2ScrollableWidth,
             horizontalController: _table2HorizontalController,
+            headerHorizontalController: _table2HeaderHorizontalController,
+            totalHorizontalController: _table2TotalHorizontalController,
             verticalController: _sharedVerticalController,
             leftRowData: table2LeftRowData,
             rightRowData: table2RightRowData,
+            leftTotalData: table2LeftTotalData,
+            rightTotalData: table2RightTotalData,
             initializeData: _initializeTable2Data,
           ),
         ],
@@ -543,9 +692,11 @@ class _DailyCostProductTableState extends State<DailyCostProductTable> {
   void dispose() {
     _table1HorizontalController.dispose();
     _table1HeaderHorizontalController.dispose();
+    _table1TotalHorizontalController.dispose();
     _sharedVerticalController.dispose();
     _table2HorizontalController.dispose();
     _table2HeaderHorizontalController.dispose();
+    _table2TotalHorizontalController.dispose();
     super.dispose();
   }
 }

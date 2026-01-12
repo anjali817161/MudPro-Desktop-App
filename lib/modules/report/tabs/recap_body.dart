@@ -10,6 +10,8 @@ import 'package:mudpro_desktop_app/modules/daily_report/tabs/total_cost/daily_to
 import 'package:mudpro_desktop_app/modules/report/recap_tabs/cost_dist/tab_bar/cost_dist_tab_view.dart';
 import 'package:mudpro_desktop_app/modules/report/recap_tabs/cum_cost/tab_bar/recap_cum_cost_tab_view.dart';
 import 'package:mudpro_desktop_app/modules/report/recap_tabs/depth_cost/tab_bar/depth_cost_tab_view.dart';
+import 'package:mudpro_desktop_app/modules/report/recap_tabs/drilling_data/tab_bar/drilling_data_tab_view.dart';
+import 'package:mudpro_desktop_app/modules/report/recap_tabs/mud_prop/tab_bar/mud_prop_tab_view.dart';
 import 'package:mudpro_desktop_app/modules/report/recap_tabs/recap_daily_cost/tab_bar/recap_dailycost_tab_view.dart';
 import 'package:mudpro_desktop_app/modules/report/tabs/recap_left_sidebar.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
@@ -51,10 +53,10 @@ class _RecapBodyState extends State<RecapBody> {
         return const DepthCostTabView();
       case 4:
         return const RecapCumcostTabView();
-      // case 5:
-      //   return const TimeDistributionPage();
-      // case 6:
-      //   return const SurveyPage();
+      case 5:
+        return const DrillingDataTabView();
+      case 6:
+        return const MudPropTabView();
       // case 7:
       //   return const AlertMainTabPage();
       default:
