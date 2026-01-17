@@ -2,7 +2,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:mudpro_desktop_app/modules/api_endpoint/api_endpoint.dart';
+import 'package:mudpro_desktop_app/api_endpoint/api_endpoint.dart';
 
 class HealthService {
   static Future<Map<String, dynamic>> checkHealth() async {
