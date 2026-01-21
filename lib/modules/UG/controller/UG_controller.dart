@@ -1,12 +1,18 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'package:mudpro_desktop_app/auth_repo/auth_repo.dart';
 import 'package:mudpro_desktop_app/modules/UG/model/formation_row_model.dart';
 import 'package:mudpro_desktop_app/modules/UG/model/pit_model.dart';
-import 'package:mudpro_desktop_app/modules/UG/model/producst_model.dart';
+import 'package:mudpro_desktop_app/modules/UG/model/producst_model.dart' hide ProductModel;
 import 'package:mudpro_desktop_app/modules/UG/model/pump_model.dart';
 import 'package:mudpro_desktop_app/modules/UG/model/sce_model.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/controller/service_controller.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
 
 class UgController extends GetxController {
+  final AuthRepository repository = AuthRepository();
+
   // Right panel main tab
   final activeRightTab = 'pad'.obs;
    final location = 'Land'.obs;
@@ -15,6 +21,9 @@ class UgController extends GetxController {
   final isLocked = true.obs;
 
    final inventoryTab = 'Products'.obs;
+
+  // Products
+  RxList<ProductModel> products = <ProductModel>[].obs;
 
   // Apply Changed Prices option
   final applyChangedPricesOption = 'To All'.obs;
@@ -56,132 +65,7 @@ final safetyMargin = '80.0'.obs;
   ].obs;
 
 
-  // SAMPLE DATA (static for now)
- var products = <ProductModel>[
-  ProductModel(
-    id: 1,
-    product: 'BARITE 4.1 - BIG BAG',
-    code: '',
-    sg: '4.10',
-    unit: '1.50 Ton',
-    price: '90.00',
-    initial: '',
-    group: 'Weight Material',
-    volAdd: true,
-    calculate: true,
-    tax: false,
-  ),
-  ProductModel(
-    id: 2,
-    product: 'BENTONITE - TON',
-    code: '',
-    sg: '2.60',
-    unit: '1.00 Ton',
-    price: '42.00',
-    initial: '',
-    group: 'Viscosifier',
-    volAdd: true,
-    calculate: true,
-  ),
-  ProductModel(
-    id: 3,
-    product: 'CALCIUM CHLORIDE',
-    code: '',
-    sg: '2.16',
-    unit: '1.00 Ton',
-    price: '124.00',
-    initial: '',
-    group: 'Common Chemical',
-    volAdd: true,
-    calculate: true,
-  ),
-  ProductModel(
-    id: 4,
-    product: 'CAUSTIC SODA',
-    code: '',
-    sg: '2.16',
-    unit: '25.00 kg',
-    price: '5.92',
-    initial: '',
-    group: 'Common Chemical',
-    volAdd: true,
-    calculate: true,
-  ),
-  ProductModel(
-    id: 5,
-    product: 'CHROME FREE LIGNO SULPH.',
-    code: '',
-    sg: '1.40',
-    unit: '50.00 lb',
-    price: '10.00',
-    initial: '',
-    group: 'WBM Thinner',
-    volAdd: true,
-    calculate: true,
-  ),
-  ProductModel(
-    id: 6,
-    product: 'CITRIC ACID',
-    code: '',
-    sg: '1.54',
-    unit: '25.00 kg',
-    price: '12.54',
-    initial: '',
-    group: 'Common Chemical',
-    volAdd: true,
-    calculate: true,
-  ),
-  ProductModel(
-    id: 7,
-    product: 'DRILLING DETERGENT',
-    code: '',
-    sg: '1.04',
-    unit: '55.00 gal',
-    price: '75.00',
-    initial: '',
-    group: 'Lubricant / Surfactant',
-    volAdd: true,
-    calculate: true,
-  ),
-  ProductModel(
-    id: 8,
-    product: 'GILSONITE AQUASOL 300',
-    code: '',
-    sg: '1.06',
-    unit: '50.00 lb',
-    price: '20.00',
-    initial: '',
-    group: 'Others',
-    volAdd: true,
-    calculate: true,
-  ),
-  ProductModel(
-    id: 9,
-    product: 'GS SEAL',
-    code: '',
-    sg: '2.25',
-    unit: '25.00 kg',
-    price: '15.00',
-    initial: '',
-    group: 'Wellbore Strength',
-    volAdd: true,
-    calculate: true,
-  ),
-  ProductModel(
-    id: 10,
-    product: 'HEC',
-    code: '',
-    sg: '1.60',
-    unit: '25.00 kg',
-    price: '88.00',
-    initial: '',
-    group: 'Viscosifier',
-    volAdd: true,
-    calculate: true,
-  ),
-].obs;
-
-
+ 
  var premixed = <PremixModel>[
   PremixModel(
     id: '1',
@@ -321,6 +205,122 @@ final otherSce = <OtherSceModel>[
     super.onInit();
     // 初始化时计算总容量
     updateTotalCapacity();
+    fetchProducts();
+  }
+
+  // Fetch products from API
+  Future<void> fetchProducts({int page = 1, String? search, String? group}) async {
+    try {
+      final result = await repository.getProducts(
+        page: page,
+        limit: 100, // Get more products for inventory
+        search: search,
+        group: group,
+      );
+
+      if (result['success']) {
+        final fetchedProducts = result['products'] as List<dynamic>;
+        products.value = fetchedProducts.map((p) => p as ProductModel).toList();
+      } else {
+        Get.snackbar(
+          'Error',
+          result['message'],
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to fetch products: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Fetch packages from API
+  Future<void> fetchPackages() async {
+    try {
+      final serviceController = ServiceController();
+      final fetchedPackages = await serviceController.getPackages();
+      packages.value = fetchedPackages.map((item) => PackageModel(
+        item.id ?? '',
+        item.name,
+        item.code,
+        item.unit,
+        item.price.toString(),
+        '', // initial
+        false, // tax
+      )).toList();
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to fetch packages: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Fetch engineering from API
+  Future<void> fetchEngineering() async {
+    try {
+      final serviceController = ServiceController();
+      final fetchedEngineering = await serviceController.getEngineering();
+      engineering.value = fetchedEngineering.map((item) => EngineeringModel(
+        item.id ?? '',
+        item.name,
+        item.code,
+        item.unit,
+        item.price.toString(),
+        false, // tax
+      )).toList();
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to fetch engineering: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Fetch services from API
+  Future<void> fetchServices() async {
+    try {
+      final serviceController = ServiceController();
+      final fetchedServices = await serviceController.getServices();
+      services.value = fetchedServices.map((item) => ServiceModel(
+        item.id ?? '',
+        item.name,
+        item.code,
+        item.unit,
+        item.price.toString(),
+        false, // tax
+      )).toList();
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to fetch services: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // Fetch all services data
+  Future<void> fetchServicesData() async {
+    await Future.wait([
+      fetchPackages(),
+      fetchEngineering(),
+      fetchServices(),
+    ]);
   }
 
   // ================= 计算总容量方法 =================

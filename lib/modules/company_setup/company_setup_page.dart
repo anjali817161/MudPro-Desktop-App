@@ -56,7 +56,7 @@ class _CompanySetupPageState extends State<CompanySetupPage>
                   ServicesPage(),
                   OperatorTab(),
                   OthersPage(),
-                  SafetyPage(),
+                  // SafetyPage(),
                 ],
               ),
             ),
@@ -213,7 +213,7 @@ class _CompanySetupPageState extends State<CompanySetupPage>
           Tab(text: 'Services'),
           Tab(text: 'Operator'),
           Tab(text: 'Others'),
-          Tab(text: 'Safety'),
+          // Tab(text: 'Safety'),
         ],
       ),
     );

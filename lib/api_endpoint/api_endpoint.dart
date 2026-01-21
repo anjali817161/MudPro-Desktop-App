@@ -20,5 +20,10 @@ class ApiEndpoint {
   static final String saveOperators = "operators/add-operators";
   static final String getOperators = "operators/get-operators";
 
+  static final String addProducts = "v1/products";
+  static final String getProducts = "v1/products";
+  static final String addBulkProducts = "v1/products/bulk";
+  static final String addExcel = "v1/products/excel";
+
 
 }

@@ -1,4 +1,4 @@
-class Product {
+class ProductModel {
   String? id;
   String product;
   String code;
@@ -9,13 +9,17 @@ class Product {
   String retail;
   String a;
   String b;
-  String c;
-  String d;
-  String e;
-  String f;
+  String price;
+  String initial;
+  bool volAdd;
+  bool calculate;
+  bool tax;
+  bool isSelected;
   bool isDeleted;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
-  Product({
+  ProductModel({
     this.id,
     this.product = '',
     this.code = '',
@@ -23,77 +27,85 @@ class Product {
     this.unitNum = '',
     this.unitClass = '',
     this.group = '',
-    this.retail = '',
+    this.retail = 'No',
     this.a = '',
     this.b = '',
-    this.c = '',
-    this.d = '',
-    this.e = '',
-    this.f = '',
+    this.price = '',
+    this.initial = '',
+    this.volAdd = false,
+    this.calculate = false,
+    this.tax = false,
+    this.isSelected = false,
     this.isDeleted = false,
+    this.createdAt,
+    this.updatedAt,
   });
 
-  // Convert to JSON for API
+  // Convert to JSON for API (single product)
   Map<String, dynamic> toJson() {
     return {
-      if (id != null) '_id': id,
-      'product': product,
-      'code': code,
-      'sg': sg,
-      'unitNum': unitNum,
-      'unitClass': unitClass,
-      'group': group,
-      'retail': retail,
-      'a': a,
-      'b': b,
-      'c': c,
-      'd': d,
-      'e': e,
-      'f': f,
-      'isDeleted': isDeleted,
+      'Product': product,
+      'Code': code,
+      'SG': sg.isNotEmpty ? double.tryParse(sg) ?? 0 : 0,
+      'Unit': {
+        'Num': unitNum.isNotEmpty ? int.tryParse(unitNum) ?? 0 : 0,
+        'Class': unitClass,
+      },
+      'Group': group,
+      'Retail': retail.isEmpty ? 'No' : retail,
+      'A': a.isNotEmpty ? int.tryParse(a) ?? 0 : null,
+      'B': b.isNotEmpty ? int.tryParse(b) ?? 0 : null,
     };
   }
 
-  // Create from JSON
-  factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
+  // Convert from API response
+  factory ProductModel.fromJson(Map<String, dynamic> json) {
+    return ProductModel(
       id: json['_id'],
-      product: json['product'] ?? '',
-      code: json['code'] ?? '',
-      sg: json['sg'] ?? '',
-      unitNum: json['unitNum'] ?? '',
-      unitClass: json['unitClass'] ?? '',
-      group: json['group'] ?? '',
-      retail: json['retail'] ?? '',
-      a: json['a'] ?? '',
-      b: json['b'] ?? '',
-      c: json['c'] ?? '',
-      d: json['d'] ?? '',
-      e: json['e'] ?? '',
-      f: json['f'] ?? '',
+      product: json['Product'] ?? '',
+      code: json['Code'] ?? '',
+      sg: json['SG']?.toString() ?? '',
+      unitNum: json['Unit']?['Num']?.toString() ?? '',
+      unitClass: json['Unit']?['Class'] ?? '',
+      group: json['Group'] ?? '',
+      retail: json['Retail'] ?? 'No',
+      a: json['A']?.toString() ?? '',
+      b: json['B']?.toString() ?? '',
       isDeleted: json['isDeleted'] ?? false,
+      createdAt: json['createdAt'] != null 
+          ? DateTime.parse(json['createdAt']) 
+          : null,
+      updatedAt: json['updatedAt'] != null 
+          ? DateTime.parse(json['updatedAt']) 
+          : null,
     );
   }
 
   // Check if product has any data
   bool hasData() {
     return product.isNotEmpty ||
-        code.isNotEmpty ||
-        sg.isNotEmpty ||
-        unitNum.isNotEmpty ||
-        unitClass.isNotEmpty ||
-        group.isNotEmpty ||
-        retail.isNotEmpty ||
-        a.isNotEmpty ||
-        b.isNotEmpty ||
-        c.isNotEmpty ||
-        d.isNotEmpty ||
-        e.isNotEmpty ||
-        f.isNotEmpty;
+           code.isNotEmpty ||
+           sg.isNotEmpty ||
+           unitNum.isNotEmpty ||
+           unitClass.isNotEmpty ||
+           group.isNotEmpty ||
+           retail.isNotEmpty ||
+           a.isNotEmpty ||
+           b.isNotEmpty;
   }
 
-  // Create a copy with updated fields
-  Product copyWith({
+  // Check if product is valid (all required fields filled)
+  bool isValid() {
+    return product.isNotEmpty &&
+           code.isNotEmpty &&
+           sg.isNotEmpty &&
+           unitNum.isNotEmpty &&
+           unitClass.isNotEmpty &&
+           group.isNotEmpty;
+  }
+
+  // Create a copy
+  ProductModel copyWith({
     String? id,
     String? product,
     String? code,
@@ -104,13 +116,8 @@ class Product {
     String? retail,
     String? a,
     String? b,
-    String? c,
-    String? d,
-    String? e,
-    String? f,
-    bool? isDeleted,
   }) {
-    return Product(
+    return ProductModel(
       id: id ?? this.id,
       product: product ?? this.product,
       code: code ?? this.code,
@@ -121,11 +128,19 @@ class Product {
       retail: retail ?? this.retail,
       a: a ?? this.a,
       b: b ?? this.b,
-      c: c ?? this.c,
-      d: d ?? this.d,
-      e: e ?? this.e,
-      f: f ?? this.f,
-      isDeleted: isDeleted ?? this.isDeleted,
     );
+  }
+
+  // Clear all fields
+  void clear() {
+    product = '';
+    code = '';
+    sg = '';
+    unitNum = '';
+    unitClass = '';
+    group = '';
+    retail = 'No';
+    a = '';
+    b = '';
   }
 }

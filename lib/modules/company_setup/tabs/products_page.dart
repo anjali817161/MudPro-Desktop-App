@@ -35,13 +35,13 @@ class ProductsPage extends StatelessWidget {
                   ),
                 ),
                 Spacer(),
-                Text(
-                  'Total Products: ${controller.products.length - 1}',
+                Obx(() => Text(
+                  'Total Products: ${controller.products.where((p) => p.hasData()).length}',
                   style: AppTheme.bodyLarge.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
-                ),
+                )),
               ],
             ),
           ),
@@ -96,9 +96,7 @@ class ProductsPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    Get.back();
-                  },
+                  onPressed: () => Get.back(),
                   style: AppTheme.secondaryButtonStyle,
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -106,24 +104,25 @@ class ProductsPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: () {
-                    // controller.saveProducts();
-                    Get.snackbar(
-                      'Success',
-                      'Products saved successfully',
-                      snackPosition: SnackPosition.BOTTOM,
-                      backgroundColor: AppTheme.successColor,
-                      colorText: Colors.white,
-                      margin: EdgeInsets.all(16),
-                    );
-                  },
+                Obx(() => ElevatedButton(
+                  onPressed: controller.isSaving.value 
+                      ? null 
+                      : () => controller.saveProducts(),
                   style: AppTheme.primaryButtonStyle,
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    child: Text('Save'),
+                    child: controller.isSaving.value
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Text('Save'),
                   ),
-                ),
+                )),
               ],
             ),
           ),
@@ -133,17 +132,17 @@ class ProductsPage extends StatelessWidget {
   }
 
   Widget _buildTable(BoxConstraints constraints) {
-    final double minWidth = 1200;
-    final double tableWidth = constraints.maxWidth > minWidth ? constraints.maxWidth - 40 : minWidth;
+    // Fixed column widths for better consistency
+    final double minWidth = 950;
+    final double tableWidth = constraints.maxWidth > minWidth 
+        ? constraints.maxWidth - 40 
+        : minWidth;
 
     return Container(
       width: tableWidth,
       child: Column(
         children: [
-          // Table Header
           _buildTableHeader(tableWidth),
-          
-          // Table Rows
           Obx(() => Column(
             children: List.generate(
               controller.products.length,
@@ -167,13 +166,13 @@ class ProductsPage extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _headerCell('No', tableWidth * 0.04),
-          _headerCell('Product', tableWidth * 0.14),
-          _headerCell('Code', tableWidth * 0.09),
-          _headerCell('SG', tableWidth * 0.07),
+          _headerCell('No', tableWidth * 0.05),
+          _headerCell('Product*', tableWidth * 0.18),
+          _headerCell('Code*', tableWidth * 0.12),
+          _headerCell('SG*', tableWidth * 0.08),
           // Unit column with sub-headers
           Container(
-            width: tableWidth * 0.12,
+            width: tableWidth * 0.15,
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
@@ -186,7 +185,7 @@ class ProductsPage extends StatelessWidget {
                   child: Container(
                     alignment: Alignment.center,
                     child: Text(
-                      'Unit',
+                      'Unit*',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -208,7 +207,10 @@ class ProductsPage extends StatelessWidget {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             border: Border(
-                              right: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
+                              right: BorderSide(
+                                color: Colors.white.withOpacity(0.2), 
+                                width: 1
+                              ),
                             ),
                           ),
                           child: Text(
@@ -240,11 +242,10 @@ class ProductsPage extends StatelessWidget {
               ],
             ),
           ),
-          _headerCell('Group', tableWidth * 0.09),
-          _headerCell('Retail', tableWidth * 0.09),
-          _headerCell('A', tableWidth * 0.06),
-          _headerCell('B', tableWidth * 0.06),
-      
+          _headerCell('Group*', tableWidth * 0.12),
+          _headerCell('Retail', tableWidth * 0.10),
+          _headerCell('Sales price', tableWidth * 0.10),
+          _headerCell('COGS', tableWidth * 0.10),
         ],
       ),
     );
@@ -274,7 +275,7 @@ class ProductsPage extends StatelessWidget {
     final product = controller.products[index];
 
     return Container(
-      height: 32,
+      height: 34,
       decoration: BoxDecoration(
         color: index % 2 == 0 ? Color(0xffF9FAFB) : Colors.white,
         border: Border(
@@ -285,7 +286,7 @@ class ProductsPage extends StatelessWidget {
         children: [
           // No Column
           Container(
-            width: tableWidth * 0.04,
+            width: tableWidth * 0.05,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               border: Border(
@@ -301,23 +302,24 @@ class ProductsPage extends StatelessWidget {
             ),
           ),
           _buildCell(
-            tableWidth * 0.14, 
+            tableWidth * 0.18, 
             product.product, 
             (val) => _updateField(index, 'product', val),
           ),
           _buildCell(
-            tableWidth * 0.09, 
+            tableWidth * 0.12, 
             product.code, 
             (val) => _updateField(index, 'code', val),
           ),
           _buildCell(
-            tableWidth * 0.07, 
+            tableWidth * 0.08, 
             product.sg, 
             (val) => _updateField(index, 'sg', val),
+            isNumeric: true,
           ),
           // Unit split column
           Container(
-            width: tableWidth * 0.12,
+            width: tableWidth * 0.15,
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
@@ -336,6 +338,7 @@ class ProductsPage extends StatelessWidget {
                     child: _buildCellContent(
                       product.unitNum, 
                       (val) => _updateField(index, 'unitNum', val),
+                      isNumeric: true,
                     ),
                   ),
                 ),
@@ -349,32 +352,38 @@ class ProductsPage extends StatelessWidget {
             ),
           ),
           _buildCell(
-            tableWidth * 0.09, 
+            tableWidth * 0.12, 
             product.group, 
             (val) => _updateField(index, 'group', val),
           ),
           _buildCell(
-            tableWidth * 0.09, 
+            tableWidth * 0.10, 
             product.retail, 
             (val) => _updateField(index, 'retail', val),
           ),
           _buildCell(
-            tableWidth * 0.06, 
+            tableWidth * 0.10, 
             product.a, 
-            (val) => _updateField(index, 'a', val),
+            (val) => _updateField(index, 'sales price', val),
+            isNumeric: true,
           ),
           _buildCell(
-            tableWidth * 0.06, 
+            tableWidth * 0.10, 
             product.b, 
-            (val) => _updateField(index, 'b', val),
+            (val) => _updateField(index, 'COGS', val),
+            isNumeric: true,
           ),
-        
         ],
       ),
     );
   }
 
-  Widget _buildCell(double width, String value, Function(String) onChanged) {
+  Widget _buildCell(
+    double width, 
+    String value, 
+    Function(String) onChanged,
+    {bool isNumeric = false}
+  ) {
     return Container(
       width: width,
       decoration: BoxDecoration(
@@ -382,18 +391,24 @@ class ProductsPage extends StatelessWidget {
           left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
         ),
       ),
-      child: _buildCellContent(value, onChanged),
+      child: _buildCellContent(value, onChanged, isNumeric: isNumeric),
     );
   }
 
-  Widget _buildCellContent(String value, Function(String) onChanged) {
+  Widget _buildCellContent(
+    String value, 
+    Function(String) onChanged,
+    {bool isNumeric = false}
+  ) {
     return TextField(
-      controller: TextEditingController(text: value)..selection = TextSelection.collapsed(offset: value.length),
+      controller: TextEditingController(text: value)
+        ..selection = TextSelection.collapsed(offset: value.length),
       style: AppTheme.bodyLarge.copyWith(fontSize: 12),
       textAlign: TextAlign.center,
+      keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         border: InputBorder.none,
-        contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         isDense: true,
       ),
       onChanged: onChanged,
@@ -425,35 +440,20 @@ class ProductsPage extends StatelessWidget {
       case 'retail':
         product.retail = value;
         break;
-      case 'a':
+      case 'sales price':
         product.a = value;
         break;
-      case 'b':
+      case 'COGS':
         product.b = value;
         break;
-      
+
     }
     
     controller.updateProduct(index, product);
     
     // Auto add new row if current row has any data and it's the last row
-    if (index == controller.products.length - 1) {
-      if (_hasAnyData(product)) {
-        controller.addProduct();
-      }
+    if (index == controller.products.length - 1 && product.hasData()) {
+      controller.addProduct();
     }
-  }
-
-  bool _hasAnyData(product) {
-    return product.product.isNotEmpty ||
-           product.code.isNotEmpty ||
-           product.sg.isNotEmpty ||
-           product.unitNum.isNotEmpty ||
-           product.unitClass.isNotEmpty ||
-           product.group.isNotEmpty ||
-           product.retail.isNotEmpty ||
-           product.a.isNotEmpty ||
-           product.b.isNotEmpty;
-         
   }
 }

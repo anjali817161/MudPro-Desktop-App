@@ -4,9 +4,11 @@ import 'dart:convert';
 import 'dart:io' as io;
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import 'package:mudpro_desktop_app/api_endpoint/api_endpoint.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/company_model.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/engineers_model.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/service_model.dart';
 
 class AuthRepository {
@@ -286,5 +288,304 @@ class AuthRepository {
     }
   }
  
+
+ // Default headers
+  Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+
+  // Add single product
+  Future<Map<String, dynamic>> addProduct(ProductModel product) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiEndpoint.baseUrl + ApiEndpoint.addProducts),
+        headers: _headers,
+        body: jsonEncode(product.toJson()),
+      );
+
+      final responseData = jsonDecode(response.body);
+      print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 201 ) {
+        return {
+          'success': true,
+          'message': 'Product added successfully',
+          'data': responseData['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to add product',
+        };
+      }
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'No internet connection',
+      };
+    } on FormatException {
+      return {
+        'success': false,
+        'message': 'Invalid response format',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred: $e',
+      };
+    }
+  }
+
+  // Bulk add products
+  Future<Map<String, dynamic>> bulkAddProducts(List<ProductModel> products) async {
+    try {
+      final validProducts = products
+          .where((p) => p.isValid())
+          .map((p) => p.toJson())
+          .toList();
+
+      if (validProducts.isEmpty) {
+        return {
+          'success': false,
+          'message': 'No valid products to save',
+        };
+      }
+
+      final response = await http.post(
+        Uri.parse(ApiEndpoint.baseUrl + ApiEndpoint.addBulkProducts),
+        headers: _headers,
+        body: jsonEncode(validProducts),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 201  || response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': '${responseData['saved']} products saved successfully',
+          'saved': responseData['saved'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to save products',
+        };
+      }
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'No internet connection',
+      };
+    } on FormatException {
+      return {
+        'success': false,
+        'message': 'Invalid response format',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred: $e',
+      };
+    }
+  }
+
+  // Upload Excel file
+  Future<Map<String, dynamic>> uploadExcel(String filePath) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(ApiEndpoint.baseUrl + ApiEndpoint.addExcel),
+      );
+
+      // Add file
+      var file = await http.MultipartFile.fromPath(
+        'file',
+        filePath,
+        contentType: MediaType('application', 'vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+      );
+      
+      request.files.add(file);
+
+      // Send request
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      
+      final responseData = jsonDecode(response.body);
+      print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': '${responseData['inserted']} products imported successfully',
+          'inserted': responseData['inserted'],
+          'errors': responseData['errors'] ?? [],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to upload Excel',
+        };
+      }
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'No internet connection',
+      };
+    } on FormatException {
+      return {
+        'success': false,
+        'message': 'Invalid response format',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred: $e',
+      };
+    }
+  }
+
+  // Get products (pagination)
+  Future<Map<String, dynamic>> getProducts({
+    int page = 1,
+    int limit = 20,
+    String? search,
+    String? group,
+  }) async {
+    try {
+      final queryParams = <String, String>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+        if (search != null && search.isNotEmpty) 'search': search,
+        if (group != null && group.isNotEmpty) 'Group': group,
+      };
+
+      final uri = Uri.parse(ApiEndpoint.baseUrl + ApiEndpoint.getProducts).replace(
+        queryParameters: queryParams,
+      );
+
+      final response = await http.get(uri, headers: _headers);
+      final responseData = jsonDecode(response.body);
+
+      print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final List<ProductModel> products = (responseData['data'] as List)
+            .map((json) => ProductModel.fromJson(json))
+            .toList();
+
+        return {
+          'success': true,
+          'products': products,
+          'total': responseData['total'],
+          'page': responseData['page'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to fetch products',
+        };
+      }
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'No internet connection',
+      };
+    } on FormatException {
+      return {
+        'success': false,
+        'message': 'Invalid response format',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred: $e',
+      };
+    }
+  }
+
+  // Delete product
+  Future<Map<String, dynamic>> deleteProduct(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/products/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Product deleted successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to delete product',
+        };
+      }
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'No internet connection',
+      };
+    } on FormatException {
+      return {
+        'success': false,
+        'message': 'Invalid response format',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred: $e',
+      };
+    }
+  }
+
+  // Restore product
+  Future<Map<String, dynamic>> restoreProduct(String id) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/products/restore/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Product restored successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to restore product',
+        };
+      }
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'No internet connection',
+      };
+    } on FormatException {
+      return {
+        'success': false,
+        'message': 'Invalid response format',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred: $e',
+      };
+    }
+  }
   
 }

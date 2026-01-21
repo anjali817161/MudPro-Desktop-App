@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/UG/controller/UG_controller.dart';
-import 'package:mudpro_desktop_app/modules/UG/model/producst_model.dart';
+import 'package:mudpro_desktop_app/modules/UG/model/producst_model.dart' hide ProductModel;
+import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
 class InventoryProductsView extends StatelessWidget {
@@ -81,19 +82,19 @@ class InventoryProductsView extends StatelessWidget {
                             columnWidths: const {
                               0: FixedColumnWidth(40),
                               1: FixedColumnWidth(260),
-                              2: FixedColumnWidth(90),
-                              3: FixedColumnWidth(70),
-                              4: FixedColumnWidth(90),
-                              5: FixedColumnWidth(90),
-                              6: FixedColumnWidth(90),
-                              7: FixedColumnWidth(140),
-                              8: FixedColumnWidth(90),
-                              9: FixedColumnWidth(90),
-                              10: FixedColumnWidth(70),
+                              2: FixedColumnWidth(140),
+                              3: FixedColumnWidth(100),
+                              4: FixedColumnWidth(100),
+                              5: FixedColumnWidth(100),
+                              6: FixedColumnWidth(100),
+                              7: FixedColumnWidth(160),
+                              8: FixedColumnWidth(100),
+                              9: FixedColumnWidth(100),
+                              10: FixedColumnWidth(100),
                             },
                             children: [
                               _headerRow([
-                                '#',
+                                'No',
                                 'Product',
                                 'Code',
                                 'SG',
@@ -151,12 +152,13 @@ class InventoryProductsView extends StatelessWidget {
 
   // ================= PRODUCT ROW =================
   TableRow _productRow(ProductModel p) {
+    int index = c.products.indexOf(p) + 1;
     return TableRow(
       decoration: BoxDecoration(
-        color: p.id!.isEven ? Colors.white : AppTheme.cardColor,
+        color: int.tryParse(p.id ?? '0')?.isEven ?? false ? Colors.white : AppTheme.cardColor,
       ),
       children: [
-        _cell(p.id.toString()),
+        _cell(index.toString()),
         _editableCell(p.product, onChanged: (v) {
           p.product = v;
           c.products.refresh();
@@ -169,12 +171,12 @@ class InventoryProductsView extends StatelessWidget {
           p.sg = v;
           c.products.refresh();
         }),
-        _editableCell(p.unit, onChanged: (v) {
-          p.unit = v;
+        _editableCell(p.unitNum, onChanged: (v) {
+          p.unitClass = v;
           c.products.refresh();
         }),
         _editableCell(p.price, onChanged: (v) {
-          p.price = v;
+          p.unitNum = v;
           c.products.refresh();
         }),
         _editableCell(p.initial, onChanged: (v) {
@@ -384,7 +386,7 @@ class InventoryProductsView extends StatelessWidget {
       ),
     ),
     children: h.map((e) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Text(
         e,
         textAlign: TextAlign.left,
@@ -398,7 +400,7 @@ class InventoryProductsView extends StatelessWidget {
   );
 
   Widget _cell(String v, {bool bold = false}) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
     child: Text(
       v,
       style: TextStyle(
@@ -410,7 +412,7 @@ class InventoryProductsView extends StatelessWidget {
   );
 
   Widget _editableCell(String value, {Function(String)? onChanged}) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
     child: Obx(() => c.isLocked.value
         ? Text(
             value,
@@ -419,23 +421,17 @@ class InventoryProductsView extends StatelessWidget {
               color: AppTheme.textPrimary,
             ),
           )
-        : Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(4),
+        : TextFormField(
+            initialValue: value,
+            onChanged: onChanged,
+            style: TextStyle(
+              fontSize: 10,
+              color: AppTheme.textPrimary,
             ),
-            child: TextFormField(
-              initialValue: value,
-              onChanged: onChanged,
-              style: TextStyle(
-                fontSize: 10,
-                color: AppTheme.textPrimary,
-              ),
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                border: InputBorder.none,
-              ),
+            decoration: const InputDecoration(
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              border: InputBorder.none,
             ),
           )),
   );

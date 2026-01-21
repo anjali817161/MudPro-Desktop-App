@@ -192,49 +192,39 @@ class _ServicesPageState extends State<ServicesPage> {
   }
 
   void _showSuccess(String message) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.transparent,
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return Align(
-          alignment: Alignment.centerRight,
+    _showAlert(message, Colors.green);
+  }
+
+  void _showError(String message) {
+    _showAlert(message, Colors.red);
+  }
+
+  void _showAlert(String message, Color backgroundColor) {
+    final overlay = Overlay.of(context);
+    final entry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: 20,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
           child: Container(
-            width: 300,
-            margin: const EdgeInsets.only(right: 20),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(8),
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               message,
               style: const TextStyle(color: Colors.white),
             ),
           ),
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(1.0, 0.0),
-            end: Offset.zero,
-          ).animate(animation),
-          child: child,
-        );
-      },
-    );
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
+        ),
       ),
     );
+    overlay.insert(entry);
+    Future.delayed(const Duration(seconds: 3), () {
+      entry.remove();
+    });
   }
 
   @override

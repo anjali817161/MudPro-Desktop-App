@@ -184,11 +184,11 @@ Obx(() {
                       shadowColor: Colors.black.withOpacity(0.03),
                       child: SectionNavBar(),
                     ),
-                    Material(
-                      elevation: 1,
-                      shadowColor: Colors.black.withOpacity(0.02),
-                      child: LockBar(),
-                    ),
+                    // Material(
+                    //   elevation: 1,
+                    //   shadowColor: Colors.black.withOpacity(0.02),
+                    //   child: LockBar(),
+                    // ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(8),

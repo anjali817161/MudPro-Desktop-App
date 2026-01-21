@@ -1,12 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mudpro_desktop_app/modules/UG/controller/UG_controller.dart';
 import 'package:mudpro_desktop_app/modules/UG/model/producst_model.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/controller/service_controller.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
-class InventoryServicesView extends StatelessWidget {
-  InventoryServicesView({super.key});
-  final c = Get.find<UgController>();
+class InventoryServicesView extends StatefulWidget {
+  const InventoryServicesView({super.key});
+
+  @override
+  State<InventoryServicesView> createState() => _InventoryServicesViewState();
+}
+
+class _InventoryServicesViewState extends State<InventoryServicesView> {
+  final ServiceController controller = ServiceController();
+
+  final RxList<PackageModel> packages = <PackageModel>[].obs;
+  final RxList<EngineeringModel> engineering = <EngineeringModel>[].obs;
+  final RxList<ServiceModel> services = <ServiceModel>[].obs;
+
+  final isLocked = true.obs;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    try {
+      final fetchedPackages = await controller.getPackages();
+      packages.value = fetchedPackages.map((item) => PackageModel(
+        item.id ?? '',
+        item.name,
+        item.code,
+        item.unit,
+        item.price.toString(),
+        '', // initial
+        false, // tax
+      )).toList();
+
+      final fetchedEngineering = await controller.getEngineering();
+      engineering.value = fetchedEngineering.map((item) => EngineeringModel(
+        item.id ?? '',
+        item.name,
+        item.code,
+        item.unit,
+        item.price.toString(),
+        false, // tax
+      )).toList();
+
+      final fetchedServices = await controller.getServices();
+      services.value = fetchedServices.map((item) => ServiceModel(
+        item.id ?? '',
+        item.name,
+        item.code,
+        item.unit,
+        item.price.toString(),
+        false, // tax
+      )).toList();
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to fetch data: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,119 +126,79 @@ class InventoryServicesView extends StatelessWidget {
   // ================= TABLES ==========================
   // ===================================================
 
- Widget _packagesTable() {
-  final rows = c.packages.map((p) => [
-        p.id,
-        p.package,
-        p.code,
-        p.unit,
-        p.price,
-        p.initial,
-        p.tax,
-      ]).toList();
-
-  return Container(
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: Colors.grey.shade300),
-    ),
-    child: Column(
-      children: [
-        // Table Header
-        Container(
-          height: 32,
-          decoration: BoxDecoration(
-            gradient: AppTheme.headerGradient,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(8),
-              topRight: Radius.circular(8),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              Icon(Icons.inventory, size: 16, color: Colors.white),
-              const SizedBox(width: 8),
-              Text(
-                'Packages',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
+  Widget _packagesTable() {
+    return Obx(() => Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: [
+          Container(
+            height: 32,
+            decoration: BoxDecoration(
+              gradient: AppTheme.headerGradient,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  '${rows.length} items',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.white,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                Icon(Icons.inventory, size: 16, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'Packages',
+                  style: TextStyle(
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Table(
-              border: TableBorder.all(
-                color: Colors.grey.shade200,
-                width: 1,
-              ),
-              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              columnWidths: const {
-                0: FixedColumnWidth(40),
-                1: FlexColumnWidth(2),
-                2: FlexColumnWidth(1),
-                3: FlexColumnWidth(1),
-                4: FlexColumnWidth(1),
-                5: FlexColumnWidth(1),
-                6: FixedColumnWidth(60),
-              },
-              children: [
-                _headerRow(['#', 'Package', 'Code', 'Unit', 'Price (\$)', 'Initial', 'Tax']),
-
-                // DATA ROWS OR EMPTY SPACE
-                if (rows.isNotEmpty)
-                  ...rows.map((row) => _tableRow(row, onChangedList: [
-                    null,
-                    (v) => row[1] = v,
-                    (v) => row[2] = v,
-                    (v) => row[3] = v,
-                    (v) => row[4] = v,
-                    (v) => row[5] = v,
-                  ], onCheckboxChangedList: [
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    (v) => row[6] = v,
-                  ]))
-                else
-                  ..._emptyRows(7, 8), // 👈 empty rows
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '${packages.length} items',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-
+          Expanded(
+            child: _table(
+              headers: ['No', 'Package', 'Code', 'Unit', 'Price (\$)', 'Initial', 'Tax'],
+              rows: packages.asMap().entries.map((entry) => [
+                (entry.key + 1).toString(),
+                entry.value.package,
+                entry.value.code,
+                entry.value.unit,
+                entry.value.price,
+                entry.value.initial,
+                entry.value.tax,
+              ]).toList(),
+              models: packages,
+              checkboxCols: [6],
+            ),
+          ),
+        ],
+      ),
+    ));
+  }
 
   Widget _engineeringTable() {
-    return Container(
+    return Obx(() => Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -215,7 +236,7 @@ class InventoryServicesView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '${c.engineering.length} items',
+                    '${engineering.length} items',
                     style: const TextStyle(
                       fontSize: 10,
                       color: Colors.white,
@@ -228,26 +249,26 @@ class InventoryServicesView extends StatelessWidget {
           ),
           Expanded(
             child: _table(
-              headers: ['#', 'Engineering', 'Code', 'Unit', 'Price (\$)', 'Tax'],
-              rows: c.engineering.map((e) => [
-                e.id,
-                e.name,
-                e.code,
-                e.unit,
-                e.price,
-                e.tax,
+              headers: ['No', 'Engineering', 'Code', 'Unit', 'Price (\$)', 'Tax'],
+              rows: engineering.asMap().entries.map((entry) => [
+                (entry.key + 1).toString(),
+                entry.value.name,
+                entry.value.code,
+                entry.value.unit,
+                entry.value.price,
+                entry.value.tax,
               ]).toList(),
-              models: c.engineering,
+              models: engineering,
               checkboxCols: [5],
             ),
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _servicesTable() {
-    return Container(
+    return Obx(() => Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -285,7 +306,7 @@ class InventoryServicesView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '${c.services.length} items',
+                    '${services.length} items',
                     style: const TextStyle(
                       fontSize: 10,
                       color: Colors.white,
@@ -298,22 +319,22 @@ class InventoryServicesView extends StatelessWidget {
           ),
           Expanded(
             child: _table(
-              headers: ['#', 'Services', 'Code', 'Unit', 'Price (\$)', 'Tax'],
-              rows: c.services.map((s) => [
-                s.id,
-                s.service,
-                s.code,
-                s.unit,
-                s.price,
-                s.tax,
+              headers: ['No', 'Services', 'Code', 'Unit', 'Price (\$)', 'Tax'],
+              rows: services.asMap().entries.map((entry) => [
+                (entry.key + 1).toString(),
+                entry.value.service,
+                entry.value.code,
+                entry.value.unit,
+                entry.value.price,
+                entry.value.tax,
               ]).toList(),
-              models: c.services,
+              models: services,
               checkboxCols: [5],
             ),
           ),
         ],
       ),
-    );
+    ));
   }
 
 TableRow _headerRow(List<String> headers) {
@@ -327,13 +348,13 @@ TableRow _headerRow(List<String> headers) {
     ),
     children: headers.map((h) {
       return Container(
-        height: 32,
+        height: 24,
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Text(
           h,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimary,
           ),
@@ -407,6 +428,25 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
     required List<dynamic> models,
     List<int> checkboxCols = const [],
   }) {
+    final columnWidths = headers.length == 7
+        ? const {
+            0: FixedColumnWidth(40),
+            1: FlexColumnWidth(2),
+            2: FlexColumnWidth(1),
+            3: FlexColumnWidth(1),
+            4: FlexColumnWidth(1),
+            5: FlexColumnWidth(1),
+            6: FixedColumnWidth(60),
+          }
+        : const {
+            0: FixedColumnWidth(40),
+            1: FlexColumnWidth(2),
+            2: FlexColumnWidth(1),
+            3: FlexColumnWidth(1),
+            4: FlexColumnWidth(1),
+            5: FixedColumnWidth(60),
+          };
+
     return SingleChildScrollView(
       child: Table(
         border: TableBorder.all(
@@ -414,14 +454,7 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
           width: 1,
         ),
         defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        columnWidths: const {
-          0: FixedColumnWidth(40),
-          1: FlexColumnWidth(2),
-          2: FlexColumnWidth(1),
-          3: FlexColumnWidth(1),
-          4: FlexColumnWidth(1),
-          5: FixedColumnWidth(60),
-        },
+        columnWidths: columnWidths,
         children: [
           // HEADER
           _headerRow(headers),
@@ -440,13 +473,13 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
                   return _checkboxCell(row[i], onChanged: (v) {
                     if (model is EngineeringModel) {
                       model.tax = v;
-                      c.engineering.refresh();
+                      engineering.refresh();
                     } else if (model is ServiceModel) {
                       model.tax = v;
-                      c.services.refresh();
+                      services.refresh();
                     } else if (model is PackageModel) {
                       model.tax = v;
-                      c.packages.refresh();
+                      packages.refresh();
                     }
                   });
                 }
@@ -456,20 +489,20 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
                     if (i == 2) model.code = v;
                     if (i == 3) model.unit = v;
                     if (i == 4) model.price = v;
-                    c.engineering.refresh();
+                    engineering.refresh();
                   } else if (model is ServiceModel) {
                     if (i == 1) model.service = v;
                     if (i == 2) model.code = v;
                     if (i == 3) model.unit = v;
                     if (i == 4) model.price = v;
-                    c.services.refresh();
+                    services.refresh();
                   } else if (model is PackageModel) {
                     if (i == 1) model.package = v;
                     if (i == 2) model.code = v;
                     if (i == 3) model.unit = v;
                     if (i == 4) model.price = v;
                     if (i == 5) model.initial = v;
-                    c.packages.refresh();
+                    packages.refresh();
                   }
                 });
               }),
@@ -500,30 +533,29 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
 
   Widget _editableCell(String value, {Function(String)? onChanged}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Obx(() => c.isLocked.value
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Obx(() => isLocked.value
           ? Text(
               value,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 color: AppTheme.textPrimary,
               ),
             )
           : Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: TextFormField(
                 initialValue: value,
                 onChanged: onChanged,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 9,
                   color: AppTheme.textPrimary,
                 ),
                 decoration: const InputDecoration(
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   border: InputBorder.none,
                 ),
               ),
@@ -541,10 +573,10 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
                 color: value ? AppTheme.successColor : Colors.grey.shade400,
               ),
             ),
-            margin: const EdgeInsets.all(4),
+            margin: const EdgeInsets.all(2),
             child: Checkbox(
               value: value,
-              onChanged: c.isLocked.value ? null : (v) => onChanged?.call(v!),
+              onChanged: isLocked.value ? null : (v) => onChanged?.call(v!),
               activeColor: AppTheme.successColor,
               checkColor: Colors.white,
               visualDensity: VisualDensity.compact,

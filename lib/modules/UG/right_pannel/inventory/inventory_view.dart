@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/UG/controller/UG_controller.dart';
+import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/inventory_pickup/inventory_pickup_tabs.dart';
 import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/inventory_products_view.dart';
 import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/inventory_service.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
@@ -202,12 +203,18 @@ class InventoryView extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        'Inventory Pickup',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primaryColor,
+                    GestureDetector(
+                      onTap: () {
+                        //
+                        Get.to(() => InventoryPickupTabs());
+                      },
+                        child: Text(
+                          'Inventory Pickup',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryColor,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -330,12 +337,18 @@ class InventoryView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          'Inventory Pickup',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primaryColor,
+                        GestureDetector(
+                           onTap: () {
+                        //
+                        Get.to(() => InventoryPickupTabs());
+                      },
+                          child: Text(
+                            'Inventory Pickup',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.primaryColor,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
