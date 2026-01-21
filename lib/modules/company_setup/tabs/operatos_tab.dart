@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/controller/operators_controller.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
 /// =======================================================
-/// OPERATOR TAB (IMPROVED TABLE UI)
+/// OPERATOR TAB (COMPRESSED & EXCEL-LIKE UI)
 /// =======================================================
 class OperatorTab extends StatefulWidget {
   const OperatorTab({super.key});
@@ -12,15 +14,58 @@ class OperatorTab extends StatefulWidget {
 }
 
 class _OperatorTabState extends State<OperatorTab> {
-  static const int totalRows = 50; // Reduced for better performance
   int selectedRow = -1;
-  int arrowRow = -1;
   final ScrollController _scrollController = ScrollController();
+  final controller = Get.put(OperatorController());
 
-  final List<List<TextEditingController>> controllers =
-      List.generate(totalRows, (_) {
-    return List.generate(6, (_) => TextEditingController());
-  });
+  // Start with 1 row, will grow dynamically
+  List<List<TextEditingController>> controllers = [
+    List.generate(6, (_) => TextEditingController()),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Add listeners to detect when user types in last row
+    _addListenersToRow(0);
+  }
+
+  void _addListenersToRow(int rowIndex) {
+    for (var controller in controllers[rowIndex]) {
+      controller.addListener(() {
+        _checkAndAddNewRow(rowIndex);
+      });
+    }
+  }
+
+  void _checkAndAddNewRow(int rowIndex) {
+    // If user types in the last row and it's not empty, add a new row
+    if (rowIndex == controllers.length - 1) {
+      bool hasData = controllers[rowIndex].any((c) => c.text.isNotEmpty);
+      if (hasData && controllers.length < 100) {
+        setState(() {
+          controllers.add(List.generate(6, (_) => TextEditingController()));
+          _addListenersToRow(controllers.length - 1);
+        });
+      }
+    }
+  }
+
+  void _clearRowsAfterSave() {
+    // Clear all rows and reset to 1 empty row
+    for (var row in controllers) {
+      for (var controller in row) {
+        controller.dispose();
+      }
+    }
+    setState(() {
+      controllers = [
+        List.generate(6, (_) => TextEditingController()),
+      ];
+      selectedRow = -1;
+      _addListenersToRow(0);
+    });
+  }
 
   @override
   void dispose() {
@@ -37,16 +82,16 @@ class _OperatorTabState extends State<OperatorTab> {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with Close Button
+          // Compact Header
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   gradient: AppTheme.secondaryGradient,
                   shape: BoxShape.circle,
@@ -54,70 +99,63 @@ class _OperatorTabState extends State<OperatorTab> {
                 child: Icon(
                   Icons.business_center,
                   color: Colors.white,
-                  size: 22,
+                  size: 18,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Text(
-                'Operator ',
+                'Operator',
                 style: AppTheme.titleMedium.copyWith(
                   color: AppTheme.textPrimary,
-                  fontSize: 16,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
-          // Table Container
+          // Compact Table Container
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey.shade300, width: 1),
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: Column(
                 children: [
-                  // Table Header with Dark Vertical Dividers
+                  // Compact Table Header
                   Container(
-                    height: 44,
+                    height: 36,
                     decoration: BoxDecoration(
                       gradient: AppTheme.primaryGradient,
                       borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(12),
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
                       ),
                     ),
                     child: Row(
                       children: [
-                        _HeaderCell(width: 60, text: '#', icon: Icons.numbers, 
-                          showRightDivider: true, dividerColor: AppTheme.textPrimary.withOpacity(0.3)),
-                        _HeaderCell(width: 180, text: 'Company', icon: Icons.business,
-                          showRightDivider: true, dividerColor: AppTheme.textPrimary.withOpacity(0.3)),
-                        _HeaderCell(width: 160, text: 'Contact', icon: Icons.person,
-                          showRightDivider: true, dividerColor: AppTheme.textPrimary.withOpacity(0.3)),
-                        _HeaderCell(width: 240, text: 'Address', icon: Icons.location_on,
-                          showRightDivider: true, dividerColor: AppTheme.textPrimary.withOpacity(0.3)),
-                        _HeaderCell(width: 160, text: 'Phone', icon: Icons.phone,
-                          showRightDivider: true, dividerColor: AppTheme.textPrimary.withOpacity(0.3)),
-                        _HeaderCell(width: 240, text: 'E-mail', icon: Icons.email,
-                          showRightDivider: true, dividerColor: AppTheme.textPrimary.withOpacity(0.3)),
-                        _HeaderCell(width: 140, text: 'Logo', icon: Icons.image,
-                          showRightDivider: false),
+                        _HeaderCell(width: 45, text: '#', icon: Icons.numbers),
+                        _HeaderCell(width: 180, text: 'Company', icon: Icons.business),
+                        _HeaderCell(width: 180, text: 'Contact', icon: Icons.person),
+                        _HeaderCell(width: 200, text: 'Address', icon: Icons.location_on),
+                        _HeaderCell(width: 160, text: 'Phone', icon: Icons.phone),
+                        _HeaderCell(width: 200, text: 'E-mail', icon: Icons.email),
+                        _HeaderCell(width: 120, text: 'Logo', icon: Icons.image, isLast: true),
                       ],
                     ),
                   ),
 
-                  // Table Body
+                  // Compact Table Body
                   Expanded(
                     child: Scrollbar(
                       controller: _scrollController,
@@ -125,18 +163,17 @@ class _OperatorTabState extends State<OperatorTab> {
                       trackVisibility: true,
                       child: ListView.builder(
                         controller: _scrollController,
-                        itemCount: totalRows,
+                        itemCount: controllers.length,
                         itemBuilder: (context, row) {
                           final bool isSelected = row == selectedRow;
-                          final bool showArrow = row == arrowRow;
 
                           return Container(
-                            height: 48,
+                            height: 32,
                             decoration: BoxDecoration(
-                              color: isSelected 
-                                  ? AppTheme.primaryColor.withOpacity(0.1)
-                                  : row % 2 == 0 
-                                      ? Colors.white 
+                              color: isSelected
+                                  ? AppTheme.primaryColor.withOpacity(0.08)
+                                  : row % 2 == 0
+                                      ? Colors.white
                                       : AppTheme.cardColor,
                               border: Border(
                                 bottom: BorderSide(
@@ -151,86 +188,53 @@ class _OperatorTabState extends State<OperatorTab> {
                                 onTap: () => setState(() {
                                   selectedRow = row;
                                 }),
-                                hoverColor: AppTheme.primaryColor.withOpacity(0.05),
+                                hoverColor: AppTheme.primaryColor.withOpacity(0.04),
                                 child: Row(
                                   children: [
-                                    // Number Column with Arrow
-                                    SizedBox(
-                                      width: 60,
+                                    // Compact Number Column
+                                    Container(
+                                      width: 45,
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          right: BorderSide(
+                                            color: Colors.grey.shade400,
+                                            width: 1,
+                                          ),
+                                        ),
+                                      ),
                                       child: Center(
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            GestureDetector(
-                                              onTap: () => setState(() {
-                                                arrowRow = arrowRow == row ? -1 : row;
-                                              }),
-                                              child: Container(
-                                                width: 28,
-                                                height: 28,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: showArrow
-                                                      ? AppTheme.accentColor
-                                                      : AppTheme.secondaryColor.withOpacity(0.2),
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    '${row + 1}',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: showArrow
-                                                          ? Colors.white
-                                                          : AppTheme.textPrimary,
-                                                    ),
-                                                  ),
-                                                ),
+                                        child: Container(
+                                          width: 22,
+                                          height: 22,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: isSelected
+                                                ? AppTheme.accentColor
+                                                : AppTheme.secondaryColor.withOpacity(0.15),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              '${row + 1}',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: isSelected
+                                                    ? Colors.white
+                                                    : AppTheme.textPrimary,
                                               ),
                                             ),
-                                            if (showArrow)
-                                              Padding(
-                                                padding: const EdgeInsets.only(left: 4),
-                                                child: GestureDetector(
-                                                  onTap: () => setState(() {
-                                                    selectedRow = row;
-                                                  }),
-                                                  child: Container(
-                                                    width: 24,
-                                                    height: 24,
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      gradient: isSelected
-                                                          ? AppTheme.primaryGradient
-                                                          : AppTheme.secondaryGradient,
-                                                    ),
-                                                    child: Icon(
-                                                      isSelected
-                                                          ? Icons.check
-                                                          : Icons.arrow_forward,
-                                                      size: 14,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                          ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                    Container(
-                                      width: 1,
-                                      height: double.infinity,
-                                      color: Colors.grey.shade400,
-                                    ),
 
-                                    // Data Cells with Vertical Dividers
-                                    _cell(180, controllers[row][0], '', showDivider: true),
-                                    _cell(160, controllers[row][1], '', showDivider: true),
-                                    _cell(240, controllers[row][2], '', showDivider: true),
-                                    _cell(160, controllers[row][3], '', showDivider: true),
-                                    _cell(240, controllers[row][4], '', showDivider: true),
-                                    _cell(140, controllers[row][5], '', showDivider: false),
+                                    // Data Cells
+                                    _cell(180, controllers[row][0], ''),
+                                    _cell(180, controllers[row][1], ''),
+                                    _cell(200, controllers[row][2], ''),
+                                    _cell(160, controllers[row][3], ''),
+                                    _cell(200, controllers[row][4], ''),
+                                    _cell(120, controllers[row][5], '', isLast: true),
                                   ],
                                 ),
                               ),
@@ -244,15 +248,15 @@ class _OperatorTabState extends State<OperatorTab> {
               ),
             ),
           ),
-          
-          // Footer with Close Button
+
+          // Compact Footer
           Container(
-            height: 50,
-            margin: const EdgeInsets.only(top: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            height: 44,
+            margin: const EdgeInsets.only(top: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: AppTheme.cardColor,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(6),
               border: Border.all(color: Colors.grey.shade300),
             ),
             child: Row(
@@ -262,21 +266,21 @@ class _OperatorTabState extends State<OperatorTab> {
                   children: [
                     Icon(
                       Icons.info_outline,
-                      size: 16,
+                      size: 14,
                       color: AppTheme.infoColor,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Text(
-                      '$totalRows operators • Selected: ${selectedRow == -1 ? 'None' : 'Row ${selectedRow + 1}'}',
+                      '${controllers.length} row(s) • Selected: ${selectedRow == -1 ? 'None' : 'Row ${selectedRow + 1}'}',
                       style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.textSecondary,
+                        fontSize: 12,
                       ),
                     ),
                   ],
                 ),
                 Row(
                   children: [
-                    // Close Button at bottom
                     OutlinedButton.icon(
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -284,12 +288,13 @@ class _OperatorTabState extends State<OperatorTab> {
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: AppTheme.errorColor),
                         foregroundColor: AppTheme.errorColor,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        minimumSize: const Size(0, 32),
                       ),
-                      icon: const Icon(Icons.close, size: 16),
-                      label: const Text('Close'),
+                      icon: const Icon(Icons.close, size: 14),
+                      label: const Text('Close', style: TextStyle(fontSize: 12)),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     OutlinedButton.icon(
                       onPressed: () {
                         if (selectedRow != -1) {
@@ -301,21 +306,26 @@ class _OperatorTabState extends State<OperatorTab> {
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: AppTheme.warningColor),
                         foregroundColor: AppTheme.warningColor,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        minimumSize: const Size(0, 32),
                       ),
-                      icon: const Icon(Icons.delete_outline, size: 16),
-                      label: const Text('Clear Selected'),
+                      icon: const Icon(Icons.delete_outline, size: 14),
+                      label: const Text('Clear', style: TextStyle(fontSize: 12)),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () async {
+                        await controller.saveOperators(controllers);
+                        _clearRowsAfterSave();
+                      },
                       style: AppTheme.primaryButtonStyle.copyWith(
                         padding: MaterialStateProperty.all(
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         ),
+                        minimumSize: MaterialStateProperty.all(const Size(0, 32)),
                       ),
-                      icon: const Icon(Icons.save, size: 16),
-                      label: const Text('Save Changes'),
+                      icon: const Icon(Icons.save, size: 14),
+                      label: const Text('Save', style: TextStyle(fontSize: 12)),
                     ),
                   ],
                 ),
@@ -327,30 +337,30 @@ class _OperatorTabState extends State<OperatorTab> {
     );
   }
 
-  Widget _cell(double width, TextEditingController controller, String hintText, 
-      {bool showDivider = true}) {
+  Widget _cell(double width, TextEditingController controller, String hintText,
+      {bool isLast = false}) {
     return Container(
       width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        border: showDivider
-            ? Border(
-                left: BorderSide(color: Colors.grey.shade400, width: 0.5),
-              )
-            : null,
+        border: Border(
+          right: isLast
+              ? BorderSide.none
+              : BorderSide(color: Colors.grey.shade400, width: 1),
+        ),
       ),
       child: TextField(
         controller: controller,
-        style: AppTheme.bodyLarge.copyWith(fontSize: 13),
+        style: AppTheme.bodyLarge.copyWith(fontSize: 12),
         decoration: InputDecoration(
           isDense: true,
           border: InputBorder.none,
           hintText: hintText,
           hintStyle: TextStyle(
-            fontSize: 12,
-            color: AppTheme.textSecondary.withOpacity(0.6),
+            fontSize: 11,
+            color: AppTheme.textSecondary.withOpacity(0.5),
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         ),
       ),
     );
@@ -358,230 +368,52 @@ class _OperatorTabState extends State<OperatorTab> {
 }
 
 /// =======================================================
-/// OTHER TABS (SAMPLE IMPLEMENTATION)
-/// =======================================================
-
-class MudCompanyTab extends StatelessWidget {
-  const MudCompanyTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.business,
-            size: 64,
-            color: AppTheme.textSecondary.withOpacity(0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Mud Company Configuration',
-            style: AppTheme.titleMedium.copyWith(
-              color: AppTheme.textSecondary,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Configure mud company settings',
-            style: AppTheme.bodySmall.copyWith(
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ProductTab extends StatelessWidget {
-  const ProductTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.inventory,
-            size: 64,
-            color: AppTheme.textSecondary.withOpacity(0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Product Management',
-            style: AppTheme.titleMedium.copyWith(
-              color: AppTheme.textSecondary,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Manage product catalog and inventory',
-            style: AppTheme.bodySmall.copyWith(
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ServicesTab extends StatelessWidget {
-  const ServicesTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.miscellaneous_services,
-            size: 64,
-            color: AppTheme.textSecondary.withOpacity(0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Services Configuration',
-            style: AppTheme.titleMedium.copyWith(
-              color: AppTheme.textSecondary,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Configure service offerings',
-            style: AppTheme.bodySmall.copyWith(
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class OthersTab extends StatelessWidget {
-  const OthersTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.settings,
-            size: 64,
-            color: AppTheme.textSecondary.withOpacity(0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Other Settings',
-            style: AppTheme.titleMedium.copyWith(
-              color: AppTheme.textSecondary,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Additional configuration options',
-            style: AppTheme.bodySmall.copyWith(
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class SafetyTab extends StatelessWidget {
-  const SafetyTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.security,
-            size: 64,
-            color: AppTheme.textSecondary.withOpacity(0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Safety Protocols',
-            style: AppTheme.titleMedium.copyWith(
-              color: AppTheme.textSecondary,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Configure safety and compliance settings',
-            style: AppTheme.bodySmall.copyWith(
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// =======================================================
-/// HEADER CELL WIDGET (WITH ICON AND DIVIDER)
+/// HEADER CELL WIDGET (COMPACT VERSION)
 /// =======================================================
 class _HeaderCell extends StatelessWidget {
   final double width;
   final String text;
   final IconData icon;
-  final bool showRightDivider;
-  final Color dividerColor;
+  final bool isLast;
 
   const _HeaderCell({
     required this.width,
     required this.text,
     required this.icon,
-    this.showRightDivider = true,
-    this.dividerColor = Colors.grey,
+    this.isLast = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        border: showRightDivider
-            ? Border(
-                right: BorderSide(color: dividerColor, width: 1),
-              )
-            : null,
+        border: isLast
+            ? null
+            : Border(
+                right: BorderSide(
+                  color: AppTheme.textPrimary.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
       ),
       child: Row(
         children: [
           Icon(
             icon,
-            size: 16,
+            size: 14,
             color: Colors.white,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
                 color: Colors.white,
-                letterSpacing: 0.3,
+                letterSpacing: 0.2,
               ),
               overflow: TextOverflow.ellipsis,
             ),

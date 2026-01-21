@@ -1,490 +1,459 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/controller/products_controller.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
-class ProductPage extends StatefulWidget {
-  const ProductPage({super.key});
-
-  @override
-  State<ProductPage> createState() => _ProductPageState();
-}
-
-class _ProductPageState extends State<ProductPage> {
-  static const int rowCount = 100;
-  int selectedRow = -1;
-  final ScrollController _scrollController = ScrollController();
-
-  final List<List<TextEditingController>> controllers =
-      List.generate(rowCount, (_) {
-    return List.generate(12, (_) => TextEditingController());
-  });
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    for (var row in controllers) {
-      for (var controller in row) {
-        controller.dispose();
-      }
-    }
-    super.dispose();
-  }
+class ProductsPage extends StatelessWidget {
+  final ProductsController controller = Get.put(ProductsController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(child: _table()),
-                  const SizedBox(width: 8),
-                  _rightToolbar(),
+      body: Column(
+        children: [
+          // Header
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'Products Management',
+                  style: AppTheme.titleLarge.copyWith(
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
+                ),
+                Spacer(),
+                Text(
+                  'Total Products: ${controller.products.length - 1}',
+                  style: AppTheme.bodyLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Table
+          Expanded(
+            child: Container(
+              margin: EdgeInsets.fromLTRB(20, 20, 20, 0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Color(0xffD1D5DB), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
                 ],
               ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: _buildTable(constraints),
+                    ),
+                  );
+                },
+              ),
             ),
-            _footerButtons(),
-          ],
-        ),
+          ),
+
+          // Bottom Action Buttons
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(color: Color(0xffE5E7EB), width: 1),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Get.back();
+                  },
+                  style: AppTheme.secondaryButtonStyle,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    child: Text('Close'),
+                  ),
+                ),
+                SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: () {
+                    // controller.saveProducts();
+                    Get.snackbar(
+                      'Success',
+                      'Products saved successfully',
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: AppTheme.successColor,
+                      colorText: Colors.white,
+                      margin: EdgeInsets.all(16),
+                    );
+                  },
+                  style: AppTheme.primaryButtonStyle,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    child: Text('Save'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // ======================================================
-  // MAIN TABLE
-  // ======================================================
-  Widget _table() {
+  Widget _buildTable(BoxConstraints constraints) {
+    final double minWidth = 1200;
+    final double tableWidth = constraints.maxWidth > minWidth ? constraints.maxWidth - 40 : minWidth;
+
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+      width: tableWidth,
       child: Column(
         children: [
-          _headerTop(),
-          _headerBottom(),
-          Container(
-            height: 1,
-            color: Colors.grey.shade300,
-          ),
-          Expanded(child: _rows()),
+          // Table Header
+          _buildTableHeader(tableWidth),
+          
+          // Table Rows
+          Obx(() => Column(
+            children: List.generate(
+              controller.products.length,
+              (index) => _buildTableRow(index, tableWidth),
+            ),
+          )),
         ],
       ),
     );
   }
 
-  // ======================================================
-  // HEADER ROW 1
-  // ======================================================
-  Widget _headerTop() {
+  Widget _buildTableHeader(double tableWidth) {
     return Container(
-      height: 36,
+      height: 38,
       decoration: BoxDecoration(
-        gradient: AppTheme.headerGradient,
-        borderRadius: const BorderRadius.only(
+        color: AppTheme.darkPrimaryColor,
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
         ),
       ),
       child: Row(
-        children: const [
-          _HCell(45, '#', Icons.numbers, false),
-          _HCell(210, 'Product', Icons.inventory, true),
-          _HCell(130, 'Code', Icons.code, true),
-          _HCell(90, 'SG', Icons.scale, true),
-          _HCell(170, 'Unit', Icons.linear_scale, true),
-          _HCell(130, 'Group', Icons.category, true),
-          Expanded(child: SizedBox()), // Spacer for empty cell
-        ],
-      ),
-    );
-  }
-
-  // ======================================================
-  // HEADER ROW 2
-  // ======================================================
-  Widget _headerBottom() {
-    return Container(
-      height: 34,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryColor.withOpacity(0.9),
-            AppTheme.primaryColor.withOpacity(0.8),
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
-      child: Row(
-        children: const [
-          _HCell(45, '', null, false),
-          _HCell(210, '', null, false),
-          _HCell(130, '', null, false),
-          _HCell(90, '', null, false),
-          _HCell(90, 'Num', Icons.format_list_numbered, true),
-          _HCell(90, 'Class', Icons.class_, true),
-          _HCell(130, '', null, false),
-          _HCell(60, 'Retail', Icons.shopping_cart, true),
-          _HCell(60, 'A', Icons.tag, true),
-          _HCell(60, 'B', Icons.tag, true),
-          _HCell(60, 'C', Icons.tag, true),
-          _HCell(60, 'D', Icons.tag, true),
-          _HCell(60, 'E', Icons.tag, true),
-          _HCell(60, 'F', Icons.tag, true),
-        ],
-      ),
-    );
-  }
-
-  // ======================================================
-  // TABLE ROWS
-  // ======================================================
-  Widget _rows() {
-    return Scrollbar(
-      controller: _scrollController,
-      thumbVisibility: true,
-      trackVisibility: true,
-      child: ListView.builder(
-        controller: _scrollController,
-        itemCount: rowCount,
-        itemBuilder: (_, row) {
-          final selected = row == selectedRow;
-          return GestureDetector(
-            onTap: () => setState(() => selectedRow = row),
-            child: Container(
-              height: 34,
-              decoration: BoxDecoration(
-                color: selected
-                    ? AppTheme.primaryColor.withOpacity(0.1)
-                    : row % 2 == 0
-                        ? Colors.white
-                        : AppTheme.cardColor,
-                border: Border(
-                  bottom: BorderSide(
-                    color: Colors.grey.shade200,
-                    width: 0.5,
+        children: [
+          _headerCell('No', tableWidth * 0.04),
+          _headerCell('Product', tableWidth * 0.14),
+          _headerCell('Code', tableWidth * 0.09),
+          _headerCell('SG', tableWidth * 0.07),
+          // Unit column with sub-headers
+          Container(
+            width: tableWidth * 0.12,
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
+                right: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
+              ),
+            ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Unit',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: Row(
-                  children: [
-                    _numberCell(row),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(210, controllers[row][0]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(130, controllers[row][1]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(90, controllers[row][2]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(90, controllers[row][3]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(90, controllers[row][4]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(130, controllers[row][5]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(60, controllers[row][6]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(60, controllers[row][7]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(60, controllers[row][8]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(60, controllers[row][9]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(60, controllers[row][10]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                    _cell(60, controllers[row][11]),
-                    Container(
-                      width: 1,
-                      height: double.infinity,
-                      color: Colors.grey.shade300,
-                    ),
-                  ],
+                Container(
+                  height: 0.5,
+                  color: Colors.white.withOpacity(0.2),
                 ),
-              ),
+                Container(
+                  height: 18,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            border: Border(
+                              right: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
+                            ),
+                          ),
+                          child: Text(
+                            'Num',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Class',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          );
-        },
+          ),
+          _headerCell('Group', tableWidth * 0.09),
+          _headerCell('Retail', tableWidth * 0.09),
+          _headerCell('A', tableWidth * 0.06),
+          _headerCell('B', tableWidth * 0.06),
+      
+        ],
       ),
     );
   }
 
-  Widget _numberCell(int row) {
-    return SizedBox(
-      width: 45,
-      child: Center(
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: AppTheme.secondaryGradient,
-          ),
-          child: Center(
-            child: Text(
-              '${row + 1}',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _cell(double width, TextEditingController controller) {
+  Widget _headerCell(String title, double width) {
     return Container(
       width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: TextField(
-        controller: controller,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
+        ),
+      ),
+      child: Text(
+        title,
         style: TextStyle(
+          color: Colors.white,
           fontSize: 12,
-          color: AppTheme.textPrimary,
-        ),
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: EdgeInsets.symmetric(vertical: 8),
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 
-  // ======================================================
-  // RIGHT ICON TOOLBAR
-  // ======================================================
-  Widget _rightToolbar() {
-    return Container(
-      width: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: const [
-          SizedBox(height: 8),
-          _IconBtn(Icons.upload_file, 'Import Master Products'),
-          _IconBtn(Icons.download, 'Download Master Products'),
-          _IconBtn(Icons.edit, 'Edit Schedule Name'),
-          _IconBtn(Icons.category, 'Product Group'),
-        ],
-      ),
-    );
-  }
+  Widget _buildTableRow(int index, double tableWidth) {
+    final product = controller.products[index];
 
-  // ======================================================
-  // FOOTER BUTTONS
-  // ======================================================
-  Widget _footerButtons() {
     return Container(
-      height: 52,
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 32,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: index % 2 == 0 ? Color(0xffF9FAFB) : Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
+        ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppTheme.errorColor),
-              foregroundColor: AppTheme.errorColor,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+          // No Column
+          Container(
+            width: tableWidth * 0.04,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
               ),
             ),
-            child: const Text('Close'),
-          ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: () {},
-            style: AppTheme.primaryButtonStyle.copyWith(
-              padding: MaterialStateProperty.all(
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            child: Text(
+              '${index + 1}',
+              style: AppTheme.bodyLarge.copyWith(
+                fontSize: 12,
+                color: AppTheme.textSecondary,
               ),
             ),
-            child: const Text('Save'),
           ),
+          _buildCell(
+            tableWidth * 0.14, 
+            product.product, 
+            (val) => _updateField(index, 'product', val),
+          ),
+          _buildCell(
+            tableWidth * 0.09, 
+            product.code, 
+            (val) => _updateField(index, 'code', val),
+          ),
+          _buildCell(
+            tableWidth * 0.07, 
+            product.sg, 
+            (val) => _updateField(index, 'sg', val),
+          ),
+          // Unit split column
+          Container(
+            width: tableWidth * 0.12,
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
+                right: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
+                      ),
+                    ),
+                    child: _buildCellContent(
+                      product.unitNum, 
+                      (val) => _updateField(index, 'unitNum', val),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _buildCellContent(
+                    product.unitClass, 
+                    (val) => _updateField(index, 'unitClass', val),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildCell(
+            tableWidth * 0.09, 
+            product.group, 
+            (val) => _updateField(index, 'group', val),
+          ),
+          _buildCell(
+            tableWidth * 0.09, 
+            product.retail, 
+            (val) => _updateField(index, 'retail', val),
+          ),
+          _buildCell(
+            tableWidth * 0.06, 
+            product.a, 
+            (val) => _updateField(index, 'a', val),
+          ),
+          _buildCell(
+            tableWidth * 0.06, 
+            product.b, 
+            (val) => _updateField(index, 'b', val),
+          ),
+        
         ],
       ),
     );
   }
-}
 
-// ======================================================
-// HEADER CELL
-// ======================================================
-class _HCell extends StatelessWidget {
-  final double width;
-  final String text;
-  final IconData? icon;
-  final bool showDivider;
-
-  const _HCell(this.width, this.text, this.icon, this.showDivider);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildCell(double width, String value, Function(String) onChanged) {
     return Container(
       width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        border: showDivider
-            ? Border(
-                right: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-              )
-            : null,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (icon != null) ...[
-            Icon(
-              icon,
-              size: 14,
-              color: Colors.white,
-            ),
-            const SizedBox(width: 6),
-          ],
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                letterSpacing: 0.3,
-              ),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ======================================================
-// ICON BUTTON WITH TOOLTIP
-// ======================================================
-class _IconBtn extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-
-  const _IconBtn(this.icon, this.tooltip);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Tooltip(
-        message: tooltip,
-        waitDuration: const Duration(milliseconds: 500),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(6),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppTheme.cardColor,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.grey.shade300, width: 1),
-              ),
-              child: Icon(
-                icon,
-                size: 18,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-          ),
+        border: Border(
+          left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
         ),
       ),
+      child: _buildCellContent(value, onChanged),
     );
+  }
+
+  Widget _buildCellContent(String value, Function(String) onChanged) {
+    return TextField(
+      controller: TextEditingController(text: value)..selection = TextSelection.collapsed(offset: value.length),
+      style: AppTheme.bodyLarge.copyWith(fontSize: 12),
+      textAlign: TextAlign.center,
+      decoration: InputDecoration(
+        border: InputBorder.none,
+        contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        isDense: true,
+      ),
+      onChanged: onChanged,
+    );
+  }
+
+  void _updateField(int index, String field, String value) {
+    final product = controller.products[index];
+    
+    switch (field) {
+      case 'product':
+        product.product = value;
+        break;
+      case 'code':
+        product.code = value;
+        break;
+      case 'sg':
+        product.sg = value;
+        break;
+      case 'unitNum':
+        product.unitNum = value;
+        break;
+      case 'unitClass':
+        product.unitClass = value;
+        break;
+      case 'group':
+        product.group = value;
+        break;
+      case 'retail':
+        product.retail = value;
+        break;
+      case 'a':
+        product.a = value;
+        break;
+      case 'b':
+        product.b = value;
+        break;
+      
+    }
+    
+    controller.updateProduct(index, product);
+    
+    // Auto add new row if current row has any data and it's the last row
+    if (index == controller.products.length - 1) {
+      if (_hasAnyData(product)) {
+        controller.addProduct();
+      }
+    }
+  }
+
+  bool _hasAnyData(product) {
+    return product.product.isNotEmpty ||
+           product.code.isNotEmpty ||
+           product.sg.isNotEmpty ||
+           product.unitNum.isNotEmpty ||
+           product.unitClass.isNotEmpty ||
+           product.group.isNotEmpty ||
+           product.retail.isNotEmpty ||
+           product.a.isNotEmpty ||
+           product.b.isNotEmpty;
+         
   }
 }

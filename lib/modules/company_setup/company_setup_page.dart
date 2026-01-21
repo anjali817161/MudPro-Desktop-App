@@ -50,9 +50,9 @@ class _CompanySetupPageState extends State<CompanySetupPage>
               ),
               child: TabBarView(
                 controller: _tabController,
-                children: const [
+                children:  [
                 MudCompanyPage(),
-                  ProductPage(),
+                  ProductsPage(),
                   ServicesPage(),
                   OperatorTab(),
                   OthersPage(),

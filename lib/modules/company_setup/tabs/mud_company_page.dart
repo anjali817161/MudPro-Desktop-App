@@ -344,119 +344,94 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
 Widget _logoUploadSection() {
   return Obx(() {
     final logoUrl = companyController.logoUrl.value;
-    final hasSelectedFile = companyController.selectedLogoFile.value != null;
-    
+    final hasLogo = logoUrl.isNotEmpty;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300, width: 1),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         children: [
-          // Logo Preview
+          // Preview
           Container(
             height: 100,
             decoration: BoxDecoration(
               color: AppTheme.cardColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
             ),
             child: Center(
-              child: logoUrl.isEmpty
+              child: !hasLogo
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.image_outlined,
-                          size: 36,
-                          color: AppTheme.textSecondary.withOpacity(0.3),
-                        ),
+                        Icon(Icons.image_outlined,
+                            size: 36,
+                            color: AppTheme.textSecondary.withOpacity(0.4)),
                         const SizedBox(height: 6),
-                        Text(
-                          'No Logo Selected',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppTheme.textSecondary.withOpacity(0.5),
-                          ),
+                        const Text(
+                          "No Logo Selected",
+                          style: TextStyle(fontSize: 11),
                         ),
                       ],
                     )
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(6),
-                      child: Container(
+                      child: Image.network(
+                        logoUrl,
                         width: 80,
                         height: 80,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: hasSelectedFile
-                            ? Image.file(
-                                companyController.selectedLogoFile.value!,
-                                fit: BoxFit.contain,
-                              )
-                            : Image.network(
-                                logoUrl,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Icon(
-                                    Icons.broken_image,
-                                    size: 36,
-                                    color: AppTheme.errorColor,
-                                  );
-                                },
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.broken_image,
+                                  size: 36,
+                                  color: AppTheme.textSecondary.withOpacity(0.4)),
+                              const SizedBox(height: 6),
+                              const Text(
+                                "Failed to load",
+                                style: TextStyle(fontSize: 11),
                               ),
+                            ],
+                          );
+                        },
                       ),
                     ),
             ),
           ),
-          
-          // Upload Controls
+
+          // Button
           Container(
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(8),
-                bottomRight: Radius.circular(8),
-              ),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(8)),
               border: Border(
-                top: BorderSide(color: Colors.grey.shade300, width: 1),
+                top: BorderSide(color: Colors.grey.shade300),
               ),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
-                    hasSelectedFile
-                        ? companyController.selectedLogoFile.value!.path.split('/').last
-                        : (logoUrl.isNotEmpty ? 'Logo uploaded' : 'No file selected'),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppTheme.textPrimary,
-                    ),
+                    hasLogo ? "Logo uploaded" : "No file selected",
+                    style: const TextStyle(fontSize: 11),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 8),
                 ElevatedButton.icon(
-                  onPressed: () => companyController.pickLogoImage(),
+                  onPressed: () => companyController.pickLogoAndConvert(),
+                  icon: const Icon(Icons.upload_file, size: 12),
+                  label: const Text("Browse", style: TextStyle(fontSize: 11)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
                     minimumSize: const Size(80, 28),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
                   ),
-                  icon: const Icon(Icons.upload_file, size: 12),
-                  label: const Text('Browse', style: TextStyle(fontSize: 11)),
-                ),
+                )
               ],
             ),
           ),
@@ -465,6 +440,7 @@ Widget _logoUploadSection() {
     );
   });
 }
+
 
   Widget _currencyRow() {
     return Container(
