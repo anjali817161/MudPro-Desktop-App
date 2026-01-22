@@ -6,7 +6,16 @@ import '../../../auth_repo/auth_repo.dart';
 class OperatorController extends GetxController {
   final _repo = AuthRepository();
 
+  // Observable list of operators
+  final RxList<OperatorModel> operators = <OperatorModel>[].obs;
+  final RxBool isLoading = false.obs;
   RxBool isSaving = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchOperators();
+  }
 
   /// SAVE FROM UI CONTROLLERS
   Future<void> saveOperators(
@@ -19,20 +28,30 @@ class OperatorController extends GetxController {
       // skip empty rows
       if (row[0].text.trim().isEmpty) continue;
 
-      list.add(
-        OperatorModel(
-          company: row[0].text.trim(),
-          contact: row[1].text.trim(),
-          address: row[2].text.trim(),
-          phone: row[3].text.trim(),
-          email: row[4].text.trim(),
-          logoUrl: row[5].text.trim(), 
-        ),
+      final newOperator = OperatorModel(
+        company: row[0].text.trim(),
+        contact: row[1].text.trim(),
+        address: row[2].text.trim(),
+        phone: row[3].text.trim(),
+        email: row[4].text.trim(),
+        logoUrl: row[5].text.trim(),
       );
+
+      // Check if this operator already exists in the fetched operators list
+      final exists = operators.any((existing) =>
+          existing.company == newOperator.company &&
+          existing.contact == newOperator.contact &&
+          existing.address == newOperator.address &&
+          existing.phone == newOperator.phone &&
+          existing.email == newOperator.email);
+
+      if (!exists) {
+        list.add(newOperator);
+      }
     }
 
     if (list.isEmpty) {
-      Get.snackbar("Error", "No operator data to save");
+      Get.snackbar("Info", "No new operator data to save");
       isSaving.value = false;
       return;
     }
@@ -48,10 +67,29 @@ class OperatorController extends GetxController {
 
     if (res['success'] == true || res['statusCode'] == 200) {
       Get.snackbar("Success", "Operators saved successfully");
+      // Refresh the operators list after saving
+      await fetchOperators();
     } else {
       Get.snackbar("Error", res['message'] ?? "Save failed");
     }
 
     isSaving.value = false;
+  }
+
+  /// FETCH OPERATORS
+  Future<void> fetchOperators() async {
+    isLoading.value = true;
+
+    final result = await _repo.getOperators();
+
+    if (result['success'] == true) {
+      operators.value = (result['data'] as List<dynamic>?)
+          ?.map((item) => OperatorModel.fromJson(item as Map<String, dynamic>))
+          .toList() ?? [];
+    } else {
+      Get.snackbar("Error", result['message'] ?? "Failed to fetch operators");
+    }
+
+    isLoading.value = false;
   }
 }

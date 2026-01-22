@@ -18,8 +18,8 @@ class _OperatorTabState extends State<OperatorTab> {
   final ScrollController _scrollController = ScrollController();
   final controller = Get.put(OperatorController());
 
-  // Start with 1 row, will grow dynamically
-  List<List<TextEditingController>> controllers = [
+  // Controllers for new entries only
+  List<List<TextEditingController>> newEntryControllers = [
     List.generate(6, (_) => TextEditingController()),
   ];
 
@@ -31,7 +31,7 @@ class _OperatorTabState extends State<OperatorTab> {
   }
 
   void _addListenersToRow(int rowIndex) {
-    for (var controller in controllers[rowIndex]) {
+    for (var controller in newEntryControllers[rowIndex]) {
       controller.addListener(() {
         _checkAndAddNewRow(rowIndex);
       });
@@ -40,12 +40,12 @@ class _OperatorTabState extends State<OperatorTab> {
 
   void _checkAndAddNewRow(int rowIndex) {
     // If user types in the last row and it's not empty, add a new row
-    if (rowIndex == controllers.length - 1) {
-      bool hasData = controllers[rowIndex].any((c) => c.text.isNotEmpty);
-      if (hasData && controllers.length < 100) {
+    if (rowIndex == newEntryControllers.length - 1) {
+      bool hasData = newEntryControllers[rowIndex].any((c) => c.text.isNotEmpty);
+      if (hasData && newEntryControllers.length < 100) {
         setState(() {
-          controllers.add(List.generate(6, (_) => TextEditingController()));
-          _addListenersToRow(controllers.length - 1);
+          newEntryControllers.add(List.generate(6, (_) => TextEditingController()));
+          _addListenersToRow(newEntryControllers.length - 1);
         });
       }
     }
@@ -53,13 +53,13 @@ class _OperatorTabState extends State<OperatorTab> {
 
   void _clearRowsAfterSave() {
     // Clear all rows and reset to 1 empty row
-    for (var row in controllers) {
+    for (var row in newEntryControllers) {
       for (var controller in row) {
         controller.dispose();
       }
     }
     setState(() {
-      controllers = [
+      newEntryControllers = [
         List.generate(6, (_) => TextEditingController()),
       ];
       selectedRow = -1;
@@ -70,7 +70,7 @@ class _OperatorTabState extends State<OperatorTab> {
   @override
   void dispose() {
     _scrollController.dispose();
-    for (var row in controllers) {
+    for (var row in newEntryControllers) {
       for (var controller in row) {
         controller.dispose();
       }
@@ -163,84 +163,93 @@ class _OperatorTabState extends State<OperatorTab> {
                       trackVisibility: true,
                       child: ListView.builder(
                         controller: _scrollController,
-                        itemCount: controllers.length,
+                        itemCount: controller.operators.length + newEntryControllers.length,
                         itemBuilder: (context, row) {
-                          final bool isSelected = row == selectedRow;
+                            final bool isSelected = row == selectedRow;
+                            final bool isLockedRow = row < controller.operators.length;
 
-                          return Container(
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppTheme.primaryColor.withOpacity(0.08)
-                                  : row % 2 == 0
-                                      ? Colors.white
-                                      : AppTheme.cardColor,
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Colors.grey.shade200,
-                                  width: 0.5,
+                            return Container(
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppTheme.primaryColor.withOpacity(0.08)
+                                    : row % 2 == 0
+                                        ? Colors.white
+                                        : AppTheme.cardColor,
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: Colors.grey.shade200,
+                                    width: 0.5,
+                                  ),
                                 ),
                               ),
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () => setState(() {
-                                  selectedRow = row;
-                                }),
-                                hoverColor: AppTheme.primaryColor.withOpacity(0.04),
-                                child: Row(
-                                  children: [
-                                    // Compact Number Column
-                                    Container(
-                                      width: 45,
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          right: BorderSide(
-                                            color: Colors.grey.shade400,
-                                            width: 1,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => setState(() {
+                                    selectedRow = row;
+                                  }),
+                                  hoverColor: AppTheme.primaryColor.withOpacity(0.04),
+                                  child: Row(
+                                    children: [
+                                      // Compact Number Column
+                                      Container(
+                                        width: 45,
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            right: BorderSide(
+                                              color: Colors.grey.shade400,
+                                              width: 1,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      child: Center(
-                                        child: Container(
-                                          width: 22,
-                                          height: 22,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: isSelected
-                                                ? AppTheme.accentColor
-                                                : AppTheme.secondaryColor.withOpacity(0.15),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              '${row + 1}',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: isSelected
-                                                    ? Colors.white
-                                                    : AppTheme.textPrimary,
+                                        child: Center(
+                                          child: Container(
+                                            width: 22,
+                                            height: 22,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: isSelected
+                                                  ? AppTheme.accentColor
+                                                  : isLockedRow
+                                                      ? Colors.grey.shade400
+                                                      : AppTheme.secondaryColor.withOpacity(0.15),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                '${row + 1}',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : AppTheme.textPrimary,
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
 
-                                    // Data Cells
-                                    _cell(180, controllers[row][0], ''),
-                                    _cell(180, controllers[row][1], ''),
-                                    _cell(200, controllers[row][2], ''),
-                                    _cell(160, controllers[row][3], ''),
-                                    _cell(200, controllers[row][4], ''),
-                                    _cell(120, controllers[row][5], '', isLast: true),
-                                  ],
+                                      // Data Cells
+                                      if (isLockedRow) ...[
+                                        // Locked cells for existing operators
+                                        _lockedCell(180, controller.operators[row].company),
+                                        _lockedCell(180, controller.operators[row].contact),
+                                        _lockedCell(200, controller.operators[row].address),
+                                        _lockedCell(160, controller.operators[row].phone),
+                                        _lockedCell(200, controller.operators[row].email),
+                                        _lockedCell(120, controller.operators[row].logoUrl, isLast: true),
+                                      ] else ...[
+                                        // Editable cells for new entries
+                                        ..._buildEditableCells(row),
+                                      ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
                       ),
                     ),
                   ),
@@ -270,13 +279,13 @@ class _OperatorTabState extends State<OperatorTab> {
                       color: AppTheme.infoColor,
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      '${controllers.length} row(s) • Selected: ${selectedRow == -1 ? 'None' : 'Row ${selectedRow + 1}'}',
+                    Obx(() => Text(
+                      '${controller.operators.length + newEntryControllers.length} row(s) • Selected: ${selectedRow == -1 ? 'None' : 'Row ${selectedRow + 1}'}',
                       style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.textSecondary,
                         fontSize: 12,
                       ),
-                    ),
+                    )),
                   ],
                 ),
                 Row(
@@ -298,8 +307,11 @@ class _OperatorTabState extends State<OperatorTab> {
                     OutlinedButton.icon(
                       onPressed: () {
                         if (selectedRow != -1) {
-                          for (var controller in controllers[selectedRow]) {
-                            controller.clear();
+                          final newRowIndex = selectedRow - controller.operators.length;
+                          if (newRowIndex >= 0 && newRowIndex < newEntryControllers.length) {
+                            for (var ctrl in newEntryControllers[newRowIndex]) {
+                              ctrl.clear();
+                            }
                           }
                         }
                       },
@@ -315,7 +327,7 @@ class _OperatorTabState extends State<OperatorTab> {
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
                       onPressed: () async {
-                        await controller.saveOperators(controllers);
+                        await controller.saveOperators(newEntryControllers);
                         _clearRowsAfterSave();
                       },
                       style: AppTheme.primaryButtonStyle.copyWith(
@@ -364,6 +376,51 @@ class _OperatorTabState extends State<OperatorTab> {
         ),
       ),
     );
+  }
+
+  Widget _lockedCell(double width, String text, {bool isLast = false}) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        border: Border(
+          right: isLast
+              ? BorderSide.none
+              : BorderSide(color: Colors.grey.shade400, width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              text,
+              style: AppTheme.bodyLarge.copyWith(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Icon(
+            Icons.lock,
+            size: 12,
+            color: Colors.grey.shade400,
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildEditableCells(int row) {
+    final newRowIndex = row - controller.operators.length;
+    return [
+      _cell(180, newEntryControllers[newRowIndex][0], ''),
+      _cell(180, newEntryControllers[newRowIndex][1], ''),
+      _cell(200, newEntryControllers[newRowIndex][2], ''),
+      _cell(160, newEntryControllers[newRowIndex][3], ''),
+      _cell(200, newEntryControllers[newRowIndex][4], ''),
+      _cell(120, newEntryControllers[newRowIndex][5], '', isLast: true),
+    ];
   }
 }
 

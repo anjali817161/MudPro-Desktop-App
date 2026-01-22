@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/controller/engineers_controller.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/controller/others_controller.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/engineers_model.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/controller/dashboard_controller.dart';
 import 'package:mudpro_desktop_app/modules/dashboard/widgets/tabular_database.dart';
@@ -95,11 +96,13 @@ class GeneralSection extends StatefulWidget {
 class _GeneralSectionState extends State<GeneralSection> {
   final c = Get.find<DashboardController>();
   final engineerController = Get.put(EngineerController());
+  final activityController = Get.put(OthersController());
 
-  final List<String> activityOptions = [
+  List<String> activityOptions = [
     'Rig-up/Service', 'Drilling', 'Circulating', 'Tripping', 'Survey',
     'Logging', 'Run Casing', 'Testing', 'Coring/Reaming', 'Cementing'
   ];
+  bool _isLoadingActivities = true;
 
   final List<String> intervalOptions = [
     '22° Hole', '16° Hole', '12 1/4° Hole', '8 1/2° Hole', '6 1/8° Hole', "Completion"
@@ -142,12 +145,37 @@ class _GeneralSectionState extends State<GeneralSection> {
   @override
   void initState() {
     super.initState();
+    _fetchActivities();
     fieldControllers['Engineer'] = TextEditingController(text: _getEngineerName(selectedEngineerId));
     fieldControllers['Engineer 2'] = TextEditingController(text: _getEngineerName(selectedEngineer2Id));
     fieldControllers['Activity'] = TextEditingController(text: selectedActivity);
     fieldControllers['Interval'] = TextEditingController(text: selectedInterval);
     fieldControllers['Date'] = TextEditingController(text: selectedDate);
     fieldControllers['Time'] = TextEditingController(text: selectedTime);
+  }
+
+  Future<void> _fetchActivities() async {
+    try {
+      final activities = await activityController.getActivities();
+      setState(() {
+        activityOptions = activities.map((activity) => activity.description).toList();
+        _isLoadingActivities = false;
+        // Ensure selectedActivity is valid
+        if (!activityOptions.contains(selectedActivity)) {
+          selectedActivity = activityOptions.isNotEmpty ? activityOptions.first : 'Cementing';
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingActivities = false;
+        // Ensure selectedActivity is valid with default options
+        if (!activityOptions.contains(selectedActivity)) {
+          selectedActivity = activityOptions.isNotEmpty ? activityOptions.first : 'Cementing';
+        }
+      });
+      // Handle error - maybe show a snackbar or keep default options
+      print('Error fetching activities: $e');
+    }
   }
 
   @override
@@ -1626,10 +1654,8 @@ class TimeDistributionSection extends StatefulWidget {
 class _TimeDistributionSectionState extends State<TimeDistributionSection> {
   final c = Get.find<DashboardController>();
 
-  final List<String> activityOptions = [
-    'Rig-up/Service', 'Drilling', 'Circulating', 'Tripping', 'Survey',
-    'Logging', 'Run Casing', 'Testing', 'Coring/Reaming', 'Cementing'
-  ];
+  List<String> activityOptions = [];
+  bool _isLoadingActivities = true;
 
   final ScrollController scrollController = ScrollController();
 

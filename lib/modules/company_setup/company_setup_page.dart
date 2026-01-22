@@ -25,7 +25,7 @@ class _CompanySetupPageState extends State<CompanySetupPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override

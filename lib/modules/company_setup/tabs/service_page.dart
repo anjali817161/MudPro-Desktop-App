@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mudpro_desktop_app/auth_repo/auth_repo.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/controller/service_controller.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/service_model.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
@@ -12,24 +11,32 @@ class ServicesPage extends StatefulWidget {
 }
 
 class _ServicesPageState extends State<ServicesPage> {
-  static const int rowCount = 20;
   final ServiceController controller = ServiceController();
   bool _isLoading = false;
 
+  // Store existing IDs to prevent duplicates
+  final Set<String> existingPackageIds = {};
+  final Set<String> existingServiceIds = {};
+  final Set<String> existingEngineeringIds = {};
+
+  // Existing data from API
+  List<PackageItem> existingPackages = [];
+  List<ServiceItem> existingServices = [];
+  List<EngineeringItem> existingEngineering = [];
+
+  // Controllers for new data only
   final List<List<TextEditingController>> packageControllers = _generateControllers();
   final List<List<TextEditingController>> servicesControllers = _generateControllers();
   final List<List<TextEditingController>> engineeringControllers = _generateControllers();
 
   static List<List<TextEditingController>> _generateControllers() {
-    return List.generate(
-      rowCount,
-      (_) => List.generate(4, (_) => TextEditingController()),
-    );
+    return List.generate(5, (_) => List.generate(4, (_) => TextEditingController()));
   }
 
   @override
   void initState() {
     super.initState();
+    _loadAllData();
   }
 
   Future<void> _loadAllData() async {
@@ -49,13 +56,12 @@ class _ServicesPageState extends State<ServicesPage> {
 
   Future<void> _loadPackages() async {
     try {
-      final packages = await controller.getPackages();
-      for (int i = 0; i < packages.length && i < rowCount; i++) {
-        packageControllers[i][0].text = packages[i].name;
-        packageControllers[i][1].text = packages[i].code;
-        packageControllers[i][2].text = packages[i].unit;
-        packageControllers[i][3].text = packages[i].price.toString();
+      existingPackages = await controller.getPackages();
+      existingPackageIds.clear();
+      for (var pkg in existingPackages) {
+        if (pkg.id != null) existingPackageIds.add(pkg.id!);
       }
+      setState(() {});
     } catch (e) {
       print('Error loading packages: $e');
     }
@@ -63,13 +69,12 @@ class _ServicesPageState extends State<ServicesPage> {
 
   Future<void> _loadServices() async {
     try {
-      final services = await controller.getServices();
-      for (int i = 0; i < services.length && i < rowCount; i++) {
-        servicesControllers[i][0].text = services[i].name;
-        servicesControllers[i][1].text = services[i].code;
-        servicesControllers[i][2].text = services[i].unit;
-        servicesControllers[i][3].text = services[i].price.toString();
+      existingServices = await controller.getServices();
+      existingServiceIds.clear();
+      for (var srv in existingServices) {
+        if (srv.id != null) existingServiceIds.add(srv.id!);
       }
+      setState(() {});
     } catch (e) {
       print('Error loading services: $e');
     }
@@ -77,13 +82,12 @@ class _ServicesPageState extends State<ServicesPage> {
 
   Future<void> _loadEngineering() async {
     try {
-      final engineering = await controller.getEngineering();
-      for (int i = 0; i < engineering.length && i < rowCount; i++) {
-        engineeringControllers[i][0].text = engineering[i].name;
-        engineeringControllers[i][1].text = engineering[i].code;
-        engineeringControllers[i][2].text = engineering[i].unit;
-        engineeringControllers[i][3].text = engineering[i].price.toString();
+      existingEngineering = await controller.getEngineering();
+      existingEngineeringIds.clear();
+      for (var eng in existingEngineering) {
+        if (eng.id != null) existingEngineeringIds.add(eng.id!);
       }
+      setState(() {});
     } catch (e) {
       print('Error loading engineering: $e');
     }
@@ -92,10 +96,11 @@ class _ServicesPageState extends State<ServicesPage> {
   Future<void> _savePackages() async {
     setState(() => _isLoading = true);
     try {
-      List<PackageItem> packages = [];
+      // Only get new packages from controllers
+      List<PackageItem> newPackages = [];
       for (var row in packageControllers) {
         if (row[0].text.trim().isNotEmpty) {
-          packages.add(PackageItem(
+          newPackages.add(PackageItem(
             name: row[0].text.trim(),
             code: row[1].text.trim(),
             unit: row[2].text.trim(),
@@ -103,18 +108,29 @@ class _ServicesPageState extends State<ServicesPage> {
           ));
         }
       }
-      
-      if (packages.isEmpty) {
-        _showError('Please add at least one package');
+
+      if (newPackages.isEmpty) {
+        _showError('Please add at least one new package');
+        setState(() => _isLoading = false);
         return;
       }
 
-      await controller.addPackages(packages);
-      _showSuccess('Packages saved successfully!');
-      for (var row in packageControllers) {
-        for (var controller in row) {
-          controller.clear();
+      final result = await controller.addPackages(newPackages);
+      
+      if (result['success'] == true) {
+        _showSuccess(result['message'] ?? 'Packages saved successfully!');
+        
+        // Clear new entry controllers
+        for (var row in packageControllers) {
+          for (var ctrl in row) {
+            ctrl.clear();
+          }
         }
+        
+        // Reload all data
+        await _loadPackages();
+      } else {
+        _showError(result['message'] ?? 'Failed to save packages');
       }
     } catch (e) {
       _showError('Failed to save packages: $e');
@@ -126,10 +142,10 @@ class _ServicesPageState extends State<ServicesPage> {
   Future<void> _saveServices() async {
     setState(() => _isLoading = true);
     try {
-      List<ServiceItem> services = [];
+      List<ServiceItem> newServices = [];
       for (var row in servicesControllers) {
         if (row[0].text.trim().isNotEmpty) {
-          services.add(ServiceItem(
+          newServices.add(ServiceItem(
             name: row[0].text.trim(),
             code: row[1].text.trim(),
             unit: row[2].text.trim(),
@@ -137,18 +153,27 @@ class _ServicesPageState extends State<ServicesPage> {
           ));
         }
       }
-      
-      if (services.isEmpty) {
-        _showError('Please add at least one service');
+
+      if (newServices.isEmpty) {
+        _showError('Please add at least one new service');
+        setState(() => _isLoading = false);
         return;
       }
 
-      await controller.addServices(services);
-      _showSuccess('Services saved successfully!');
-      for (var row in servicesControllers) {
-        for (var controller in row) {
-          controller.clear();
+      final result = await controller.addServices(newServices);
+      
+      if (result['success'] == true) {
+        _showSuccess(result['message'] ?? 'Services saved successfully!');
+        
+        for (var row in servicesControllers) {
+          for (var ctrl in row) {
+            ctrl.clear();
+          }
         }
+        
+        await _loadServices();
+      } else {
+        _showError(result['message'] ?? 'Failed to save services');
       }
     } catch (e) {
       _showError('Failed to save services: $e');
@@ -160,10 +185,10 @@ class _ServicesPageState extends State<ServicesPage> {
   Future<void> _saveEngineering() async {
     setState(() => _isLoading = true);
     try {
-      List<EngineeringItem> engineering = [];
+      List<EngineeringItem> newEngineering = [];
       for (var row in engineeringControllers) {
         if (row[0].text.trim().isNotEmpty) {
-          engineering.add(EngineeringItem(
+          newEngineering.add(EngineeringItem(
             name: row[0].text.trim(),
             code: row[1].text.trim(),
             unit: row[2].text.trim(),
@@ -171,18 +196,27 @@ class _ServicesPageState extends State<ServicesPage> {
           ));
         }
       }
-      
-      if (engineering.isEmpty) {
-        _showError('Please add at least one engineering item');
+
+      if (newEngineering.isEmpty) {
+        _showError('Please add at least one new engineering item');
+        setState(() => _isLoading = false);
         return;
       }
 
-      await controller.addEngineering(engineering);
-      _showSuccess('Engineering items saved successfully!');
-      for (var row in engineeringControllers) {
-        for (var controller in row) {
-          controller.clear();
+      final result = await controller.addEngineering(newEngineering);
+      
+      if (result['success'] == true) {
+        _showSuccess(result['message'] ?? 'Engineering items saved successfully!');
+        
+        for (var row in engineeringControllers) {
+          for (var ctrl in row) {
+            ctrl.clear();
+          }
         }
+        
+        await _loadEngineering();
+      } else {
+        _showError(result['message'] ?? 'Failed to save engineering');
       }
     } catch (e) {
       _showError('Failed to save engineering: $e');
@@ -192,11 +226,11 @@ class _ServicesPageState extends State<ServicesPage> {
   }
 
   void _showSuccess(String message) {
-    _showAlert(message, Colors.green);
+    _showAlert(message, const Color(0xff10B981));
   }
 
   void _showError(String message) {
-    _showAlert(message, Colors.red);
+    _showAlert(message, const Color(0xffEF4444));
   }
 
   void _showAlert(String message, Color backgroundColor) {
@@ -208,14 +242,41 @@ class _ServicesPageState extends State<ServicesPage> {
         child: Material(
           color: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: backgroundColor,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: Text(
-              message,
-              style: const TextStyle(color: Colors.white),
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  backgroundColor == const Color(0xff10B981)
+                      ? Icons.check_circle
+                      : Icons.error,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -231,8 +292,8 @@ class _ServicesPageState extends State<ServicesPage> {
   void dispose() {
     for (var table in [packageControllers, servicesControllers, engineeringControllers]) {
       for (var row in table) {
-        for (var controller in row) {
-          controller.dispose();
+        for (var ctrl in row) {
+          ctrl.dispose();
         }
       }
     }
@@ -289,40 +350,50 @@ class _ServicesPageState extends State<ServicesPage> {
     return [
       _tableSection(
         title: 'Package',
+        existingData: existingPackages,
         controllers: packageControllers,
         icon: Icons.inventory,
         gradient: AppTheme.primaryGradient,
         constraints: constraints,
         onSave: _savePackages,
+        isPackage: true,
       ),
       const SizedBox(width: 12),
       _tableSection(
         title: 'Services',
+        existingData: existingServices,
         controllers: servicesControllers,
         icon: Icons.miscellaneous_services,
         gradient: AppTheme.secondaryGradient,
         constraints: constraints,
         onSave: _saveServices,
+        isService: true,
       ),
       const SizedBox(width: 12),
       _tableSection(
         title: 'Engineering',
+        existingData: existingEngineering,
         controllers: engineeringControllers,
         icon: Icons.engineering,
         gradient: AppTheme.accentGradient,
         constraints: constraints,
         onSave: _saveEngineering,
+        isEngineering: true,
       ),
     ];
   }
 
   Widget _tableSection({
     required String title,
+    required List<dynamic> existingData,
     required List<List<TextEditingController>> controllers,
     required IconData icon,
     required Gradient gradient,
     required BoxConstraints constraints,
     required VoidCallback onSave,
+    bool isPackage = false,
+    bool isService = false,
+    bool isEngineering = false,
   }) {
     final isSmallScreen = constraints.maxWidth < 400;
     final widths = isSmallScreen
@@ -347,7 +418,13 @@ class _ServicesPageState extends State<ServicesPage> {
             _sectionHeader(title, icon, gradient),
             _tableHeader(widths),
             Container(height: 1, color: Colors.grey.shade300),
-            Expanded(child: _tableRows(controllers, widths)),
+            Expanded(
+              child: _tableRows(
+                existingData,
+                controllers,
+                widths,
+              ),
+            ),
             _tableSaveButton(onSave, title),
           ],
         ),
@@ -447,16 +524,24 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget _tableRows(List<List<TextEditingController>> controllers, List<double> widths) {
+  Widget _tableRows(
+    List<dynamic> existingData,
+    List<List<TextEditingController>> controllers,
+    List<double> widths,
+  ) {
     return Scrollbar(
       thumbVisibility: true,
       child: ListView.builder(
-        itemCount: rowCount,
-        itemBuilder: (_, row) {
+        itemCount: existingData.length + controllers.length,
+        itemBuilder: (_, index) {
+          final isExisting = index < existingData.length;
+          
           return Container(
             height: 28,
             decoration: BoxDecoration(
-              color: row % 2 == 0 ? Colors.white : AppTheme.cardColor,
+              color: isExisting
+                  ? const Color(0xffF3F4F6)
+                  : (index % 2 == 0 ? Colors.white : AppTheme.cardColor),
               border: Border(
                 bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
               ),
@@ -465,15 +550,25 @@ class _ServicesPageState extends State<ServicesPage> {
               color: Colors.transparent,
               child: Row(
                 children: [
-                  _numberCell(row, widths[0]),
+                  _numberCell(index + 1, widths[0], isExisting),
                   Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  _editCell(widths[1], controllers[row][0]),
-                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  _editCell(widths[2], controllers[row][1]),
-                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  _editCell(widths[3], controllers[row][2]),
-                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  _editCell(widths[4], controllers[row][3]),
+                  if (isExisting) ...[
+                    _lockedCell(widths[1], existingData[index].name),
+                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                    _lockedCell(widths[2], existingData[index].code),
+                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                    _lockedCell(widths[3], existingData[index].unit),
+                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                    _lockedCell(widths[4], existingData[index].price.toString()),
+                  ] else ...[
+                    _editCell(widths[1], controllers[index - existingData.length][0]),
+                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                    _editCell(widths[2], controllers[index - existingData.length][1]),
+                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                    _editCell(widths[3], controllers[index - existingData.length][2]),
+                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                    _editCell(widths[4], controllers[index - existingData.length][3]),
+                  ],
                 ],
               ),
             ),
@@ -483,28 +578,56 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget _numberCell(int row, double width) {
+  Widget _numberCell(int number, double width, bool isLocked) {
     return SizedBox(
       width: width,
       child: Center(
-        child: Container(
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppTheme.secondaryColor.withOpacity(0.2),
-          ),
-          child: Center(
-            child: Text(
-              '${row + 1}',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLocked)
+              const Padding(
+                padding: EdgeInsets.only(right: 4),
+                child: Icon(Icons.lock, size: 10, color: Colors.grey),
+              ),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isLocked
+                    ? Colors.grey.withOpacity(0.3)
+                    : AppTheme.secondaryColor.withOpacity(0.2),
+              ),
+              child: Center(
+                child: Text(
+                  '$number',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _lockedCell(double width, String value) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      alignment: Alignment.centerLeft,
+      child: Text(
+        value,
+        style: TextStyle(
+          fontSize: 11,
+          color: AppTheme.textSecondary,
+        ),
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

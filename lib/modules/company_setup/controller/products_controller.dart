@@ -7,20 +7,61 @@ import 'package:flutter/material.dart';
 class ProductsController extends GetxController {
   final AuthRepository repository = AuthRepository();
   
-  ProductsController();
-
-  // Observable list of products (UI only, not from API)
-  RxList<ProductModel> products = <ProductModel>[].obs;
+  // Observable list of products (contains both existing and new)
+  final RxList<ProductModel> products = <ProductModel>[].obs;
+  
+  // Track existing product IDs to prevent duplicates
+  final RxSet<String> existingProductIds = <String>{}.obs;
   
   // Loading states
-  RxBool isSaving = false.obs;
-  RxBool isLoading = false.obs;
+  final RxBool isSaving = false.obs;
+  final RxBool isLoading = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    // Initialize with one empty row
-    addProduct();
+    loadProducts();
+  }
+
+  // Load existing products from API
+  Future<void> loadProducts() async {
+    isLoading.value = true;
+
+    try {
+      final result = await repository.getProducts(page: 1, limit: 1000);
+      
+      if (result['success'] == true) {
+        final List<ProductModel> fetchedProducts = result['products'] ?? [];
+        
+        // Clear and update existing product IDs
+        existingProductIds.clear();
+        for (var product in fetchedProducts) {
+          if (product.id != null) {
+            existingProductIds.add(product.id!);
+          }
+        }
+        
+        // Clear and add existing products (these are locked/read-only)
+        products.clear();
+        products.addAll(fetchedProducts);
+        
+        // Add one empty row for new entry
+        addProduct();
+        
+      } else {
+        // If fetch fails, just add empty row
+        products.clear();
+        addProduct();
+        showErrorAlert(result['message'] ?? 'Failed to load products');
+      }
+    } catch (e) {
+      // On error, ensure we have at least one empty row
+      products.clear();
+      addProduct();
+      showErrorAlert('Failed to load products: $e');
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   // Add new empty product row
@@ -30,55 +71,37 @@ class ProductsController extends GetxController {
 
   // Update product at index
   void updateProduct(int index, ProductModel product) {
-    if (index < products.length) {
+    if (index >= 0 && index < products.length) {
       products[index] = product;
+      products.refresh(); // Force UI update
     }
+  }
+
+  // Check if product is existing (locked)
+  bool isExistingProduct(int index) {
+    if (index < 0 || index >= products.length) return false;
+    final product = products[index];
+    return product.id != null && existingProductIds.contains(product.id);
   }
 
   // Save products (bulk or single based on data)
   Future<void> saveProducts() async {
-    // Filter products with data
-    final productsWithData = products.where((p) => p.hasData()).toList();
+    // Filter only NEW products (without ID or not in existingProductIds)
+    final newProducts = products.where((p) => 
+      (p.id == null || !existingProductIds.contains(p.id)) && p.hasData()
+    ).toList();
     
-    if (productsWithData.isEmpty) {
-      Get.snackbar(
-        'No Data',
-        'Please fill at least one product to save',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-        margin: EdgeInsets.all(16),
-      );
+    if (newProducts.isEmpty) {
+      showErrorAlert('No new data to save');
       return;
     }
 
     // Check for valid products
-    final validProducts = productsWithData.where((p) => p.isValid()).toList();
-    final invalidProducts = productsWithData.where((p) => !p.isValid()).toList();
+    final validProducts = newProducts.where((p) => p.isValid()).toList();
 
     if (validProducts.isEmpty) {
-      Get.snackbar(
-        'Validation Error',
-        'Please fill all required fields (Product, Code, SG, Unit Num, Unit Class, Group)',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        margin: EdgeInsets.all(16),
-        duration: Duration(seconds: 4),
-      );
+      showErrorAlert('Please fill all required fields (Product, Code, SG, Unit Num, Unit Class, Group)');
       return;
-    }
-
-    // Show warning if some products are invalid
-    if (invalidProducts.isNotEmpty) {
-      Get.snackbar(
-        'Warning',
-        '${invalidProducts.length} incomplete products will be skipped',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-        margin: EdgeInsets.all(16),
-      );
     }
 
     isSaving.value = true;
@@ -94,47 +117,93 @@ class ProductsController extends GetxController {
         result = await repository.bulkAddProducts(validProducts);
       }
 
-      isSaving.value = false;
-
-      if (result['success']) {
-        Get.snackbar(
-          'Success',
-          result['message'],
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppTheme.successColor,
-          colorText: Colors.white,
-          margin: EdgeInsets.all(16),
-        );
-
-        // Clear all fields after successful save
-        clearAllProducts();
+      if (result['success'] == true) {
+        showSuccessAlert(result['message'] ?? 'Products saved successfully');
+        
+        // Refresh the entire list
+        await loadProducts();
       } else {
-        Get.snackbar(
-          'Error',
-          result['message'],
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          margin: EdgeInsets.all(16),
-        );
+        showErrorAlert(result['message'] ?? 'Failed to save products');
       }
     } catch (e) {
+      showErrorAlert('Failed to save products: $e');
+    } finally {
       isSaving.value = false;
-      Get.snackbar(
-        'Error',
-        'Failed to save products: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        margin: EdgeInsets.all(16),
-      );
     }
   }
 
-  // Clear all products and reset to one empty row
-  void clearAllProducts() {
-    products.clear();
-    addProduct();
+  // Show success alert (top-right corner)
+  void showSuccessAlert(String message) {
+    Get.rawSnackbar(
+      messageText: Row(
+        children: [
+          Icon(Icons.check_circle, color: Colors.white, size: 20),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Color(0xff10B981), // Success green
+      borderRadius: 8,
+      margin: EdgeInsets.only(top: 16, right: 16),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      snackPosition: SnackPosition.TOP,
+      duration: Duration(seconds: 3),
+      maxWidth: 400,
+      animationDuration: Duration(milliseconds: 300),
+      boxShadows: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.2),
+          blurRadius: 8,
+          offset: Offset(0, 2),
+        ),
+      ],
+    );
+  }
+
+  // Show error alert (top-right corner)
+  void showErrorAlert(String message) {
+    Get.rawSnackbar(
+      messageText: Row(
+        children: [
+          Icon(Icons.error, color: Colors.white, size: 20),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Color(0xffEF4444), // Error red
+      borderRadius: 8,
+      margin: EdgeInsets.only(top: 16, right: 16),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      snackPosition: SnackPosition.TOP,
+      duration: Duration(seconds: 3),
+      maxWidth: 400,
+      animationDuration: Duration(milliseconds: 300),
+      boxShadows: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.2),
+          blurRadius: 8,
+          offset: Offset(0, 2),
+        ),
+      ],
+    );
   }
 
   // Upload Excel file
@@ -144,17 +213,11 @@ class ProductsController extends GetxController {
     try {
       final result = await repository.uploadExcel(filePath);
       
-      isLoading.value = false;
-
-      if (result['success']) {
-        Get.snackbar(
-          'Success',
-          result['message'],
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppTheme.successColor,
-          colorText: Colors.white,
-          margin: EdgeInsets.all(16),
-        );
+      if (result['success'] == true) {
+        showSuccessAlert(result['message'] ?? 'Excel uploaded successfully');
+        
+        // Refresh the entire list
+        await loadProducts();
 
         // Show errors if any
         if (result['errors'] != null && result['errors'].isNotEmpty) {
@@ -166,31 +229,19 @@ class ProductsController extends GetxController {
           );
         }
       } else {
-        Get.snackbar(
-          'Error',
-          result['message'],
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          margin: EdgeInsets.all(16),
-        );
+        showErrorAlert(result['message'] ?? 'Failed to upload Excel');
       }
     } catch (e) {
+      showErrorAlert('Failed to upload Excel: $e');
+    } finally {
       isLoading.value = false;
-      Get.snackbar(
-        'Error',
-        'Failed to upload Excel: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        margin: EdgeInsets.all(16),
-      );
     }
   }
 
   @override
   void onClose() {
     products.clear();
+    existingProductIds.clear();
     super.onClose();
   }
 }

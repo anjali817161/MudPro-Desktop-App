@@ -1,43 +1,91 @@
-// lib/repositories/service_repository.dart
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mudpro_desktop_app/api_endpoint/api_endpoint.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/service_model.dart';
 
 class ServiceController {
-  // Update this with your backend URL
+  final String baseUrl = ApiEndpoint.baseUrl;
 
+  Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
 
   // ============ PACKAGE APIs ============
+  
+  // Add single or bulk packages
   Future<Map<String, dynamic>> addPackages(List<PackageItem> packages) async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiEndpoint.baseUrl + ApiEndpoint.addPackages),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(packages.map((e) => e.toJson()).toList()),
-      );
+      // If single package
+      if (packages.length == 1) {
+        final response = await http.post(
+          Uri.parse('$baseUrl${ApiEndpoint.addPackages}'),
+          headers: _headers,
+          body: jsonEncode(packages.first.toJson()),
+        );
 
-      if (response.statusCode == 201) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to add packages');
+        final responseData = jsonDecode(response.body);
+        print("responsebody: ${response.body}");
+        print("statusCode: ${response.statusCode}");
+        
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          return {
+            'success': true,
+            'message': 'Package added successfully',
+            'data': responseData['data'],
+          };
+        } else {
+          return {
+            'success': false,
+            'message': responseData['message'] ?? 'Failed to add package',
+          };
+        }
+      } 
+      // Bulk packages
+      else {
+        final response = await http.post(
+          Uri.parse('$baseUrl${ApiEndpoint.addBulkPackages}'),
+          headers: _headers,
+          body: jsonEncode(packages.map((e) => e.toJson()).toList()),
+        );
+
+        final responseData = jsonDecode(response.body);
+        print("responsebody: ${response.body}");
+        print("statusCode: ${response.statusCode}");
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          return {
+            'success': true,
+            'message': '${packages.length} packages added successfully',
+            'saved': packages.length,
+          };
+        } else {
+          return {
+            'success': false,
+            'message': responseData['message'] ?? 'Failed to add packages',
+          };
+        }
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
     }
   }
 
   Future<List<PackageItem>> getPackages() async {
     try {
       final response = await http.get(
-        Uri.parse(ApiEndpoint.baseUrl + ApiEndpoint.getPackages),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl${ApiEndpoint.getPackages}'),
+        headers: _headers,
       );
+      print("responsebody: ${response.body}");
+        print("statusCode: ${response.statusCode}");
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        final List items = data['data'];
+        final List items = data['data'] ?? [];
         return items.map((e) => PackageItem.fromJson(e)).toList();
       } else {
         throw Exception('Failed to load packages');
@@ -48,34 +96,81 @@ class ServiceController {
   }
 
   // ============ SERVICE APIs ============
+  
   Future<Map<String, dynamic>> addServices(List<ServiceItem> services) async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiEndpoint.baseUrl + ApiEndpoint.addServices),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(services.map((e) => e.toJson()).toList()),
-      );
+      // If single service
+      if (services.length == 1) {
+        final response = await http.post(
+          Uri.parse('$baseUrl${ApiEndpoint.addServices}'),
+          headers: _headers,
+          body: jsonEncode(services.first.toJson()),
+        );
 
-      if (response.statusCode == 201) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to add services');
+        final responseData = jsonDecode(response.body);
+        print("responsebody: ${response.body}");
+        print("statusCode: ${response.statusCode}");
+        
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          return {
+            'success': true,
+            'message': 'Service added successfully',
+            'data': responseData['data'],
+          };
+        } else {
+          return {
+            'success': false,
+            'message': responseData['message'] ?? 'Failed to add service',
+          };
+        }
+      } 
+      // Bulk services
+      else {
+        final response = await http.post(
+          Uri.parse('$baseUrl${ApiEndpoint.addBulkServices}'),
+          headers: _headers,
+          body: jsonEncode(services.map((e) => e.toJson()).toList()),
+        );
+
+        final responseData = jsonDecode(response.body);
+        print("responsebody: ${response.body}");
+        print("statusCode: ${response.statusCode}");
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          return {
+            'success': true,
+            'message': '${services.length} services added successfully',
+            'saved': services.length,
+          };
+        } else {
+          return {
+            'success': false,
+            'message': responseData['message'] ?? 'Failed to add services',
+          };
+        }
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
     }
   }
 
   Future<List<ServiceItem>> getServices() async {
     try {
       final response = await http.get(
-        Uri.parse(ApiEndpoint.baseUrl + ApiEndpoint.getServices),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl${ApiEndpoint.getServices}'),
+        headers: _headers,
       );
 
-      if (response.statusCode == 200) {
+print("responsebody: ${response.body}");
+        print("statusCode: ${response.statusCode}");
+
+        
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        final List items = data['data'];
+        final List items = data['data'] ?? [];
         return items.map((e) => ServiceItem.fromJson(e)).toList();
       } else {
         throw Exception('Failed to load services');
@@ -86,34 +181,80 @@ class ServiceController {
   }
 
   // ============ ENGINEERING APIs ============
+  
   Future<Map<String, dynamic>> addEngineering(List<EngineeringItem> engineering) async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiEndpoint.baseUrl + ApiEndpoint.addEngineering),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(engineering.map((e) => e.toJson()).toList()),
-      );
+      // If single engineering
+      if (engineering.length == 1) {
+        final response = await http.post(
+          Uri.parse('$baseUrl${ApiEndpoint.addEngineering}'),
+          headers: _headers,
+          body: jsonEncode(engineering.first.toJson()),
+        );
 
-      if (response.statusCode == 201) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Failed to add engineering');
+        final responseData = jsonDecode(response.body);
+        print("responsebody: ${response.body}");
+        print("statusCode: ${response.statusCode}");
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          return {
+            'success': true,
+            'message': 'Engineering item added successfully',
+            'data': responseData['data'],
+          };
+        } else {
+          return {
+            'success': false,
+            'message': responseData['message'] ?? 'Failed to add engineering',
+          };
+        }
+      } 
+      // Bulk engineering
+      else {
+        final response = await http.post(
+          Uri.parse('$baseUrl${ApiEndpoint.addBulkEngineering}'),
+          headers: _headers,
+          body: jsonEncode(engineering.map((e) => e.toJson()).toList()),
+        );
+
+        final responseData = jsonDecode(response.body);
+        print("responsebody: ${response.body}");
+        print("statusCode: ${response.statusCode}");
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          return {
+            'success': true,
+            'message': '${engineering.length} engineering items added successfully',
+            'saved': engineering.length,
+          };
+        } else {
+          return {
+            'success': false,
+            'message': responseData['message'] ?? 'Failed to add engineering',
+          };
+        }
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
     }
   }
 
   Future<List<EngineeringItem>> getEngineering() async {
     try {
       final response = await http.get(
-        Uri.parse(ApiEndpoint.baseUrl + ApiEndpoint.getEngineering),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl${ApiEndpoint.getEngineering}'),
+        headers: _headers,
       );
 
-      if (response.statusCode == 200) {
+      print("responsebody: ${response.body}");
+        print("statusCode: ${response.statusCode}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        final List items = data['data'];
+        final List items = data['data'] ?? [];
         return items.map((e) => EngineeringItem.fromJson(e)).toList();
       } else {
         throw Exception('Failed to load engineering');
