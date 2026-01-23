@@ -3,9 +3,6 @@ import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/controller/operators_controller.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
-/// =======================================================
-/// OPERATOR TAB (COMPRESSED & EXCEL-LIKE UI)
-/// =======================================================
 class OperatorTab extends StatefulWidget {
   const OperatorTab({super.key});
 
@@ -27,6 +24,7 @@ class _OperatorTabState extends State<OperatorTab> {
   void initState() {
     super.initState();
     // Add listeners to detect when user types in last row
+    controller.fetchOperators();
     _addListenersToRow(0);
   }
 
@@ -117,145 +115,155 @@ class _OperatorTabState extends State<OperatorTab> {
 
           // Compact Table Container
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300, width: 1),
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
                   ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Compact Table Header
-                  Container(
-                    height: 36,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
+                );
+              } else {
+                return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300, width: 1),
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        _HeaderCell(width: 45, text: '#', icon: Icons.numbers),
-                        _HeaderCell(width: 180, text: 'Company', icon: Icons.business),
-                        _HeaderCell(width: 180, text: 'Contact', icon: Icons.person),
-                        _HeaderCell(width: 200, text: 'Address', icon: Icons.location_on),
-                        _HeaderCell(width: 160, text: 'Phone', icon: Icons.phone),
-                        _HeaderCell(width: 200, text: 'E-mail', icon: Icons.email),
-                        _HeaderCell(width: 120, text: 'Logo', icon: Icons.image, isLast: true),
-                      ],
-                    ),
+                    ],
                   ),
+                  child: Column(
+                    children: [
+                      // Compact Table Header
+                      Container(
+                        height: 36,
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGradient,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            _HeaderCell(width: 45, text: '#', icon: Icons.numbers),
+                            _HeaderCell(width: 180, text: 'Company', icon: Icons.business),
+                            _HeaderCell(width: 180, text: 'Contact', icon: Icons.person),
+                            _HeaderCell(width: 200, text: 'Address', icon: Icons.location_on),
+                            _HeaderCell(width: 160, text: 'Phone', icon: Icons.phone),
+                            _HeaderCell(width: 200, text: 'E-mail', icon: Icons.email),
+                            _HeaderCell(width: 120, text: 'Logo', icon: Icons.image, isLast: true),
+                          ],
+                        ),
+                      ),
 
-                  // Compact Table Body
-                  Expanded(
-                    child: Scrollbar(
-                      controller: _scrollController,
-                      thumbVisibility: true,
-                      trackVisibility: true,
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        itemCount: controller.operators.length + newEntryControllers.length,
-                        itemBuilder: (context, row) {
-                            final bool isSelected = row == selectedRow;
-                            final bool isLockedRow = row < controller.operators.length;
+                      // Compact Table Body
+                      Expanded(
+                        child: Scrollbar(
+                          controller: _scrollController,
+                          thumbVisibility: true,
+                          trackVisibility: true,
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            itemCount: controller.operators.length + newEntryControllers.length,
+                            itemBuilder: (context, row) {
+                                final bool isSelected = row == selectedRow;
+                                final bool isLockedRow = row < controller.operators.length;
 
-                            return Container(
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppTheme.primaryColor.withOpacity(0.08)
-                                    : row % 2 == 0
-                                        ? Colors.white
-                                        : AppTheme.cardColor,
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: Colors.grey.shade200,
-                                    width: 0.5,
+                                return Container(
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppTheme.primaryColor.withOpacity(0.08)
+                                        : row % 2 == 0
+                                            ? Colors.white
+                                            : AppTheme.cardColor,
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Colors.grey.shade200,
+                                        width: 0.5,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => setState(() {
-                                    selectedRow = row;
-                                  }),
-                                  hoverColor: AppTheme.primaryColor.withOpacity(0.04),
-                                  child: Row(
-                                    children: [
-                                      // Compact Number Column
-                                      Container(
-                                        width: 45,
-                                        decoration: BoxDecoration(
-                                          border: Border(
-                                            right: BorderSide(
-                                              color: Colors.grey.shade400,
-                                              width: 1,
-                                            ),
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Container(
-                                            width: 22,
-                                            height: 22,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () => setState(() {
+                                        selectedRow = row;
+                                      }),
+                                      hoverColor: AppTheme.primaryColor.withOpacity(0.04),
+                                      child: Row(
+                                        children: [
+                                          // Compact Number Column
+                                          Container(
+                                            width: 45,
                                             decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: isSelected
-                                                  ? AppTheme.accentColor
-                                                  : isLockedRow
-                                                      ? Colors.grey.shade400
-                                                      : AppTheme.secondaryColor.withOpacity(0.15),
+                                              border: Border(
+                                                right: BorderSide(
+                                                  color: Colors.grey.shade400,
+                                                  width: 1,
+                                                ),
+                                              ),
                                             ),
                                             child: Center(
-                                              child: Text(
-                                                '${row + 1}',
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w600,
+                                              child: Container(
+                                                width: 22,
+                                                height: 22,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
                                                   color: isSelected
-                                                      ? Colors.white
-                                                      : AppTheme.textPrimary,
+                                                      ? AppTheme.accentColor
+                                                      : isLockedRow
+                                                          ? Colors.grey.shade400
+                                                          : AppTheme.secondaryColor.withOpacity(0.15),
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    '${row + 1}',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: isSelected
+                                                          ? Colors.white
+                                                          : AppTheme.textPrimary,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      ),
 
-                                      // Data Cells
-                                      if (isLockedRow) ...[
-                                        // Locked cells for existing operators
-                                        _lockedCell(180, controller.operators[row].company),
-                                        _lockedCell(180, controller.operators[row].contact),
-                                        _lockedCell(200, controller.operators[row].address),
-                                        _lockedCell(160, controller.operators[row].phone),
-                                        _lockedCell(200, controller.operators[row].email),
-                                        _lockedCell(120, controller.operators[row].logoUrl, isLast: true),
-                                      ] else ...[
-                                        // Editable cells for new entries
-                                        ..._buildEditableCells(row),
-                                      ],
-                                    ],
+                                          // Data Cells
+                                          if (isLockedRow) ...[
+                                            // Locked cells for existing operators
+                                            _lockedCell(180, controller.operators[row].company),
+                                            _lockedCell(180, controller.operators[row].contact),
+                                            _lockedCell(200, controller.operators[row].address),
+                                            _lockedCell(160, controller.operators[row].phone),
+                                            _lockedCell(200, controller.operators[row].email),
+                                            _lockedCell(120, controller.operators[row].logoUrl, isLast: true),
+                                          ] else ...[
+                                            // Editable cells for new entries
+                                            ..._buildEditableCells(row),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
-                          },
+                                );
+                              },
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                );
+              }
+            }),
           ),
 
           // Compact Footer

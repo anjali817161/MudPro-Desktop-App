@@ -5,43 +5,56 @@ import 'package:mudpro_desktop_app/modules/company_setup/tabs/products_page.dart
 import 'package:mudpro_desktop_app/modules/company_setup/tabs/service_page.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
-class InventoryPickupTabs extends StatelessWidget {
-  InventoryPickupTabs({super.key});
+class InventoryPickupTabs extends StatefulWidget {
+  const InventoryPickupTabs({super.key});
+
+  @override
+  State<InventoryPickupTabs> createState() => _InventoryPickupTabsState();
+}
+
+class _InventoryPickupTabsState extends State<InventoryPickupTabs> {
   final c = Get.find<UgController>();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // ================= TOP SUB TABS =================
-        Container(
-          height: 36,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Inventory Pickup'),
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
+      ),
+      body: Column(
+        children: [
+          // ================= TOP SUB TABS =================
+          Container(
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+              ),
+            ),
+            child: Row(
+              children: [
+                _tabButton('Products'),
+                _tabButton('Services'),
+              ],
             ),
           ),
-          child: Row(
-            children: [
-              _tabButton('Products'),
-              _tabButton('Services'),
-            ],
-          ),
-        ),
 
-        // ================= MIDDLE CONTENT =================
-        Expanded(
-          child: Container(
-            color: Colors.grey.shade50,
-            child: Obx(() {
-              return c.inventoryTab.value == 'Products'
-                  ? ProductsPage()
-                  : ServicesPage();
-            }),
+          // ================= MIDDLE CONTENT =================
+          Expanded(
+            child: Container(
+              color: Colors.grey.shade50,
+              child: Obx(() {
+                return c.inventoryTab.value == 'Products'
+                    ? ProductsPage()
+                    : ServicesPage();
+              }),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -89,6 +102,4 @@ class InventoryPickupTabs extends StatelessWidget {
       );
     });
   }
-
-
 }

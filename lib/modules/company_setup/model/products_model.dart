@@ -13,6 +13,7 @@ class ProductModel {
   String initial;
   bool volAdd;
   bool calculate;
+  bool plot;
   bool tax;
   bool isSelected;
   bool isDeleted;
@@ -27,13 +28,14 @@ class ProductModel {
     this.unitNum = '',
     this.unitClass = '',
     this.group = '',
-    this.retail = 'No',
+    this.retail = '',
     this.a = '',
     this.b = '',
     this.price = '',
     this.initial = '',
     this.volAdd = false,
     this.calculate = false,
+    this.plot = false,
     this.tax = false,
     this.isSelected = false,
     this.isDeleted = false,
@@ -52,7 +54,7 @@ class ProductModel {
         'Class': unitClass,
       },
       'Group': group,
-      'Retail': retail.isEmpty ? 'No' : retail,
+      'Retail': retail.isEmpty ? '' : retail,
       'A': a.isNotEmpty ? int.tryParse(a) ?? 0 : null,
       'B': b.isNotEmpty ? int.tryParse(b) ?? 0 : null,
     };
@@ -68,7 +70,7 @@ class ProductModel {
       unitNum: json['Unit']?['Num']?.toString() ?? '',
       unitClass: json['Unit']?['Class'] ?? '',
       group: json['Group'] ?? '',
-      retail: json['Retail'] ?? 'No',
+      retail: json['Retail'] ?? '',
       a: json['A']?.toString() ?? '',
       b: json['B']?.toString() ?? '',
       isDeleted: json['isDeleted'] ?? false,
@@ -139,7 +141,7 @@ class ProductModel {
     unitNum = '';
     unitClass = '';
     group = '';
-    retail = 'No';
+    retail = '';
     a = '';
     b = '';
   }

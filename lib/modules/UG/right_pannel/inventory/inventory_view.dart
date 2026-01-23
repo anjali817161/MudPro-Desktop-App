@@ -203,17 +203,24 @@ class InventoryView extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                    GestureDetector(
-                      onTap: () {
-                        //
-                        Get.to(() => InventoryPickupTabs());
-                      },
-                        child: Text(
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Get.to(() => const InventoryPickupTabs());
+                        },
+                        icon: Icon(Icons.launch, size: 14, color: AppTheme.primaryColor),
+                        label: Text(
                           'Inventory Pickup',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: AppTheme.primaryColor,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: AppTheme.primaryColor),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
                           ),
                         ),
                       ),
@@ -337,17 +344,24 @@ class InventoryView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        GestureDetector(
-                           onTap: () {
-                        //
-                        Get.to(() => InventoryPickupTabs());
-                      },
-                          child: Text(
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            Get.to(() => const InventoryPickupTabs());
+                          },
+                          icon: Icon(Icons.launch, size: 14, color: AppTheme.primaryColor),
+                          label: Text(
                             'Inventory Pickup',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: AppTheme.primaryColor,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: AppTheme.primaryColor),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
                             ),
                           ),
                         ),

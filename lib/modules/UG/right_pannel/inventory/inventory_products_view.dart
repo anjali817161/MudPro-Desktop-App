@@ -1,15 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/UG/controller/UG_controller.dart';
-import 'package:mudpro_desktop_app/modules/UG/model/producst_model.dart' hide ProductModel;
+import 'package:mudpro_desktop_app/modules/UG/model/producst_model.dart';
+import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/inventory_store/inventory_store.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
-class InventoryProductsView extends StatelessWidget {
+class InventoryProductsView extends StatefulWidget {
+  const InventoryProductsView({super.key});
+
+  @override
+  State<InventoryProductsView> createState() => _InventoryProductsViewState();
+}
+
+class _InventoryProductsViewState extends State<InventoryProductsView> {
   final c = Get.find<UgController>();
 
   @override
+  void initState() {
+    super.initState();
+    // Clear all tables initially to keep them empty
+    c.products.clear();
+    c.premixed.clear();
+    c.obm.clear();
+    // Add one empty row for premixed and obm tables
+    c.premixed.add(PremixModel(id: '1', description: '', mw: '', leasingFee: '', mudType: '', tax: false));
+    c.obm.add(ObmModel(id: '1', product: '', code: '', sg: '', conc: ''));
+    // Auto refresh data when page enters
+    _refreshData();
+  }
+
+  void _refreshData() {
+    try {
+      final store = Get.find<InventoryProductsStore>();
+      // Refresh the observable lists to trigger UI update
+      store.selectedProducts.refresh();
+      c.products.refresh();
+      c.premixed.refresh();
+      c.obm.refresh();
+      print('✅ Data refreshed on page enter');
+    } catch (e) {
+      print('❌ Error refreshing data: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final store = Get.find<InventoryProductsStore>();
+
     return Container(
       padding: const EdgeInsets.all(8),
       child: Column(
@@ -56,7 +94,7 @@ class InventoryProductsView extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Obx(() => Text(
-                            '${c.products.length} items',
+                            '${store.selectedProducts.length} items',
                             style: const TextStyle(
                               fontSize: 11,
                               color: Colors.white,
@@ -68,50 +106,148 @@ class InventoryProductsView extends StatelessWidget {
                     ),
                   ),
                   Expanded(
-                    child: Obx(() => Scrollbar(
-                      thumbVisibility: true,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
+                    child: Obx(() {
+                      final productsToDisplay = store.selectedProducts;
+
+                      return Scrollbar(
+                        thumbVisibility: true,
                         child: SingleChildScrollView(
-                          child: Table(
-                            border: TableBorder.all(
-                              color: Colors.grey.shade200,
-                              width: 1,
+                          scrollDirection: Axis.horizontal,
+                          child: SingleChildScrollView(
+                            child: Table(
+                              border: TableBorder.all(
+                                color: Colors.grey.shade200,
+                                width: 1,
+                              ),
+                              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                              columnWidths: const {
+                                0: FixedColumnWidth(40),
+                                1: FixedColumnWidth(250),
+                                2: FixedColumnWidth(140),
+                                3: FixedColumnWidth(100),
+                                4: FixedColumnWidth(100),
+                                5: FixedColumnWidth(100),
+                                6: FixedColumnWidth(100),
+                                7: FixedColumnWidth(140),
+                                8: FixedColumnWidth(80),
+                                9: FixedColumnWidth(140),
+                                10: FixedColumnWidth(80),
+                              },
+                              children: [
+                                // Header Row
+                                TableRow(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [AppTheme.primaryColor.withOpacity(0.1), AppTheme.primaryColor.withOpacity(0.05)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                  children: [
+                                    _tableHeaderCell('No'),
+                                    _tableHeaderCell('Product'),
+                                    _tableHeaderCell('Code'),
+                                    _tableHeaderCell('SG'),
+                                    _tableHeaderCell('Unit'),
+                                    _tableHeaderCell('Price'),
+                                    _tableHeaderCell('Initial'),
+                                    _tableHeaderCell('Group'),
+                                    _tableHeaderCell('Vol. Add'),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          _headerText('Concentration'),
+                                          const SizedBox(height: 2),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Expanded(child: Center(child: _headerText('Calculate', size: 9))),
+                                              Expanded(child: Center(child: _headerText('Plot', size: 9))),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    _tableHeaderCell('Tax'),
+                                  ],
+                                ),
+                                // Data Rows
+                                ...productsToDisplay.asMap().entries.map((entry) {
+                                  final index = entry.key;
+                                  final p = entry.value;
+                                  return TableRow(
+                                    decoration: BoxDecoration(
+                                      color: index.isEven ? Colors.white : AppTheme.cardColor,
+                                    ),
+                                    children: [
+                                      _tableCell((index + 1).toString()),
+                                      _editableTableCell(p.product, onChanged: (v) {
+                                        p.product = v;
+                                        store.selectedProducts.refresh();
+                                      }),
+                                      _editableTableCell(p.code, onChanged: (v) {
+                                        p.code = v;
+                                        store.selectedProducts.refresh();
+                                      }),
+                                      _editableTableCell(p.sg, onChanged: (v) {
+                                        p.sg = v;
+                                        store.selectedProducts.refresh();
+                                      }),
+                                      _editableTableCell(p.unitNum, onChanged: (v) {
+                                        p.unitClass = v;
+                                        store.selectedProducts.refresh();
+                                      }),
+                                      _editableTableCell(p.price, onChanged: (v) {
+                                        p.unitNum = v;
+                                        store.selectedProducts.refresh();
+                                      }),
+                                      _editableTableCell(p.initial, onChanged: (v) {
+                                        p.initial = v;
+                                        store.selectedProducts.refresh();
+                                      }),
+                                      _editableTableCell(p.group, onChanged: (v) {
+                                        p.group = v;
+                                        store.selectedProducts.refresh();
+                                      }),
+                                      _checkboxCell(() => p.volAdd, (v) {
+                                        p.volAdd = v;
+                                        store.selectedProducts.refresh();
+                                      }),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 2),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            Expanded(
+                                              child: _checkboxCell(() => p.calculate, (v) {
+                                                p.calculate = v;
+                                                store.selectedProducts.refresh();
+                                              }),
+                                            ),
+                                            Expanded(
+                                              child: _checkboxCell(() => p.plot ?? false, (v) {
+                                                p.plot = v;
+                                                store.selectedProducts.refresh();
+                                              }),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      _checkboxCell(() => p.tax, (v) {
+                                        p.tax = v;
+                                        store.selectedProducts.refresh();
+                                      }),
+                                    ],
+                                  );
+                                }),
+                              ],
                             ),
-                            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                            columnWidths: const {
-                              0: FixedColumnWidth(40),
-                              1: FixedColumnWidth(260),
-                              2: FixedColumnWidth(140),
-                              3: FixedColumnWidth(100),
-                              4: FixedColumnWidth(100),
-                              5: FixedColumnWidth(100),
-                              6: FixedColumnWidth(100),
-                              7: FixedColumnWidth(160),
-                              8: FixedColumnWidth(100),
-                              9: FixedColumnWidth(100),
-                              10: FixedColumnWidth(100),
-                            },
-                            children: [
-                              _headerRow([
-                                'No',
-                                'Product',
-                                'Code',
-                                'SG',
-                                'Unit',
-                                'Price',
-                                'Initial',
-                                'Group',
-                                'Vol. Add',
-                                'Calculate',
-                                'Tax',
-                              ]),
-                              ...c.products.map((p) => _productRow(p)),
-                            ],
                           ),
                         ),
-                      ),
-                    )),
+                      );
+                    }),
                   ),
                 ],
               ),
@@ -147,59 +283,6 @@ class InventoryProductsView extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  // ================= PRODUCT ROW =================
-  TableRow _productRow(ProductModel p) {
-    int index = c.products.indexOf(p) + 1;
-    return TableRow(
-      decoration: BoxDecoration(
-        color: int.tryParse(p.id ?? '0')?.isEven ?? false ? Colors.white : AppTheme.cardColor,
-      ),
-      children: [
-        _cell(index.toString()),
-        _editableCell(p.product, onChanged: (v) {
-          p.product = v;
-          c.products.refresh();
-        }),
-        _editableCell(p.code, onChanged: (v) {
-          p.code = v;
-          c.products.refresh();
-        }),
-        _editableCell(p.sg, onChanged: (v) {
-          p.sg = v;
-          c.products.refresh();
-        }),
-        _editableCell(p.unitNum, onChanged: (v) {
-          p.unitClass = v;
-          c.products.refresh();
-        }),
-        _editableCell(p.price, onChanged: (v) {
-          p.unitNum = v;
-          c.products.refresh();
-        }),
-        _editableCell(p.initial, onChanged: (v) {
-          p.initial = v;
-          c.products.refresh();
-        }),
-        _editableCell(p.group, onChanged: (v) {
-          p.group = v;
-          c.products.refresh();
-        }),
-        _checkbox(() => p.volAdd, (v) {
-          p.volAdd = v;
-          c.products.refresh();
-        }),
-        _checkbox(() => p.calculate, (v) {
-          p.calculate = v;
-          c.products.refresh();
-        }),
-        _checkbox(() => p.tax, (v) {
-          p.tax = v;
-          c.products.refresh();
-        }),
-      ],
     );
   }
 
@@ -239,53 +322,70 @@ class InventoryProductsView extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: SingleChildScrollView(
+            child: Obx(() => SingleChildScrollView(
               child: Table(
                 border: TableBorder.all(
                   color: Colors.grey.shade200,
                   width: 1,
                 ),
-                columnWidths: const {
-                  0: FixedColumnWidth(40),
-                  1: FlexColumnWidth(),
-                  2: FixedColumnWidth(80),
-                  3: FixedColumnWidth(90),
-                  4: FixedColumnWidth(90),
-                  5: FixedColumnWidth(60),
-                },
+                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                 children: [
-                  _headerRow(['#', 'Description', 'MW', 'Leasing Fee', 'Mud Type', 'Tax']),
-                  ...c.premixed.map((e) => TableRow(
+                  TableRow(
                     decoration: BoxDecoration(
-                      color: e.id.hashCode.isEven ? Colors.white : AppTheme.cardColor,
+                      gradient: LinearGradient(
+                        colors: [AppTheme.primaryColor.withOpacity(0.1), AppTheme.primaryColor.withOpacity(0.05)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
                     children: [
-                      _cell(e.id),
-                      _editableCell(e.description, onChanged: (v) {
-                        e.description = v;
-                        c.premixed.refresh();
-                      }),
-                      _editableCell(e.mw, onChanged: (v) {
-                        e.mw = v;
-                        c.premixed.refresh();
-                      }),
-                      _editableCell(e.leasingFee, onChanged: (v) {
-                        e.leasingFee = v;
-                        c.premixed.refresh();
-                      }),
-                      _editableCell(e.mudType, onChanged: (v) {
-                        e.mudType = v;
-                        c.premixed.refresh();
-                      }),
-                      _checkbox(() => e.tax, (v) {
-                        e.tax = v;
-                        c.premixed.refresh();
-                      }),
+                      _tableHeaderCell('#'),
+                      _tableHeaderCell('Description'),
+                      _tableHeaderCell('MW'),
+                      _tableHeaderCell('Leasing Fee'),
+                      _tableHeaderCell('Mud Type'),
+                      _tableHeaderCell('Tax'),
                     ],
-                  )),
+                  ),
+                  ...c.premixed.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final e = entry.value;
+                    return TableRow(
+                      decoration: BoxDecoration(
+                        color: index.isEven ? Colors.white : AppTheme.cardColor,
+                      ),
+                      children: [
+                        _tableCell(e.id),
+                        _editableTableCell(e.description, onChanged: (v) {
+                          e.description = v;
+                          c.premixed.refresh();
+                          _checkAndAddPremixedRow();
+                        }),
+                        _editableTableCell(e.mw, onChanged: (v) {
+                          e.mw = v;
+                          c.premixed.refresh();
+                          _checkAndAddPremixedRow();
+                        }),
+                        _editableTableCell(e.leasingFee, onChanged: (v) {
+                          e.leasingFee = v;
+                          c.premixed.refresh();
+                          _checkAndAddPremixedRow();
+                        }),
+                        _editableTableCell(e.mudType, onChanged: (v) {
+                          e.mudType = v;
+                          c.premixed.refresh();
+                          _checkAndAddPremixedRow();
+                        }),
+                        _checkboxCell(() => e.tax, (v) {
+                          e.tax = v;
+                          c.premixed.refresh();
+                        }),
+                      ],
+                    );
+                  }),
                 ],
               ),
-            ),
+            )),
           ),
         ],
       ),
@@ -328,48 +428,65 @@ class InventoryProductsView extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: SingleChildScrollView(
+            child: Obx(() => SingleChildScrollView(
               child: Table(
                 border: TableBorder.all(
                   color: Colors.grey.shade200,
                   width: 1,
                 ),
-                columnWidths: const {
-                  0: FixedColumnWidth(40),
-                  1: FlexColumnWidth(),
-                  2: FixedColumnWidth(80),
-                  3: FixedColumnWidth(80),
-                  4: FixedColumnWidth(80),
-                },
+                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                 children: [
-                  _headerRow(['#', 'Product', 'Code', 'SG', 'Conc']),
-                  ...c.obm.map((e) => TableRow(
+                  TableRow(
                     decoration: BoxDecoration(
-                      color: e.id.hashCode.isEven ? Colors.white : AppTheme.cardColor,
+                      gradient: LinearGradient(
+                        colors: [AppTheme.primaryColor.withOpacity(0.1), AppTheme.primaryColor.withOpacity(0.05)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
                     children: [
-                      _cell(e.id),
-                      _editableCell(e.product, onChanged: (v) {
-                        e.product = v;
-                        c.obm.refresh();
-                      }),
-                      _editableCell(e.code, onChanged: (v) {
-                        e.code = v;
-                        c.obm.refresh();
-                      }),
-                      _editableCell(e.sg, onChanged: (v) {
-                        e.sg = v;
-                        c.obm.refresh();
-                      }),
-                      _editableCell(e.conc, onChanged: (v) {
-                        e.conc = v;
-                        c.obm.refresh();
-                      }),
+                      _tableHeaderCell('#'),
+                      _tableHeaderCell('Product'),
+                      _tableHeaderCell('Code'),
+                      _tableHeaderCell('SG'),
+                      _tableHeaderCell('Conc'),
                     ],
-                  )),
+                  ),
+                  ...c.obm.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final e = entry.value;
+                    return TableRow(
+                      decoration: BoxDecoration(
+                        color: index.isEven ? Colors.white : AppTheme.cardColor,
+                      ),
+                      children: [
+                        _tableCell(e.id),
+                        _editableTableCell(e.product, onChanged: (v) {
+                          e.product = v;
+                          c.obm.refresh();
+                          _checkAndAddObmRow();
+                        }),
+                        _editableTableCell(e.code, onChanged: (v) {
+                          e.code = v;
+                          c.obm.refresh();
+                          _checkAndAddObmRow();
+                        }),
+                        _editableTableCell(e.sg, onChanged: (v) {
+                          e.sg = v;
+                          c.obm.refresh();
+                          _checkAndAddObmRow();
+                        }),
+                        _editableTableCell(e.conc, onChanged: (v) {
+                          e.conc = v;
+                          c.obm.refresh();
+                          _checkAndAddObmRow();
+                        }),
+                      ],
+                    );
+                  }),
                 ],
               ),
-            ),
+            )),
           ),
         ],
       ),
@@ -377,47 +494,46 @@ class InventoryProductsView extends StatelessWidget {
   }
 
   // ================= HELPERS =================
-  TableRow _headerRow(List<String> h) => TableRow(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [AppTheme.primaryColor.withOpacity(0.1), AppTheme.primaryColor.withOpacity(0.05)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
+  Widget _headerText(String text, {double? size}) => Text(
+    text,
+    style: TextStyle(
+      fontSize: size ?? 10,
+      fontWeight: FontWeight.w600,
+      color: AppTheme.textPrimary,
     ),
-    children: h.map((e) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      child: Text(
-        e,
-        textAlign: TextAlign.left,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: AppTheme.textPrimary,
-        ),
-      ),
-    )).toList(),
   );
 
-  Widget _cell(String v, {bool bold = false}) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+  Widget _tableHeaderCell(String text) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
     child: Text(
-      v,
+      text,
+      textAlign: TextAlign.left,
       style: TextStyle(
         fontSize: 10,
-        fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
+        fontWeight: FontWeight.w600,
         color: AppTheme.textPrimary,
       ),
     ),
   );
 
-  Widget _editableCell(String value, {Function(String)? onChanged}) => Padding(
+  Widget _tableCell(String value) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+    child: Text(
+      value,
+      style: TextStyle(
+        fontSize: 9,
+        color: AppTheme.textPrimary,
+      ),
+    ),
+  );
+
+  Widget _editableTableCell(String value, {Function(String)? onChanged}) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
     child: Obx(() => c.isLocked.value
         ? Text(
             value,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 9,
               color: AppTheme.textPrimary,
             ),
           )
@@ -425,7 +541,7 @@ class InventoryProductsView extends StatelessWidget {
             initialValue: value,
             onChanged: onChanged,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 9,
               color: AppTheme.textPrimary,
             ),
             decoration: const InputDecoration(
@@ -436,7 +552,59 @@ class InventoryProductsView extends StatelessWidget {
           )),
   );
 
-  Widget _checkbox(bool Function() getter, Function(bool) onChange) {
+  final _cellStyle = TextStyle(
+    fontSize: 9,
+    color: AppTheme.textPrimary,
+  );
+
+  Widget _editableCell(String value, {Function(String)? onChanged}) => Obx(() => c.isLocked.value
+      ? Text(value, style: _cellStyle)
+      : SizedBox(
+          width: double.infinity,
+          child: TextFormField(
+            initialValue: value,
+            onChanged: onChanged,
+            style: _cellStyle,
+            decoration: const InputDecoration(
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              border: InputBorder.none,
+            ),
+          ),
+        ));
+
+  // ================= ROW FILL CHECKERS =================
+  bool _isPremixedRowFilled(PremixModel row) {
+    return row.description.isNotEmpty &&
+           row.mw.isNotEmpty &&
+           row.leasingFee.isNotEmpty &&
+           row.mudType.isNotEmpty;
+  }
+
+  bool _isObmRowFilled(ObmModel row) {
+    return row.product.isNotEmpty &&
+           row.code.isNotEmpty &&
+           row.sg.isNotEmpty &&
+           row.conc.isNotEmpty;
+  }
+
+  void _checkAndAddPremixedRow() {
+    if (c.premixed.isNotEmpty && _isPremixedRowFilled(c.premixed.last)) {
+      int nextId = int.parse(c.premixed.last.id) + 1;
+      c.premixed.add(PremixModel(id: nextId.toString(), description: '', mw: '', leasingFee: '', mudType: '', tax: false));
+      c.premixed.refresh();
+    }
+  }
+
+  void _checkAndAddObmRow() {
+    if (c.obm.isNotEmpty && _isObmRowFilled(c.obm.last)) {
+      int nextId = int.parse(c.obm.last.id) + 1;
+      c.obm.add(ObmModel(id: nextId.toString(), product: '', code: '', sg: '', conc: ''));
+      c.obm.refresh();
+    }
+  }
+
+  Widget _checkboxCell(bool Function() getter, Function(bool) onChange) {
     return Center(
       child: Obx(() => Container(
         decoration: BoxDecoration(
@@ -446,15 +614,16 @@ class InventoryProductsView extends StatelessWidget {
             color: getter() ? AppTheme.successColor : Colors.grey.shade400,
           ),
         ),
-        margin: const EdgeInsets.all(4),
-        child: Checkbox(
-          value: getter(),
-          onChanged: c.isLocked.value ? null : (v) => onChange(v!),
-          activeColor: AppTheme.successColor,
-          checkColor: Colors.white,
-          visualDensity: VisualDensity.compact,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
+        margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+        child: Transform.scale(
+          scale: 0.75,
+          child: Checkbox(
+            value: getter(),
+            onChanged: c.isLocked.value ? null : (v) => onChange(v!),
+            activeColor: AppTheme.successColor,
+            checkColor: Colors.white,
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
       )),

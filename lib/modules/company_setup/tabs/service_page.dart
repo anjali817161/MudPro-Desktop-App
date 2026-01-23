@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/inventory_store/inventory_store.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/controller/service_controller.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/service_model.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
+import 'package:get/get.dart';
 
 class ServicesPage extends StatefulWidget {
   const ServicesPage({super.key});
@@ -14,17 +16,19 @@ class _ServicesPageState extends State<ServicesPage> {
   final ServiceController controller = ServiceController();
   bool _isLoading = false;
 
-  // Store existing IDs to prevent duplicates
   final Set<String> existingPackageIds = {};
   final Set<String> existingServiceIds = {};
   final Set<String> existingEngineeringIds = {};
 
-  // Existing data from API
+  // Selection tracking
+  final Set<int> selectedPackageIndices = {};
+  final Set<int> selectedServiceIndices = {};
+  final Set<int> selectedEngineeringIndices = {};
+
   List<PackageItem> existingPackages = [];
   List<ServiceItem> existingServices = [];
   List<EngineeringItem> existingEngineering = [];
 
-  // Controllers for new data only
   final List<List<TextEditingController>> packageControllers = _generateControllers();
   final List<List<TextEditingController>> servicesControllers = _generateControllers();
   final List<List<TextEditingController>> engineeringControllers = _generateControllers();
@@ -93,10 +97,41 @@ class _ServicesPageState extends State<ServicesPage> {
     }
   }
 
+  void _applySelectedServices() {
+    try {
+      final selectedPkgs = selectedPackageIndices.map((i) => existingPackages[i]).toList();
+      final selectedSrvs = selectedServiceIndices.map((i) => existingServices[i]).toList();
+      final selectedEngs = selectedEngineeringIndices.map((i) => existingEngineering[i]).toList();
+
+      // Find the store (don't create new one)
+      final store = Get.find<InventoryServicesStore>();
+      store.setSelectedServices(
+        packages: selectedPkgs,
+        services: selectedSrvs,
+        engineering: selectedEngs,
+      );
+
+      Navigator.pop(context);
+      
+      Get.snackbar(
+        'Success',
+        '${selectedPkgs.length + selectedSrvs.length + selectedEngs.length} items applied to inventory',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Color(0xff10B981),
+        colorText: Colors.white,
+        duration: Duration(seconds: 2),
+      );
+      
+      print('✅ Applied services: ${selectedPkgs.length} packages, ${selectedSrvs.length} services, ${selectedEngs.length} engineering');
+    } catch (e) {
+      print('❌ Error applying services: $e');
+      _showError('Failed to apply services. Please restart the app.');
+    }
+  }
+
   Future<void> _savePackages() async {
     setState(() => _isLoading = true);
     try {
-      // Only get new packages from controllers
       List<PackageItem> newPackages = [];
       for (var row in packageControllers) {
         if (row[0].text.trim().isNotEmpty) {
@@ -120,14 +155,12 @@ class _ServicesPageState extends State<ServicesPage> {
       if (result['success'] == true) {
         _showSuccess(result['message'] ?? 'Packages saved successfully!');
         
-        // Clear new entry controllers
         for (var row in packageControllers) {
           for (var ctrl in row) {
             ctrl.clear();
           }
         }
         
-        // Reload all data
         await _loadPackages();
       } else {
         _showError(result['message'] ?? 'Failed to save packages');
@@ -356,6 +389,7 @@ class _ServicesPageState extends State<ServicesPage> {
         gradient: AppTheme.primaryGradient,
         constraints: constraints,
         onSave: _savePackages,
+        selectedIndices: selectedPackageIndices,
         isPackage: true,
       ),
       const SizedBox(width: 12),
@@ -367,6 +401,7 @@ class _ServicesPageState extends State<ServicesPage> {
         gradient: AppTheme.secondaryGradient,
         constraints: constraints,
         onSave: _saveServices,
+        selectedIndices: selectedServiceIndices,
         isService: true,
       ),
       const SizedBox(width: 12),
@@ -378,6 +413,7 @@ class _ServicesPageState extends State<ServicesPage> {
         gradient: AppTheme.accentGradient,
         constraints: constraints,
         onSave: _saveEngineering,
+        selectedIndices: selectedEngineeringIndices,
         isEngineering: true,
       ),
     ];
@@ -391,6 +427,7 @@ class _ServicesPageState extends State<ServicesPage> {
     required Gradient gradient,
     required BoxConstraints constraints,
     required VoidCallback onSave,
+    required Set<int> selectedIndices,
     bool isPackage = false,
     bool isService = false,
     bool isEngineering = false,
@@ -415,7 +452,7 @@ class _ServicesPageState extends State<ServicesPage> {
         ),
         child: Column(
           children: [
-            _sectionHeader(title, icon, gradient),
+            _sectionHeader(title, icon, gradient, selectedIndices.length),
             _tableHeader(widths),
             Container(height: 1, color: Colors.grey.shade300),
             Expanded(
@@ -423,6 +460,7 @@ class _ServicesPageState extends State<ServicesPage> {
                 existingData,
                 controllers,
                 widths,
+                selectedIndices,
               ),
             ),
             _tableSaveButton(onSave, title),
@@ -432,37 +470,7 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget _tableSaveButton(VoidCallback onSave, String title) {
-    return Container(
-      height: 48,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : onSave,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-          child: Text(
-            'Save $title',
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _sectionHeader(String title, IconData icon, Gradient gradient) {
+  Widget _sectionHeader(String title, IconData icon, Gradient gradient, int selectedCount) {
     return Container(
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -496,6 +504,22 @@ class _ServicesPageState extends State<ServicesPage> {
               ),
             ),
           ),
+          if (selectedCount > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Selected: $selectedCount',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -528,6 +552,7 @@ class _ServicesPageState extends State<ServicesPage> {
     List<dynamic> existingData,
     List<List<TextEditingController>> controllers,
     List<double> widths,
+    Set<int> selectedIndices,
   ) {
     return Scrollbar(
       thumbVisibility: true,
@@ -535,41 +560,57 @@ class _ServicesPageState extends State<ServicesPage> {
         itemCount: existingData.length + controllers.length,
         itemBuilder: (_, index) {
           final isExisting = index < existingData.length;
+          final isSelected = selectedIndices.contains(index);
           
-          return Container(
-            height: 28,
-            decoration: BoxDecoration(
-              color: isExisting
-                  ? const Color(0xffF3F4F6)
-                  : (index % 2 == 0 ? Colors.white : AppTheme.cardColor),
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
+          return InkWell(
+            onTap: isExisting
+                ? () {
+                    setState(() {
+                      if (selectedIndices.contains(index)) {
+                        selectedIndices.remove(index);
+                      } else {
+                        selectedIndices.add(index);
+                      }
+                    });
+                  }
+                : null,
+            child: Container(
+              height: 28,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppTheme.primaryColor.withOpacity(0.2)
+                    : (isExisting
+                        ? const Color(0xffF3F4F6)
+                        : (index % 2 == 0 ? Colors.white : AppTheme.cardColor)),
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
+                ),
               ),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: Row(
-                children: [
-                  _numberCell(index + 1, widths[0], isExisting),
-                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  if (isExisting) ...[
-                    _lockedCell(widths[1], existingData[index].name),
+              child: Material(
+                color: Colors.transparent,
+                child: Row(
+                  children: [
+                    _numberCell(index + 1, widths[0], isExisting, isSelected),
                     Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                    _lockedCell(widths[2], existingData[index].code),
-                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                    _lockedCell(widths[3], existingData[index].unit),
-                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                    _lockedCell(widths[4], existingData[index].price.toString()),
-                  ] else ...[
-                    _editCell(widths[1], controllers[index - existingData.length][0]),
-                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                    _editCell(widths[2], controllers[index - existingData.length][1]),
-                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                    _editCell(widths[3], controllers[index - existingData.length][2]),
-                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                    _editCell(widths[4], controllers[index - existingData.length][3]),
+                    if (isExisting) ...[
+                      _lockedCell(widths[1], existingData[index].name),
+                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                      _lockedCell(widths[2], existingData[index].code),
+                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                      _lockedCell(widths[3], existingData[index].unit),
+                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                      _lockedCell(widths[4], existingData[index].price.toString()),
+                    ] else ...[
+                      _editCell(widths[1], controllers[index - existingData.length][0]),
+                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                      _editCell(widths[2], controllers[index - existingData.length][1]),
+                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                      _editCell(widths[3], controllers[index - existingData.length][2]),
+                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                      _editCell(widths[4], controllers[index - existingData.length][3]),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           );
@@ -578,7 +619,7 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget _numberCell(int number, double width, bool isLocked) {
+  Widget _numberCell(int number, double width, bool isLocked, bool isSelected) {
     return SizedBox(
       width: width,
       child: Center(
@@ -586,18 +627,24 @@ class _ServicesPageState extends State<ServicesPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (isLocked)
-              const Padding(
-                padding: EdgeInsets.only(right: 4),
-                child: Icon(Icons.lock, size: 10, color: Colors.grey),
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Icon(
+                  isSelected ? Icons.check_circle : Icons.lock,
+                  size: 10,
+                  color: isSelected ? AppTheme.primaryColor : Colors.grey,
+                ),
               ),
             Container(
               width: 20,
               height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isLocked
-                    ? Colors.grey.withOpacity(0.3)
-                    : AppTheme.secondaryColor.withOpacity(0.2),
+                color: isSelected
+                    ? AppTheme.primaryColor.withOpacity(0.3)
+                    : (isLocked
+                        ? Colors.grey.withOpacity(0.3)
+                        : AppTheme.secondaryColor.withOpacity(0.2)),
               ),
               child: Center(
                 child: Text(
@@ -605,7 +652,7 @@ class _ServicesPageState extends State<ServicesPage> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+                    color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
                   ),
                 ),
               ),
@@ -648,7 +695,41 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
+  Widget _tableSaveButton(VoidCallback onSave, String title) {
+    return Container(
+      height: 48,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ElevatedButton(
+          onPressed: _isLoading ? null : onSave,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.primaryColor,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          child: Text(
+            'Save $title',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _footerButtons() {
+    final totalSelected = selectedPackageIndices.length +
+        selectedServiceIndices.length +
+        selectedEngineeringIndices.length;
+
     return Container(
       height: 52,
       margin: const EdgeInsets.only(top: 12),
@@ -667,6 +748,18 @@ class _ServicesPageState extends State<ServicesPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          if (totalSelected > 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Text(
+                'Total Selected: $totalSelected',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ),
           OutlinedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -678,6 +771,18 @@ class _ServicesPageState extends State<ServicesPage> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
             ),
             child: const Text('Close'),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: totalSelected == 0 ? null : _applySelectedServices,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.grey.shade300,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            ),
+            child: const Text('Apply Selected'),
           ),
         ],
       ),

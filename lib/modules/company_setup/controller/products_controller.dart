@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/auth_repo/auth_repo.dart';
+import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/inventory_store/inventory_store.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -7,13 +8,13 @@ import 'package:flutter/material.dart';
 class ProductsController extends GetxController {
   final AuthRepository repository = AuthRepository();
   
-  // Observable list of products (contains both existing and new)
   final RxList<ProductModel> products = <ProductModel>[].obs;
-  
-  // Track existing product IDs to prevent duplicates
   final RxSet<String> existingProductIds = <String>{}.obs;
   
-  // Loading states
+  // Selection tracking
+  final RxSet<int> selectedProductIndices = <int>{}.obs;
+  final RxList<ProductModel> selectedProducts = <ProductModel>[].obs;
+  
   final RxBool isSaving = false.obs;
   final RxBool isLoading = false.obs;
 
@@ -23,7 +24,6 @@ class ProductsController extends GetxController {
     loadProducts();
   }
 
-  // Load existing products from API
   Future<void> loadProducts() async {
     isLoading.value = true;
 
@@ -33,7 +33,6 @@ class ProductsController extends GetxController {
       if (result['success'] == true) {
         final List<ProductModel> fetchedProducts = result['products'] ?? [];
         
-        // Clear and update existing product IDs
         existingProductIds.clear();
         for (var product in fetchedProducts) {
           if (product.id != null) {
@@ -41,21 +40,17 @@ class ProductsController extends GetxController {
           }
         }
         
-        // Clear and add existing products (these are locked/read-only)
         products.clear();
         products.addAll(fetchedProducts);
         
-        // Add one empty row for new entry
         addProduct();
         
       } else {
-        // If fetch fails, just add empty row
         products.clear();
         addProduct();
         showErrorAlert(result['message'] ?? 'Failed to load products');
       }
     } catch (e) {
-      // On error, ensure we have at least one empty row
       products.clear();
       addProduct();
       showErrorAlert('Failed to load products: $e');
@@ -64,29 +59,57 @@ class ProductsController extends GetxController {
     }
   }
 
-  // Add new empty product row
   void addProduct() {
     products.add(ProductModel());
   }
 
-  // Update product at index
   void updateProduct(int index, ProductModel product) {
     if (index >= 0 && index < products.length) {
       products[index] = product;
-      products.refresh(); // Force UI update
+      products.refresh();
     }
   }
 
-  // Check if product is existing (locked)
   bool isExistingProduct(int index) {
     if (index < 0 || index >= products.length) return false;
     final product = products[index];
     return product.id != null && existingProductIds.contains(product.id);
   }
 
-  // Save products (bulk or single based on data)
+  // Selection methods
+  bool isProductSelected(int index) {
+    return selectedProductIndices.contains(index);
+  }
+
+  void toggleProductSelection(int index) {
+    if (!isExistingProduct(index)) return;
+    
+    if (selectedProductIndices.contains(index)) {
+      selectedProductIndices.remove(index);
+      selectedProducts.removeWhere((p) => p.id == products[index].id);
+    } else {
+      selectedProductIndices.add(index);
+      selectedProducts.add(products[index]);
+    }
+    
+    selectedProductIndices.refresh();
+    selectedProducts.refresh();
+  }
+
+  void applySelectedProducts() {
+    try {
+      // Find the store (don't create new one)
+      final store = Get.find<InventoryProductsStore>();
+      store.setSelectedProducts(selectedProducts);
+      
+      print('✅ Applied ${selectedProducts.length} products to inventory');
+    } catch (e) {
+      print('❌ Error applying products: $e');
+      showErrorAlert('Failed to apply products. Please restart the app.');
+    }
+  }
+
   Future<void> saveProducts() async {
-    // Filter only NEW products (without ID or not in existingProductIds)
     final newProducts = products.where((p) => 
       (p.id == null || !existingProductIds.contains(p.id)) && p.hasData()
     ).toList();
@@ -96,7 +119,6 @@ class ProductsController extends GetxController {
       return;
     }
 
-    // Check for valid products
     final validProducts = newProducts.where((p) => p.isValid()).toList();
 
     if (validProducts.isEmpty) {
@@ -109,18 +131,14 @@ class ProductsController extends GetxController {
     try {
       Map<String, dynamic> result;
 
-      // If only one valid product, use single API
       if (validProducts.length == 1) {
         result = await repository.addProduct(validProducts.first);
       } else {
-        // Use bulk API for multiple products
         result = await repository.bulkAddProducts(validProducts);
       }
 
       if (result['success'] == true) {
         showSuccessAlert(result['message'] ?? 'Products saved successfully');
-        
-        // Refresh the entire list
         await loadProducts();
       } else {
         showErrorAlert(result['message'] ?? 'Failed to save products');
@@ -132,7 +150,6 @@ class ProductsController extends GetxController {
     }
   }
 
-  // Show success alert (top-right corner)
   void showSuccessAlert(String message) {
     Get.rawSnackbar(
       messageText: Row(
@@ -151,7 +168,7 @@ class ProductsController extends GetxController {
           ),
         ],
       ),
-      backgroundColor: Color(0xff10B981), // Success green
+      backgroundColor: Color(0xff10B981),
       borderRadius: 8,
       margin: EdgeInsets.only(top: 16, right: 16),
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -169,7 +186,6 @@ class ProductsController extends GetxController {
     );
   }
 
-  // Show error alert (top-right corner)
   void showErrorAlert(String message) {
     Get.rawSnackbar(
       messageText: Row(
@@ -188,7 +204,7 @@ class ProductsController extends GetxController {
           ),
         ],
       ),
-      backgroundColor: Color(0xffEF4444), // Error red
+      backgroundColor: Color(0xffEF4444),
       borderRadius: 8,
       margin: EdgeInsets.only(top: 16, right: 16),
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -206,7 +222,6 @@ class ProductsController extends GetxController {
     );
   }
 
-  // Upload Excel file
   Future<void> uploadExcel(String filePath) async {
     isLoading.value = true;
 
@@ -215,11 +230,8 @@ class ProductsController extends GetxController {
       
       if (result['success'] == true) {
         showSuccessAlert(result['message'] ?? 'Excel uploaded successfully');
-        
-        // Refresh the entire list
         await loadProducts();
 
-        // Show errors if any
         if (result['errors'] != null && result['errors'].isNotEmpty) {
           Get.defaultDialog(
             title: 'Import Errors',
@@ -242,6 +254,8 @@ class ProductsController extends GetxController {
   void onClose() {
     products.clear();
     existingProductIds.clear();
+    selectedProductIndices.clear();
+    selectedProducts.clear();
     super.onClose();
   }
 }

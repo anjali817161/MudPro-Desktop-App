@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/UG/model/producst_model.dart';
-import 'package:mudpro_desktop_app/modules/company_setup/controller/service_controller.dart';
+import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/inventory_store/inventory_store.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
 class InventoryServicesView extends StatefulWidget {
@@ -12,8 +12,6 @@ class InventoryServicesView extends StatefulWidget {
 }
 
 class _InventoryServicesViewState extends State<InventoryServicesView> {
-  final ServiceController controller = ServiceController();
-
   final RxList<PackageModel> packages = <PackageModel>[].obs;
   final RxList<EngineeringModel> engineering = <EngineeringModel>[].obs;
   final RxList<ServiceModel> services = <ServiceModel>[].obs;
@@ -23,13 +21,29 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
   @override
   void initState() {
     super.initState();
-    fetchData();
+    loadSelectedData();
   }
 
-  Future<void> fetchData() async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Auto refresh when page is entered - using addPostFrameCallback for instant update
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      loadSelectedData();
+    });
+  }
+
+  void loadSelectedData() {
     try {
-      final fetchedPackages = await controller.getPackages();
-      packages.value = fetchedPackages.map((item) => PackageModel(
+      final store = Get.find<InventoryServicesStore>();
+
+      // Clear first to ensure fresh data
+      packages.clear();
+      engineering.clear();
+      services.clear();
+
+      // Load selected packages with instant update
+      final loadedPackages = store.selectedPackages.map((item) => PackageModel(
         item.id ?? '',
         item.name,
         item.code,
@@ -38,9 +52,10 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
         '', // initial
         false, // tax
       )).toList();
+      packages.addAll(loadedPackages);
 
-      final fetchedEngineering = await controller.getEngineering();
-      engineering.value = fetchedEngineering.map((item) => EngineeringModel(
+      // Load selected engineering with instant update
+      final loadedEngineering = store.selectedEngineering.map((item) => EngineeringModel(
         item.id ?? '',
         item.name,
         item.code,
@@ -48,9 +63,10 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
         item.price.toString(),
         false, // tax
       )).toList();
+      engineering.addAll(loadedEngineering);
 
-      final fetchedServices = await controller.getServices();
-      services.value = fetchedServices.map((item) => ServiceModel(
+      // Load selected services with instant update
+      final loadedServices = store.selectedServices.map((item) => ServiceModel(
         item.id ?? '',
         item.name,
         item.code,
@@ -58,14 +74,16 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
         item.price.toString(),
         false, // tax
       )).toList();
+      services.addAll(loadedServices);
+      
+      // Force UI update
+      packages.refresh();
+      engineering.refresh();
+      services.refresh();
+      
+      print('✅ Loaded - Packages: ${packages.length}, Services: ${services.length}, Engineering: ${engineering.length}');
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to fetch data: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      print('❌ Store not initialized or no data: $e');
     }
   }
 
@@ -76,15 +94,12 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           // ================= LEFT COLUMN =================
           Expanded(
             flex: 2,
             child: Column(
               children: [
-
                 // -------- PACKAGES --------
-               
                 const SizedBox(height: 4),
                 Expanded(
                   child: _packagesTable(),
@@ -93,7 +108,6 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
                 const SizedBox(height: 8),
 
                 // -------- ENGINEERING --------
-                
                 const SizedBox(height: 4),
                 Expanded(
                   child: _engineeringTable(),
@@ -109,7 +123,6 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
             flex: 2,
             child: Column(
               children: [
-               
                 const SizedBox(height: 4),
                 Expanded(
                   child: _servicesTable(),
@@ -337,86 +350,32 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
     ));
   }
 
-TableRow _headerRow(List<String> headers) {
-  return TableRow(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [AppTheme.primaryColor.withOpacity(0.1), AppTheme.primaryColor.withOpacity(0.05)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    ),
-    children: headers.map((h) {
-      return Container(
-        height: 24,
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Text(
-          h,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-      );
-    }).toList(),
-  );
-}
-
-
-
-TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList, List<Function(bool)?>? onCheckboxChangedList}) {
-  return TableRow(
-    decoration: BoxDecoration(
-      color: values.hashCode.isEven ? Colors.white : AppTheme.cardColor,
-    ),
-    children: List.generate(values.length, (i) {
-      if (values[i] is bool) {
-        return _checkboxCell(values[i], onChanged: onCheckboxChangedList?[i]);
-      }
-      return _editableCell(values[i].toString(), onChanged: onChangedList?[i]);
-    }),
-  );
-}
-
-
-
-
-  List<TableRow> _emptyRows(int columns, int count) {
-  return List.generate(
-    count,
-    (index) => TableRow(
+  TableRow _headerRow(List<String> headers) {
+    return TableRow(
       decoration: BoxDecoration(
-        color: index.isEven ? Colors.white : AppTheme.cardColor,
+        gradient: LinearGradient(
+          colors: [AppTheme.primaryColor.withOpacity(0.1), AppTheme.primaryColor.withOpacity(0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-      children: List.generate(
-        columns,
-        (colIndex) => Container(
-          height: 32,
-          decoration: BoxDecoration(
-            border: Border(
-              right: BorderSide(color: Colors.grey.shade200),
-              bottom: BorderSide(color: Colors.grey.shade200),
+      children: headers.map((h) {
+        return Container(
+          height: 28, // Reduced from 32
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text(
+            h,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
             ),
           ),
-          child: colIndex == 0 
-            ? Center(
-                child: Text(
-                  '${index + 1}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey.shade400,
-                  ),
-                ),
-              )
-            : null,
-        ),
-      ),
-    ),
-  );
-}
-
+        );
+      }).toList(),
+    );
+  }
 
   // ===================================================
   // ================= COMMON TABLE ====================
@@ -430,21 +389,21 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
   }) {
     final columnWidths = headers.length == 7
         ? const {
-            0: FixedColumnWidth(40),
+            0: FixedColumnWidth(35),
             1: FlexColumnWidth(2),
             2: FlexColumnWidth(1),
             3: FlexColumnWidth(1),
             4: FlexColumnWidth(1),
             5: FlexColumnWidth(1),
-            6: FixedColumnWidth(60),
+            6: FixedColumnWidth(55),
           }
         : const {
-            0: FixedColumnWidth(40),
+            0: FixedColumnWidth(35),
             1: FlexColumnWidth(2),
             2: FlexColumnWidth(1),
             3: FlexColumnWidth(1),
             4: FlexColumnWidth(1),
-            5: FixedColumnWidth(60),
+            5: FixedColumnWidth(55),
           };
 
     return SingleChildScrollView(
@@ -519,11 +478,11 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
 
   Widget _cell(String text, {bool bold = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), // Reduced padding
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 9, // Reduced font size
           fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
           color: AppTheme.textPrimary,
         ),
@@ -533,12 +492,12 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
 
   Widget _editableCell(String value, {Function(String)? onChanged}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1), // Reduced padding
       child: Obx(() => isLocked.value
           ? Text(
               value,
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 8.5, // Reduced font size
                 color: AppTheme.textPrimary,
               ),
             )
@@ -550,12 +509,12 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
                 initialValue: value,
                 onChanged: onChanged,
                 style: TextStyle(
-                  fontSize: 9,
+                  fontSize: 8.5, // Reduced font size
                   color: AppTheme.textPrimary,
                 ),
                 decoration: const InputDecoration(
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 1), // Reduced padding
                   border: InputBorder.none,
                 ),
               ),
@@ -565,48 +524,17 @@ TableRow _tableRow(List<dynamic> values, {List<Function(String)?>? onChangedList
 
   Widget _checkboxCell(bool value, {Function(bool)? onChanged}) {
     return Center(
-      child: Obx(() => Container(
-            decoration: BoxDecoration(
-              color: value ? AppTheme.successColor.withOpacity(0.1) : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: value ? AppTheme.successColor : Colors.grey.shade400,
-              ),
-            ),
-            margin: const EdgeInsets.all(2),
-            child: Checkbox(
-              value: value,
-              onChanged: isLocked.value ? null : (v) => onChanged?.call(v!),
-              activeColor: AppTheme.successColor,
-              checkColor: Colors.white,
-              visualDensity: VisualDensity.compact,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          )),
-    );
-  }
-
-  Widget _sectionHeader(String text) {
-    return Container(
-      height: 28,
-      width: double.infinity,
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withOpacity(0.08),
-        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: AppTheme.primaryColor,
+      child: Obx(() => Transform.scale(
+        scale: 0.75, // Reduced checkbox size
+        child: Checkbox(
+          value: value,
+          onChanged: isLocked.value ? null : (v) => onChanged?.call(v!),
+          activeColor: AppTheme.successColor,
+          checkColor: Colors.white,
+          visualDensity: VisualDensity.compact,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-      ),
+      )),
     );
   }
 }
