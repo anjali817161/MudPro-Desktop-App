@@ -1,14 +1,20 @@
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/auth_repo/auth_repo.dart';
+import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/inventory_store/inventory_store.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+// IMPORTANT: Import the centralized stores
 
-class ProductsController extends GetxController {
+class ProductsPickupController extends GetxController {
   final AuthRepository repository = AuthRepository();
   
   final RxList<ProductModel> products = <ProductModel>[].obs;
   final RxSet<String> existingProductIds = <String>{}.obs;
+  
+  // Selection tracking
+  final RxSet<int> selectedProductIndices = <int>{}.obs;
+  final RxList<ProductModel> selectedProducts = <ProductModel>[].obs;
   
   final RxBool isSaving = false.obs;
   final RxBool isLoading = false.obs;
@@ -71,73 +77,37 @@ class ProductsController extends GetxController {
     return product.id != null && existingProductIds.contains(product.id);
   }
 
-  // Update product API call
-  Future<void> updateProductData(String productId, ProductModel product) async {
-    isSaving.value = true;
-
-    try {
-      final result = await repository.updateProduct(productId, product);
-
-      if (result['success'] == true) {
-        showSuccessAlert(result['message'] ?? 'Product updated successfully');
-        await loadProducts();
-      } else {
-        showErrorAlert(result['message'] ?? 'Failed to update product');
-      }
-    } catch (e) {
-      showErrorAlert('Failed to update product: $e');
-    } finally {
-      isSaving.value = false;
-    }
+  // Selection methods
+  bool isProductSelected(int index) {
+    return selectedProductIndices.contains(index);
   }
 
-  // Delete product API call
-  Future<void> deleteProduct(String productId) async {
-    isSaving.value = true;
-
-    try {
-      final result = await repository.deleteProduct(productId);
-
-      if (result['success'] == true) {
-        showSuccessAlert(result['message'] ?? 'Product deleted successfully');
-        await loadProducts();
-      } else {
-        showErrorAlert(result['message'] ?? 'Failed to delete product');
-      }
-    } catch (e) {
-      showErrorAlert('Failed to delete product: $e');
-    } finally {
-      isSaving.value = false;
+  void toggleProductSelection(int index) {
+    if (!isExistingProduct(index)) return;
+    
+    if (selectedProductIndices.contains(index)) {
+      selectedProductIndices.remove(index);
+      selectedProducts.removeWhere((p) => p.id == products[index].id);
+    } else {
+      selectedProductIndices.add(index);
+      selectedProducts.add(products[index]);
     }
+    
+    selectedProductIndices.refresh();
+    selectedProducts.refresh();
   }
 
-  // Show delete confirmation dialog
-  void showDeleteConfirmation(BuildContext context, String productId, String productName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Delete'),
-          content: Text('Are you sure you want to delete "$productName"?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                deleteProduct(productId);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
+  void applySelectedProducts() {
+    try {
+      // Find the store (don't create new one)
+      final store = Get.find<InventoryProductsStore>();
+      store.setSelectedProducts(selectedProducts);
+      
+      print('✅ Applied ${selectedProducts.length} products to inventory');
+    } catch (e) {
+      print('❌ Error applying products: $e');
+      showErrorAlert('Failed to apply products. Please restart the app.');
+    }
   }
 
   Future<void> saveProducts() async {
@@ -285,6 +255,8 @@ class ProductsController extends GetxController {
   void onClose() {
     products.clear();
     existingProductIds.clear();
+    selectedProductIndices.clear();
+    selectedProducts.clear();
     super.onClose();
   }
 }

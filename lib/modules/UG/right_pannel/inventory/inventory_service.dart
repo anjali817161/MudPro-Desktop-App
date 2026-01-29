@@ -12,16 +12,13 @@ class InventoryServicesView extends StatefulWidget {
 }
 
 class _InventoryServicesViewState extends State<InventoryServicesView> {
-  final RxList<PackageModel> packages = <PackageModel>[].obs;
-  final RxList<EngineeringModel> engineering = <EngineeringModel>[].obs;
-  final RxList<ServiceModel> services = <ServiceModel>[].obs;
-
   final isLocked = true.obs;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    loadSelectedData();
+    _refreshData();
   }
 
   @override
@@ -29,66 +26,33 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
     super.didChangeDependencies();
     // Auto refresh when page is entered - using addPostFrameCallback for instant update
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      loadSelectedData();
+      _refreshData();
     });
   }
 
-  void loadSelectedData() {
+  void _refreshData() {
     try {
       final store = Get.find<InventoryServicesStore>();
-
-      // Clear first to ensure fresh data
-      packages.clear();
-      engineering.clear();
-      services.clear();
-
-      // Load selected packages with instant update
-      final loadedPackages = store.selectedPackages.map((item) => PackageModel(
-        item.id ?? '',
-        item.name,
-        item.code,
-        item.unit,
-        item.price.toString(),
-        '', // initial
-        false, // tax
-      )).toList();
-      packages.addAll(loadedPackages);
-
-      // Load selected engineering with instant update
-      final loadedEngineering = store.selectedEngineering.map((item) => EngineeringModel(
-        item.id ?? '',
-        item.name,
-        item.code,
-        item.unit,
-        item.price.toString(),
-        false, // tax
-      )).toList();
-      engineering.addAll(loadedEngineering);
-
-      // Load selected services with instant update
-      final loadedServices = store.selectedServices.map((item) => ServiceModel(
-        item.id ?? '',
-        item.name,
-        item.code,
-        item.unit,
-        item.price.toString(),
-        false, // tax
-      )).toList();
-      services.addAll(loadedServices);
-      
-      // Force UI update
-      packages.refresh();
-      engineering.refresh();
-      services.refresh();
-      
-      print('✅ Loaded - Packages: ${packages.length}, Services: ${services.length}, Engineering: ${engineering.length}');
+      // Refresh the observable lists to trigger UI update
+      store.selectedPackages.refresh();
+      store.selectedServices.refresh();
+      store.selectedEngineering.refresh();
+      print('✅ Data refreshed on page enter');
     } catch (e) {
-      print('❌ Store not initialized or no data: $e');
+      print('❌ Error refreshing data: $e');
     }
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final store = Get.find<InventoryServicesStore>();
+
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Row(
@@ -102,7 +66,7 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
                 // -------- PACKAGES --------
                 const SizedBox(height: 4),
                 Expanded(
-                  child: _packagesTable(),
+                  child: _packagesTable(store),
                 ),
 
                 const SizedBox(height: 8),
@@ -110,7 +74,7 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
                 // -------- ENGINEERING --------
                 const SizedBox(height: 4),
                 Expanded(
-                  child: _engineeringTable(),
+                  child: _engineeringTable(store),
                 ),
               ],
             ),
@@ -125,7 +89,7 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
               children: [
                 const SizedBox(height: 4),
                 Expanded(
-                  child: _servicesTable(),
+                  child: _servicesTable(store),
                 ),
               ],
             ),
@@ -139,7 +103,7 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
   // ================= TABLES ==========================
   // ===================================================
 
-  Widget _packagesTable() {
+  Widget _packagesTable(InventoryServicesStore store) {
     return Obx(() => Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -178,7 +142,7 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '${packages.length} items',
+                    '${store.selectedPackages.length} items',
                     style: const TextStyle(
                       fontSize: 10,
                       color: Colors.white,
@@ -192,16 +156,15 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
           Expanded(
             child: _table(
               headers: ['No', 'Package', 'Code', 'Unit', 'Price (\$)', 'Initial', 'Tax'],
-              rows: packages.asMap().entries.map((entry) => [
+              rows: store.selectedPackages.asMap().entries.map((entry) => [
                 (entry.key + 1).toString(),
-                entry.value.package,
+                entry.value.name,
                 entry.value.code,
                 entry.value.unit,
-                entry.value.price,
-                entry.value.initial,
-                entry.value.tax,
+                entry.value.price.toString(),
+                '', // initial
+                false, // tax
               ]).toList(),
-              models: packages,
               checkboxCols: [6],
             ),
           ),
@@ -210,7 +173,7 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
     ));
   }
 
-  Widget _engineeringTable() {
+  Widget _engineeringTable(InventoryServicesStore store) {
     return Obx(() => Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -249,7 +212,7 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '${engineering.length} items',
+                    '${store.selectedEngineering.length} items',
                     style: const TextStyle(
                       fontSize: 10,
                       color: Colors.white,
@@ -263,15 +226,14 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
           Expanded(
             child: _table(
               headers: ['No', 'Engineering', 'Code', 'Unit', 'Price (\$)', 'Tax'],
-              rows: engineering.asMap().entries.map((entry) => [
+              rows: store.selectedEngineering.asMap().entries.map((entry) => [
                 (entry.key + 1).toString(),
                 entry.value.name,
                 entry.value.code,
                 entry.value.unit,
-                entry.value.price,
-                entry.value.tax,
+                entry.value.price.toString(),
+                false, // tax
               ]).toList(),
-              models: engineering,
               checkboxCols: [5],
             ),
           ),
@@ -280,7 +242,7 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
     ));
   }
 
-  Widget _servicesTable() {
+  Widget _servicesTable(InventoryServicesStore store) {
     return Obx(() => Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -319,7 +281,7 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '${services.length} items',
+                    '${store.selectedServices.length} items',
                     style: const TextStyle(
                       fontSize: 10,
                       color: Colors.white,
@@ -333,15 +295,14 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
           Expanded(
             child: _table(
               headers: ['No', 'Services', 'Code', 'Unit', 'Price (\$)', 'Tax'],
-              rows: services.asMap().entries.map((entry) => [
+              rows: store.selectedServices.asMap().entries.map((entry) => [
                 (entry.key + 1).toString(),
-                entry.value.service,
+                entry.value.name,
                 entry.value.code,
                 entry.value.unit,
-                entry.value.price,
-                entry.value.tax,
+                entry.value.price.toString(),
+                false, // tax
               ]).toList(),
-              models: services,
               checkboxCols: [5],
             ),
           ),
@@ -384,7 +345,6 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
   Widget _table({
     required List<String> headers,
     required List<List<dynamic>> rows,
-    required List<dynamic> models,
     List<int> checkboxCols = const [],
   }) {
     final columnWidths = headers.length == 7
@@ -406,68 +366,40 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
             5: FixedColumnWidth(55),
           };
 
-    return SingleChildScrollView(
-      child: Table(
-        border: TableBorder.all(
-          color: Colors.grey.shade200,
-          width: 1,
-        ),
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        columnWidths: columnWidths,
-        children: [
-          // HEADER
-          _headerRow(headers),
+    return Scrollbar(
+      thumbVisibility: true,
+      controller: _scrollController,
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        child: Table(
+          border: TableBorder.all(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          columnWidths: columnWidths,
+          children: [
+            // HEADER
+            _headerRow(headers),
 
-          // ROWS
-          ...rows.asMap().entries.map((entry) {
-            final rowIndex = entry.key;
-            final row = entry.value;
-            final model = models[rowIndex];
-            return TableRow(
-              decoration: BoxDecoration(
-                color: rowIndex.isEven ? Colors.white : AppTheme.cardColor,
-              ),
-              children: List.generate(row.length, (i) {
-                if (checkboxCols.contains(i)) {
-                  return _checkboxCell(row[i], onChanged: (v) {
-                    if (model is EngineeringModel) {
-                      model.tax = v;
-                      engineering.refresh();
-                    } else if (model is ServiceModel) {
-                      model.tax = v;
-                      services.refresh();
-                    } else if (model is PackageModel) {
-                      model.tax = v;
-                      packages.refresh();
-                    }
-                  });
-                }
-                return _editableCell(row[i].toString(), onChanged: (v) {
-                  if (model is EngineeringModel) {
-                    if (i == 1) model.name = v;
-                    if (i == 2) model.code = v;
-                    if (i == 3) model.unit = v;
-                    if (i == 4) model.price = v;
-                    engineering.refresh();
-                  } else if (model is ServiceModel) {
-                    if (i == 1) model.service = v;
-                    if (i == 2) model.code = v;
-                    if (i == 3) model.unit = v;
-                    if (i == 4) model.price = v;
-                    services.refresh();
-                  } else if (model is PackageModel) {
-                    if (i == 1) model.package = v;
-                    if (i == 2) model.code = v;
-                    if (i == 3) model.unit = v;
-                    if (i == 4) model.price = v;
-                    if (i == 5) model.initial = v;
-                    packages.refresh();
+            // ROWS
+            ...rows.asMap().entries.map((entry) {
+              final rowIndex = entry.key;
+              final row = entry.value;
+              return TableRow(
+                decoration: BoxDecoration(
+                  color: rowIndex.isEven ? Colors.white : AppTheme.cardColor,
+                ),
+                children: List.generate(row.length, (i) {
+                  if (checkboxCols.contains(i)) {
+                    return _checkboxCell(row[i]);
                   }
-                });
-              }),
-            );
-          }),
-        ],
+                  return _editableCell(row[i].toString());
+                }),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
@@ -538,3 +470,4 @@ class _InventoryServicesViewState extends State<InventoryServicesView> {
     );
   }
 }
+

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/UG/controller/UG_controller.dart';
+import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/pickup_tabs/products_pickup_tab.dart';
+import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/pickup_tabs/services_pickup_tab.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/tabs/products_page.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/tabs/service_page.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
@@ -48,8 +50,8 @@ class _InventoryPickupTabsState extends State<InventoryPickupTabs> {
               color: Colors.grey.shade50,
               child: Obx(() {
                 return c.inventoryTab.value == 'Products'
-                    ? ProductsPage()
-                    : ServicesPage();
+                    ? ProductsPickupPage()
+                    : ServicesPickupPage();
               }),
             ),
           ),

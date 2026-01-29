@@ -118,6 +118,58 @@ class EngineerController extends GetxController {
     isSaving.value = false;
   }
 
+  // Update engineer
+  Future<void> updateEngineer(String engineerId, Engineer engineer) async {
+    isSaving.value = true;
+
+    final result = await _repository.updateEngineer(engineerId, engineer);
+
+    if (result['success'] == true) {
+      alertMessage.value = result['message'] ?? 'Engineer updated successfully';
+      
+      // Clear alert after 3 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        alertMessage.value = '';
+      });
+      
+      // Refresh the list
+      await fetchEngineers();
+    } else {
+      errorMessage.value = result['message'] ?? 'Failed to update engineer';
+      Future.delayed(const Duration(seconds: 3), () {
+        errorMessage.value = '';
+      });
+    }
+
+    isSaving.value = false;
+  }
+
+  // Delete engineer
+  Future<void> deleteEngineer(String engineerId) async {
+    isSaving.value = true;
+
+    final result = await _repository.deleteEngineer(engineerId);
+
+    if (result['success'] == true) {
+      alertMessage.value = result['message'] ?? 'Engineer deleted successfully';
+      
+      // Clear alert after 3 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        alertMessage.value = '';
+      });
+      
+      // Refresh the list
+      await fetchEngineers();
+    } else {
+      errorMessage.value = result['message'] ?? 'Failed to delete engineer';
+      Future.delayed(const Duration(seconds: 3), () {
+        errorMessage.value = '';
+      });
+    }
+
+    isSaving.value = false;
+  }
+
   // Save all rows
   Future<void> saveAllRows() async {
     isSaving.value = true;
@@ -199,6 +251,35 @@ class EngineerController extends GetxController {
         rowControllers.add(EngineerRowControllers());
       }
     }
+  }
+
+  // Show delete confirmation dialog
+  void showDeleteConfirmation(BuildContext context, String engineerId, String engineerName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Delete'),
+          content: Text('Are you sure you want to delete $engineerName?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                deleteEngineer(engineerId);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

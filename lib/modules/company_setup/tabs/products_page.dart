@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/controller/products_controller.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
 class ProductsPage extends StatelessWidget {
@@ -49,14 +50,6 @@ class ProductsPage extends StatelessWidget {
                     style: AppTheme.bodyLarge.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(width: 20),
-                  Text(
-                    'Selected: ${controller.selectedProducts.length}',
-                    style: AppTheme.bodyLarge.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -122,35 +115,6 @@ class ProductsPage extends StatelessWidget {
                   ),
                   SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: controller.selectedProducts.isEmpty
-                        ? null
-                        : () {
-                            controller.applySelectedProducts();
-                            Get.back();
-                            Get.snackbar(
-                              'Success',
-                              '${controller.selectedProducts.length} products applied to inventory',
-                              snackPosition: SnackPosition.TOP,
-                              backgroundColor: Color(0xff10B981),
-                              colorText: Colors.white,
-                              duration: Duration(seconds: 2),
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.grey.shade300,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      child: Text('Apply Selected'),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  ElevatedButton(
                     onPressed: controller.isSaving.value
                         ? null
                         : () => controller.saveProducts(),
@@ -179,7 +143,7 @@ class ProductsPage extends StatelessWidget {
   }
 
   Widget _buildTable(ProductsController controller, BoxConstraints constraints) {
-    final double minWidth = 950;
+    final double minWidth = 1050;
     final double tableWidth = constraints.maxWidth > minWidth
         ? constraints.maxWidth - 40
         : minWidth;
@@ -212,11 +176,11 @@ class ProductsPage extends StatelessWidget {
       child: Row(
         children: [
           _headerCell('No', tableWidth * 0.05),
-          _headerCell('Product*', tableWidth * 0.18),
-          _headerCell('Code*', tableWidth * 0.12),
-          _headerCell('SG*', tableWidth * 0.08),
+          _headerCell('Product*', tableWidth * 0.16),
+          _headerCell('Code*', tableWidth * 0.11),
+          _headerCell('SG*', tableWidth * 0.07),
           Container(
-            width: tableWidth * 0.15,
+            width: tableWidth * 0.14,
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(color: Colors.white.withOpacity(0.2), width: 1),
@@ -285,10 +249,11 @@ class ProductsPage extends StatelessWidget {
               ],
             ),
           ),
-          _headerCell('Group*', tableWidth * 0.12),
-          _headerCell('Retail', tableWidth * 0.10),
-          _headerCell('Sales price', tableWidth * 0.10),
-          _headerCell('COGS', tableWidth * 0.10),
+          _headerCell('Group*', tableWidth * 0.11),
+          _headerCell('Retail', tableWidth * 0.09),
+          _headerCell('Sales price', tableWidth * 0.09),
+          _headerCell('COGS', tableWidth * 0.09),
+          _headerCell('Actions', tableWidth * 0.09),
         ],
       ),
     );
@@ -317,147 +282,141 @@ class ProductsPage extends StatelessWidget {
   Widget _buildTableRow(ProductsController controller, int index, double tableWidth) {
     final product = controller.products[index];
     final isLocked = controller.isExistingProduct(index);
-    final isSelected = controller.isProductSelected(index);
 
-    return InkWell(
-      onTap: isLocked ? () => controller.toggleProductSelection(index) : null,
-      child: Container(
-        height: 34,
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.primaryColor.withOpacity(0.2)
-              : (isLocked
-                  ? Color(0xffF3F4F6)
-                  : (index % 2 == 0 ? Color(0xffF9FAFB) : Colors.white)),
-          border: Border(
-            bottom: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
-          ),
+    return Container(
+      height: 34,
+      decoration: BoxDecoration(
+        color: isLocked
+            ? Color(0xffF3F4F6)
+            : (index % 2 == 0 ? Color(0xffF9FAFB) : Colors.white),
+        border: Border(
+          bottom: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
         ),
-        child: Row(
-          children: [
-            // No Column with selection indicator
-            Container(
-              width: tableWidth * 0.05,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
-                ),
+      ),
+      child: Row(
+        children: [
+          // No Column
+          Container(
+            width: tableWidth * 0.05,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (isLocked)
-                    Padding(
-                      padding: EdgeInsets.only(right: 4),
-                      child: Icon(
-                        isSelected ? Icons.check_circle : Icons.lock,
-                        size: 12,
-                        color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
-                      ),
-                    ),
-                  Text(
-                    '${index + 1}',
-                    style: AppTheme.bodyLarge.copyWith(
-                      fontSize: 12,
-                      color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isLocked)
+                  Padding(
+                    padding: EdgeInsets.only(right: 4),
+                    child: Icon(
+                      Icons.lock,
+                      size: 12,
+                      color: AppTheme.textSecondary,
                     ),
                   ),
-                ],
-              ),
-            ),
-            _buildCell(
-              controller,
-              tableWidth * 0.18,
-              product.product,
-              (val) => _updateField(controller, index, 'product', val),
-              isLocked: isLocked,
-            ),
-            _buildCell(
-              controller,
-              tableWidth * 0.12,
-              product.code,
-              (val) => _updateField(controller, index, 'code', val),
-              isLocked: isLocked,
-            ),
-            _buildCell(
-              controller,
-              tableWidth * 0.08,
-              product.sg,
-              (val) => _updateField(controller, index, 'sg', val),
-              isNumeric: true,
-              isLocked: isLocked,
-            ),
-            Container(
-              width: tableWidth * 0.15,
-              decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
-                  right: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
+                Text(
+                  '${index + 1}',
+                  style: AppTheme.bodyLarge.copyWith(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
+              ],
+            ),
+          ),
+          _buildCell(
+            controller,
+            tableWidth * 0.16,
+            product.product,
+            (val) => _updateField(controller, index, 'product', val),
+            isLocked: isLocked,
+          ),
+          _buildCell(
+            controller,
+            tableWidth * 0.11,
+            product.code,
+            (val) => _updateField(controller, index, 'code', val),
+            isLocked: isLocked,
+          ),
+          _buildCell(
+            controller,
+            tableWidth * 0.07,
+            product.sg,
+            (val) => _updateField(controller, index, 'sg', val),
+            isNumeric: true,
+            isLocked: isLocked,
+          ),
+          Container(
+            width: tableWidth * 0.14,
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
+                right: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          right: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
-                        ),
-                      ),
-                      child: _buildCellContent(
-                        controller,
-                        product.unitNum,
-                        (val) => _updateField(controller, index, 'unitNum', val),
-                        isNumeric: true,
-                        isLocked: isLocked,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
                       ),
                     ),
-                  ),
-                  Expanded(
                     child: _buildCellContent(
                       controller,
-                      product.unitClass,
-                      (val) => _updateField(controller, index, 'unitClass', val),
+                      product.unitNum,
+                      (val) => _updateField(controller, index, 'unitNum', val),
+                      isNumeric: true,
                       isLocked: isLocked,
                     ),
                   ),
-                ],
-              ),
+                ),
+                Expanded(
+                  child: _buildCellContent(
+                    controller,
+                    product.unitClass,
+                    (val) => _updateField(controller, index, 'unitClass', val),
+                    isLocked: isLocked,
+                  ),
+                ),
+              ],
             ),
-            _buildCell(
-              controller,
-              tableWidth * 0.12,
-              product.group,
-              (val) => _updateField(controller, index, 'group', val),
-              isLocked: isLocked,
-            ),
-            _buildCell(
-              controller,
-              tableWidth * 0.10,
-              product.retail,
-              (val) => _updateField(controller, index, 'retail', val),
-              isLocked: isLocked,
-            ),
-            _buildCell(
-              controller,
-              tableWidth * 0.10,
-              product.a,
-              (val) => _updateField(controller, index, 'sales price', val),
-              isNumeric: true,
-              isLocked: isLocked,
-            ),
-            _buildCell(
-              controller,
-              tableWidth * 0.10,
-              product.b,
-              (val) => _updateField(controller, index, 'COGS', val),
-              isNumeric: true,
-              isLocked: isLocked,
-            ),
-          ],
-        ),
+          ),
+          _buildCell(
+            controller,
+            tableWidth * 0.11,
+            product.group,
+            (val) => _updateField(controller, index, 'group', val),
+            isLocked: isLocked,
+          ),
+          _buildCell(
+            controller,
+            tableWidth * 0.09,
+            product.retail,
+            (val) => _updateField(controller, index, 'retail', val),
+            isLocked: isLocked,
+          ),
+          _buildCell(
+            controller,
+            tableWidth * 0.09,
+            product.a,
+            (val) => _updateField(controller, index, 'sales price', val),
+            isNumeric: true,
+            isLocked: isLocked,
+          ),
+          _buildCell(
+            controller,
+            tableWidth * 0.09,
+            product.b,
+            (val) => _updateField(controller, index, 'COGS', val),
+            isNumeric: true,
+            isLocked: isLocked,
+          ),
+          _buildActionsCell(controller, tableWidth * 0.09, product, index, isLocked),
+        ],
       ),
     );
   }
@@ -521,6 +480,223 @@ class ProductsPage extends StatelessWidget {
         isDense: true,
       ),
       onChanged: onChanged,
+    );
+  }
+
+  Widget _buildActionsCell(
+    ProductsController controller,
+    double width,
+    ProductModel product,
+    int index,
+    bool isLocked,
+  ) {
+    if (!isLocked) {
+      return Container(
+        width: width,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
+          ),
+        ),
+        child: Text(
+          '-',
+          style: TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondary.withOpacity(0.3),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: width,
+      padding: EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(color: Color(0xffE5E7EB), width: 0.5),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Update Button
+          IconButton(
+            onPressed: () => _showUpdateDialog(controller, product),
+            icon: Icon(Icons.edit, size: 16),
+            color: Colors.blue,
+            padding: EdgeInsets.zero,
+            constraints: BoxConstraints(minWidth: 28, minHeight: 28),
+            tooltip: 'Update',
+          ),
+          SizedBox(width: 4),
+          // Delete Button
+          IconButton(
+            onPressed: () {
+              controller.showDeleteConfirmation(
+                Get.context!,
+                product.id!,
+                product.product,
+              );
+            },
+            icon: Icon(Icons.delete, size: 16),
+            color: Colors.red,
+            padding: EdgeInsets.zero,
+            constraints: BoxConstraints(minWidth: 28, minHeight: 28),
+            tooltip: 'Delete',
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUpdateDialog(ProductsController controller, ProductModel product) {
+    final productController = TextEditingController(text: product.product);
+    final codeController = TextEditingController(text: product.code);
+    final sgController = TextEditingController(text: product.sg);
+    final unitNumController = TextEditingController(text: product.unitNum);
+    final unitClassController = TextEditingController(text: product.unitClass);
+    final groupController = TextEditingController(text: product.group);
+    final retailController = TextEditingController(text: product.retail);
+    final aController = TextEditingController(text: product.a);
+    final bController = TextEditingController(text: product.b);
+
+    showDialog(
+      context: Get.context!,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Update Product', style: TextStyle(fontSize: 16)),
+          content: SizedBox(
+            width: 500,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _dialogTextField('Product*', productController, Icons.inventory),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: _dialogTextField('Code*', codeController, Icons.qr_code),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _dialogTextField('SG*', sgController, Icons.straighten, isNumeric: true),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: _dialogTextField('Unit Num*', unitNumController, Icons.format_list_numbered, isNumeric: true),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _dialogTextField('Unit Class*', unitClassController, Icons.category),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: _dialogTextField('Group*', groupController, Icons.group_work),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _dialogTextField('Retail', retailController, Icons.store),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: _dialogTextField('Sales Price', aController, Icons.attach_money, isNumeric: true),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  _dialogTextField('COGS', bController, Icons.monetization_on, isNumeric: true),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                productController.dispose();
+                codeController.dispose();
+                sgController.dispose();
+                unitNumController.dispose();
+                unitClassController.dispose();
+                groupController.dispose();
+                retailController.dispose();
+                aController.dispose();
+                bController.dispose();
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final updatedProduct = ProductModel(
+                  id: product.id,
+                  product: productController.text.trim(),
+                  code: codeController.text.trim(),
+                  sg: sgController.text.trim(),
+                  unitNum: unitNumController.text.trim(),
+                  unitClass: unitClassController.text.trim(),
+                  group: groupController.text.trim(),
+                  retail: retailController.text.trim(),
+                  a: aController.text.trim(),
+                  b: bController.text.trim(),
+                );
+
+                controller.updateProductData(product.id!, updatedProduct);
+
+                productController.dispose();
+                codeController.dispose();
+                sgController.dispose();
+                unitNumController.dispose();
+                unitClassController.dispose();
+                groupController.dispose();
+                retailController.dispose();
+                aController.dispose();
+                bController.dispose();
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+              ),
+              child: Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _dialogTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon, {
+    bool isNumeric = false,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 18),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      ),
     );
   }
 

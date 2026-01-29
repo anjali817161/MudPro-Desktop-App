@@ -25,9 +25,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-
-        print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
         
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -48,8 +45,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
 
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -78,9 +73,6 @@ class OthersController {
         headers: _headers,
       );
 
-        print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final List items = data['data'] ?? [];
@@ -90,6 +82,63 @@ class OthersController {
       }
     } catch (e) {
       throw Exception('Error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateActivity(String id, ActivityItem activity) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl${ApiEndpoint.updateActivity}/$id'),
+        headers: _headers,
+        body: jsonEncode(activity.toJson()),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Activity updated successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to update activity',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteActivity(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl${ApiEndpoint.deleteActivity}/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Activity deleted successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to delete activity',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
     }
   }
 
@@ -105,9 +154,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
         
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -128,9 +174,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
         
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -159,10 +202,7 @@ class OthersController {
         headers: _headers,
       );
 
-        print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
-
-      if (response.statusCode == 200 || response.statusCode == 201  ) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final List items = data['data'] ?? [];
         return items.map((e) => AdditionItem.fromJson(e)).toList();
@@ -171,6 +211,63 @@ class OthersController {
       }
     } catch (e) {
       throw Exception('Error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateAddition(String id, AdditionItem addition) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl${ApiEndpoint.updateAddition}/$id'),
+        headers: _headers,
+        body: jsonEncode(addition.toJson()),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Addition updated successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to update addition',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteAddition(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl${ApiEndpoint.deleteAddition}/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Addition deleted successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to delete addition',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
     }
   }
 
@@ -186,9 +283,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
         
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -209,9 +303,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
 
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -240,9 +331,6 @@ class OthersController {
         headers: _headers,
       );
 
-  print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final List items = data['data'] ?? [];
@@ -252,6 +340,63 @@ class OthersController {
       }
     } catch (e) {
       throw Exception('Error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateLoss(String id, LossItem loss) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl${ApiEndpoint.updateLoss}/$id'),
+        headers: _headers,
+        body: jsonEncode(loss.toJson()),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Loss updated successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to update loss',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteLoss(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl${ApiEndpoint.deleteLoss}/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Loss deleted successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to delete loss',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
     }
   }
 
@@ -267,9 +412,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
 
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -290,9 +432,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
 
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -321,9 +460,6 @@ class OthersController {
         headers: _headers,
       );
 
-  print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final List items = data['data'] ?? [];
@@ -333,6 +469,63 @@ class OthersController {
       }
     } catch (e) {
       throw Exception('Error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateWaterBased(String id, WaterBasedItem waterBased) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl${ApiEndpoint.updateWaterBased}/$id'),
+        headers: _headers,
+        body: jsonEncode(waterBased.toJson()),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Water-based updated successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to update water-based',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteWaterBased(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl${ApiEndpoint.deleteWaterBased}/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Water-based deleted successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to delete water-based',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
     }
   }
 
@@ -348,9 +541,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
         
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -371,8 +561,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
 
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -400,8 +588,6 @@ class OthersController {
         Uri.parse('$baseUrl${ApiEndpoint.getOilBased}'),
         headers: _headers,
       );
-        print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -412,6 +598,63 @@ class OthersController {
       }
     } catch (e) {
       throw Exception('Error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateOilBased(String id, OilBasedItem oilBased) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl${ApiEndpoint.updateOilBased}/$id'),
+        headers: _headers,
+        body: jsonEncode(oilBased.toJson()),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Oil-based updated successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to update oil-based',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteOilBased(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl${ApiEndpoint.deleteOilBased}/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Oil-based deleted successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to delete oil-based',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
     }
   }
 
@@ -427,9 +670,7 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
-
+        
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
             'success': true,
@@ -449,8 +690,6 @@ class OthersController {
         );
 
         final responseData = jsonDecode(response.body);
-          print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
         
         if (response.statusCode == 201 || response.statusCode == 200) {
           return {
@@ -479,9 +718,6 @@ class OthersController {
         headers: _headers,
       );
 
-        print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final List items = data['data'] ?? [];
@@ -491,6 +727,63 @@ class OthersController {
       }
     } catch (e) {
       throw Exception('Error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateSynthetic(String id, SyntheticItem synthetic) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl${ApiEndpoint.updateSynthetic}/$id'),
+        headers: _headers,
+        body: jsonEncode(synthetic.toJson()),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Synthetic updated successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to update synthetic',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteSynthetic(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl${ApiEndpoint.deleteSynthetic}/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Synthetic deleted successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to delete synthetic',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
     }
   }
 }

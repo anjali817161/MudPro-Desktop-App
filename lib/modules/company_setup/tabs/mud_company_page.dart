@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/controller/company_controller.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/controller/engineers_controller.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/model/engineers_model.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
 class MudCompanyPage extends StatefulWidget {
@@ -339,108 +340,105 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
     );
   }
 
-  // Only the _logoUploadSection() widget - replace in your MudCompanyPage
+  Widget _logoUploadSection() {
+    return Obx(() {
+      final logoUrl = companyController.logoUrl.value;
+      final hasLogo = logoUrl.isNotEmpty;
 
-Widget _logoUploadSection() {
-  return Obx(() {
-    final logoUrl = companyController.logoUrl.value;
-    final hasLogo = logoUrl.isNotEmpty;
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        children: [
-          // Preview
-          Container(
-            height: 100,
-            decoration: BoxDecoration(
-              color: AppTheme.cardColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            ),
-            child: Center(
-              child: !hasLogo
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.image_outlined,
-                            size: 36,
-                            color: AppTheme.textSecondary.withOpacity(0.4)),
-                        const SizedBox(height: 6),
-                        const Text(
-                          "No Logo Selected",
-                          style: TextStyle(fontSize: 11),
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Column(
+          children: [
+            // Preview
+            Container(
+              height: 100,
+              decoration: BoxDecoration(
+                color: AppTheme.cardColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+              ),
+              child: Center(
+                child: !hasLogo
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.image_outlined,
+                              size: 36,
+                              color: AppTheme.textSecondary.withOpacity(0.4)),
+                          const SizedBox(height: 6),
+                          const Text(
+                            "No Logo Selected",
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ],
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.network(
+                          logoUrl,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.broken_image,
+                                    size: 36,
+                                    color: AppTheme.textSecondary.withOpacity(0.4)),
+                                const SizedBox(height: 6),
+                                const Text(
+                                  "Failed to load",
+                                  style: TextStyle(fontSize: 11),
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                      ],
-                    )
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.network(
-                        logoUrl,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.broken_image,
-                                  size: 36,
-                                  color: AppTheme.textSecondary.withOpacity(0.4)),
-                              const SizedBox(height: 6),
-                              const Text(
-                                "Failed to load",
-                                style: TextStyle(fontSize: 11),
-                              ),
-                            ],
-                          );
-                        },
                       ),
-                    ),
-            ),
-          ),
-
-          // Button
-          Container(
-            height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(8)),
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade300),
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    hasLogo ? "Logo uploaded" : "No file selected",
-                    style: const TextStyle(fontSize: 11),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => companyController.pickLogoAndConvert(),
-                  icon: const Icon(Icons.upload_file, size: 12),
-                  label: const Text("Browse", style: TextStyle(fontSize: 11)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    minimumSize: const Size(80, 28),
-                  ),
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  });
-}
 
+            // Button
+            Container(
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(8)),
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade300),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      hasLogo ? "Logo uploaded" : "No file selected",
+                      style: const TextStyle(fontSize: 11),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () => companyController.pickLogoAndConvert(),
+                    icon: const Icon(Icons.upload_file, size: 12),
+                    label: const Text("Browse", style: TextStyle(fontSize: 11)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      minimumSize: const Size(80, 28),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
 
   Widget _currencyRow() {
     return Container(
@@ -583,16 +581,17 @@ Widget _logoUploadSection() {
   }
 
   // ======================================================
-  // RIGHT SECTION - Engineers Table (FIXED STRUCTURE)
+  // RIGHT SECTION - Engineers Table (WITH ACTIONS COLUMN)
   // ======================================================
   Widget _rightSection() {
     // Fixed column widths
     const double numberWidth = 50.0;
-    const double firstNameWidth = 150.0;
-    const double lastNameWidth = 150.0;
-    const double cellWidth = 150.0;
-    const double officeWidth = 160.0;
-    const double emailWidth = 200.0;
+    const double firstNameWidth = 130.0;
+    const double lastNameWidth = 130.0;
+    const double cellWidth = 130.0;
+    const double officeWidth = 180.0;
+    const double emailWidth = 230.0;
+    const double actionsWidth = 100.0;
 
     return Container(
       decoration: AppTheme.elevatedCardDecoration,
@@ -621,10 +620,12 @@ Widget _logoUploadSection() {
                 _HeaderCell(officeWidth, 'Office', Icons.phone),
                 _verticalDivider(),
                 _HeaderCell(emailWidth, 'E-mail', Icons.email),
+                _verticalDivider(),
+                _HeaderCell(actionsWidth, 'Actions', Icons.settings),
               ],
             ),
           ),
-          
+
           // Table Body
           Expanded(
             child: Obx(() {
@@ -644,7 +645,7 @@ Widget _logoUploadSection() {
                   itemBuilder: (_, index) {
                     final row = engineerController.rowControllers[index];
                     final isSaved = row.engineerId != null;
-                    
+
                     return Container(
                       height: 36,
                       decoration: BoxDecoration(
@@ -666,6 +667,8 @@ Widget _logoUploadSection() {
                           _editableCell(officeWidth, row.officeController, 'Office', index, isSaved),
                           _verticalDivider(),
                           _editableCell(emailWidth, row.emailController, 'Email', index, isSaved),
+                          _verticalDivider(),
+                          _actionsCell(actionsWidth, row, index),
                         ],
                       ),
                     );
@@ -674,7 +677,7 @@ Widget _logoUploadSection() {
               );
             }),
           ),
-          
+
           // Footer
           Container(
             height: 44,
@@ -811,6 +814,151 @@ Widget _logoUploadSection() {
             color: AppTheme.textSecondary.withOpacity(0.4),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _actionsCell(double width, EngineerRowControllers row, int rowIndex) {
+    final isSaved = row.engineerId != null;
+    
+    if (!isSaved) {
+      return Container(
+        width: width,
+        alignment: Alignment.center,
+        child: Text(
+          '-',
+          style: TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondary.withOpacity(0.3),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Update Button
+          IconButton(
+            onPressed: () => _showUpdateDialog(row),
+            icon: const Icon(Icons.edit, size: 16),
+            color: Colors.blue,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            tooltip: 'Update',
+          ),
+          const SizedBox(width: 4),
+          // Delete Button
+          IconButton(
+            onPressed: () {
+              final engineerName = '${row.firstNameController.text} ${row.lastNameController.text}';
+              engineerController.showDeleteConfirmation(
+                context,
+                row.engineerId!,
+                engineerName,
+              );
+            },
+            icon: const Icon(Icons.delete, size: 16),
+            color: Colors.red,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            tooltip: 'Delete',
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUpdateDialog(EngineerRowControllers row) {
+    final firstNameController = TextEditingController(text: row.firstNameController.text);
+    final lastNameController = TextEditingController(text: row.lastNameController.text);
+    final cellController = TextEditingController(text: row.cellController.text);
+    final officeController = TextEditingController(text: row.officeController.text);
+    final emailController = TextEditingController(text: row.emailController.text);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Update Engineer', style: TextStyle(fontSize: 16)),
+          content: SizedBox(
+            width: 400,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _dialogTextField('First Name', firstNameController, Icons.person),
+                  const SizedBox(height: 12),
+                  _dialogTextField('Last Name', lastNameController, Icons.person_outline),
+                  const SizedBox(height: 12),
+                  _dialogTextField('Cell', cellController, Icons.phone_android),
+                  const SizedBox(height: 12),
+                  _dialogTextField('Office', officeController, Icons.phone),
+                  const SizedBox(height: 12),
+                  _dialogTextField('Email', emailController, Icons.email),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                firstNameController.dispose();
+                lastNameController.dispose();
+                cellController.dispose();
+                officeController.dispose();
+                emailController.dispose();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final updatedEngineer = Engineer(
+                  id: row.engineerId,
+                  firstName: firstNameController.text.trim(),
+                  lastName: lastNameController.text.trim(),
+                  cell: cellController.text.trim(),
+                  office: officeController.text.trim(),
+                  email: emailController.text.trim(),
+                  photo: row.photoController.text.trim().isEmpty
+                      ? null
+                      : row.photoController.text.trim(),
+                );
+
+                engineerController.updateEngineer(row.engineerId!, updatedEngineer);
+                
+                firstNameController.dispose();
+                lastNameController.dispose();
+                cellController.dispose();
+                officeController.dispose();
+                emailController.dispose();
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+              ),
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _dialogTextField(String label, TextEditingController controller, IconData icon) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 18),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
     );
   }

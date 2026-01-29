@@ -13,10 +13,8 @@ class ServiceController {
 
   // ============ PACKAGE APIs ============
   
-  // Add single or bulk packages
   Future<Map<String, dynamic>> addPackages(List<PackageItem> packages) async {
     try {
-      // If single package
       if (packages.length == 1) {
         final response = await http.post(
           Uri.parse('$baseUrl${ApiEndpoint.addPackages}'),
@@ -40,9 +38,7 @@ class ServiceController {
             'message': responseData['message'] ?? 'Failed to add package',
           };
         }
-      } 
-      // Bulk packages
-      else {
+      } else {
         final response = await http.post(
           Uri.parse('$baseUrl${ApiEndpoint.addBulkPackages}'),
           headers: _headers,
@@ -81,7 +77,7 @@ class ServiceController {
         headers: _headers,
       );
       print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
+      print("statusCode: ${response.statusCode}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -95,11 +91,72 @@ class ServiceController {
     }
   }
 
+  Future<Map<String, dynamic>> updatePackage(String id, PackageItem package) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl${ApiEndpoint.updatePackage}/$id'),
+        headers: _headers,
+        body: jsonEncode(package.toJson()),
+      );
+
+      final responseData = jsonDecode(response.body);
+      print("responsebody: ${response.body}");
+      print("statusCode: ${response.statusCode}");
+
+      if (response.statusCode == 200 ) {
+        return {
+          'success': true,
+          'message': 'Package updated successfully',
+          'data': responseData['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to update package',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deletePackage(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl${ApiEndpoint.deletePackage}/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+      print("responsebody: ${response.body}");
+      print("statusCode: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': responseData['message'] ?? 'Package deleted successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to delete package',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
   // ============ SERVICE APIs ============
   
   Future<Map<String, dynamic>> addServices(List<ServiceItem> services) async {
     try {
-      // If single service
       if (services.length == 1) {
         final response = await http.post(
           Uri.parse('$baseUrl${ApiEndpoint.addServices}'),
@@ -123,9 +180,7 @@ class ServiceController {
             'message': responseData['message'] ?? 'Failed to add service',
           };
         }
-      } 
-      // Bulk services
-      else {
+      } else {
         final response = await http.post(
           Uri.parse('$baseUrl${ApiEndpoint.addBulkServices}'),
           headers: _headers,
@@ -164,9 +219,8 @@ class ServiceController {
         headers: _headers,
       );
 
-print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
-
+      print("responsebody: ${response.body}");
+      print("statusCode: ${response.statusCode}");
         
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -180,11 +234,72 @@ print("responsebody: ${response.body}");
     }
   }
 
+  Future<Map<String, dynamic>> updateService(String id, ServiceItem service) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl${ApiEndpoint.updateService}/$id'),
+        headers: _headers,
+        body: jsonEncode(service.toJson()),
+      );
+
+      final responseData = jsonDecode(response.body);
+      print("responsebody: ${response.body}");
+      print("statusCode: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Service updated successfully',
+          'data': responseData['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to update service',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteService(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl${ApiEndpoint.deleteService}/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+      print("responsebody: ${response.body}");
+      print("statusCode: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': responseData['message'] ?? 'Service deleted successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to delete service',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
   // ============ ENGINEERING APIs ============
   
   Future<Map<String, dynamic>> addEngineering(List<EngineeringItem> engineering) async {
     try {
-      // If single engineering
       if (engineering.length == 1) {
         final response = await http.post(
           Uri.parse('$baseUrl${ApiEndpoint.addEngineering}'),
@@ -208,9 +323,8 @@ print("responsebody: ${response.body}");
             'message': responseData['message'] ?? 'Failed to add engineering',
           };
         }
-      } 
-      // Bulk engineering
-      else {
+      } else {
+        
         final response = await http.post(
           Uri.parse('$baseUrl${ApiEndpoint.addBulkEngineering}'),
           headers: _headers,
@@ -250,7 +364,7 @@ print("responsebody: ${response.body}");
       );
 
       print("responsebody: ${response.body}");
-        print("statusCode: ${response.statusCode}");
+      print("statusCode: ${response.statusCode}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -261,6 +375,68 @@ print("responsebody: ${response.body}");
       }
     } catch (e) {
       throw Exception('Error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateEngineering(String id, EngineeringItem engineering) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl${ApiEndpoint.updateEngineering}/$id'),
+        headers: _headers,
+        body: jsonEncode(engineering.toJson()),
+      );
+
+      final responseData = jsonDecode(response.body);
+      print("responsebody: ${response.body}");
+      print("statusCode: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Engineering updated successfully',
+          'data': responseData['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to update engineering',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteEngineering(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl${ApiEndpoint.deleteEngineering}/$id'),
+        headers: _headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+      print("responsebody: ${response.body}");
+      print("statusCode: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': responseData['message'] ?? 'Engineering deleted successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Failed to delete engineering',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
     }
   }
 }

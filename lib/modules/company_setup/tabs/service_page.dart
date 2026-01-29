@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mudpro_desktop_app/modules/UG/right_pannel/inventory/inventory_store/inventory_store.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/controller/service_controller.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/service_model.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
-import 'package:get/get.dart';
 
 class ServicesPage extends StatefulWidget {
   const ServicesPage({super.key});
@@ -16,15 +14,6 @@ class _ServicesPageState extends State<ServicesPage> {
   final ServiceController controller = ServiceController();
   bool _isLoading = false;
 
-  final Set<String> existingPackageIds = {};
-  final Set<String> existingServiceIds = {};
-  final Set<String> existingEngineeringIds = {};
-
-  // Selection tracking
-  final Set<int> selectedPackageIndices = {};
-  final Set<int> selectedServiceIndices = {};
-  final Set<int> selectedEngineeringIndices = {};
-
   List<PackageItem> existingPackages = [];
   List<ServiceItem> existingServices = [];
   List<EngineeringItem> existingEngineering = [];
@@ -32,6 +21,11 @@ class _ServicesPageState extends State<ServicesPage> {
   final List<List<TextEditingController>> packageControllers = _generateControllers();
   final List<List<TextEditingController>> servicesControllers = _generateControllers();
   final List<List<TextEditingController>> engineeringControllers = _generateControllers();
+
+  // ScrollControllers for each table
+  final ScrollController _packageScrollController = ScrollController();
+  final ScrollController _servicesScrollController = ScrollController();
+  final ScrollController _engineeringScrollController = ScrollController();
 
   static List<List<TextEditingController>> _generateControllers() {
     return List.generate(5, (_) => List.generate(4, (_) => TextEditingController()));
@@ -61,10 +55,6 @@ class _ServicesPageState extends State<ServicesPage> {
   Future<void> _loadPackages() async {
     try {
       existingPackages = await controller.getPackages();
-      existingPackageIds.clear();
-      for (var pkg in existingPackages) {
-        if (pkg.id != null) existingPackageIds.add(pkg.id!);
-      }
       setState(() {});
     } catch (e) {
       print('Error loading packages: $e');
@@ -74,10 +64,6 @@ class _ServicesPageState extends State<ServicesPage> {
   Future<void> _loadServices() async {
     try {
       existingServices = await controller.getServices();
-      existingServiceIds.clear();
-      for (var srv in existingServices) {
-        if (srv.id != null) existingServiceIds.add(srv.id!);
-      }
       setState(() {});
     } catch (e) {
       print('Error loading services: $e');
@@ -87,45 +73,369 @@ class _ServicesPageState extends State<ServicesPage> {
   Future<void> _loadEngineering() async {
     try {
       existingEngineering = await controller.getEngineering();
-      existingEngineeringIds.clear();
-      for (var eng in existingEngineering) {
-        if (eng.id != null) existingEngineeringIds.add(eng.id!);
-      }
       setState(() {});
     } catch (e) {
       print('Error loading engineering: $e');
     }
   }
 
-  void _applySelectedServices() {
+  // Update Package
+  Future<void> _showUpdatePackageDialog(PackageItem package, int index) async {
+    final nameController = TextEditingController(text: package.name);
+    final codeController = TextEditingController(text: package.code);
+    final unitController = TextEditingController(text: package.unit);
+    final priceController = TextEditingController(text: package.price.toString());
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Package'),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: codeController,
+                decoration: const InputDecoration(labelText: 'Code'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: unitController,
+                decoration: const InputDecoration(labelText: 'Unit'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: priceController,
+                decoration: const InputDecoration(labelText: 'Price'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _updatePackage(
+                package.id!,
+                PackageItem(
+                  id: package.id,
+                  name: nameController.text.trim(),
+                  code: codeController.text.trim(),
+                  unit: unitController.text.trim(),
+                  price: double.tryParse(priceController.text) ?? 0.0,
+                ),
+              );
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updatePackage(String id, PackageItem package) async {
+    setState(() => _isLoading = true);
     try {
-      final selectedPkgs = selectedPackageIndices.map((i) => existingPackages[i]).toList();
-      final selectedSrvs = selectedServiceIndices.map((i) => existingServices[i]).toList();
-      final selectedEngs = selectedEngineeringIndices.map((i) => existingEngineering[i]).toList();
-
-      // Find the store (don't create new one)
-      final store = Get.find<InventoryServicesStore>();
-      store.setSelectedServices(
-        packages: selectedPkgs,
-        services: selectedSrvs,
-        engineering: selectedEngs,
-      );
-
-      Navigator.pop(context);
-      
-      Get.snackbar(
-        'Success',
-        '${selectedPkgs.length + selectedSrvs.length + selectedEngs.length} items applied to inventory',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Color(0xff10B981),
-        colorText: Colors.white,
-        duration: Duration(seconds: 2),
-      );
-      
-      print('✅ Applied services: ${selectedPkgs.length} packages, ${selectedSrvs.length} services, ${selectedEngs.length} engineering');
+      final result = await controller.updatePackage(id, package);
+      if (result['success'] == true) {
+        _showSuccess(result['message'] ?? 'Package updated successfully!');
+        await _loadPackages();
+      } else {
+        _showError(result['message'] ?? 'Failed to update package');
+      }
     } catch (e) {
-      print('❌ Error applying services: $e');
-      _showError('Failed to apply services. Please restart the app.');
+      _showError('Failed to update package: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deletePackage(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: const Text('Are you sure you want to delete this package?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        final result = await controller.deletePackage(id);
+        if (result['success'] == true) {
+          _showSuccess(result['message'] ?? 'Package deleted successfully!');
+          await _loadPackages();
+        } else {
+          _showError(result['message'] ?? 'Failed to delete package');
+        }
+      } catch (e) {
+        _showError('Failed to delete package: $e');
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  // Update Service
+  Future<void> _showUpdateServiceDialog(ServiceItem service, int index) async {
+    final nameController = TextEditingController(text: service.name);
+    final codeController = TextEditingController(text: service.code);
+    final unitController = TextEditingController(text: service.unit);
+    final priceController = TextEditingController(text: service.price.toString());
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Service'),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: codeController,
+                decoration: const InputDecoration(labelText: 'Code'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: unitController,
+                decoration: const InputDecoration(labelText: 'Unit'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: priceController,
+                decoration: const InputDecoration(labelText: 'Price'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _updateService(
+                service.id!,
+                ServiceItem(
+                  id: service.id,
+                  name: nameController.text.trim(),
+                  code: codeController.text.trim(),
+                  unit: unitController.text.trim(),
+                  price: double.tryParse(priceController.text) ?? 0.0,
+                ),
+              );
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateService(String id, ServiceItem service) async {
+    setState(() => _isLoading = true);
+    try {
+      final result = await controller.updateService(id, service);
+      if (result['success'] == true) {
+        _showSuccess(result['message'] ?? 'Service updated successfully!');
+        await _loadServices();
+      } else {
+        _showError(result['message'] ?? 'Failed to update service');
+      }
+    } catch (e) {
+      _showError('Failed to update service: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deleteService(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: const Text('Are you sure you want to delete this service?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        final result = await controller.deleteService(id);
+        if (result['success'] == true) {
+          _showSuccess(result['message'] ?? 'Service deleted successfully!');
+          await _loadServices();
+        } else {
+          _showError(result['message'] ?? 'Failed to delete service');
+        }
+      } catch (e) {
+        _showError('Failed to delete service: $e');
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  // Update Engineering
+  Future<void> _showUpdateEngineeringDialog(EngineeringItem engineering, int index) async {
+    final nameController = TextEditingController(text: engineering.name);
+    final codeController = TextEditingController(text: engineering.code);
+    final unitController = TextEditingController(text: engineering.unit);
+    final priceController = TextEditingController(text: engineering.price.toString());
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Engineering'),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: codeController,
+                decoration: const InputDecoration(labelText: 'Code'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: unitController,
+                decoration: const InputDecoration(labelText: 'Unit'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: priceController,
+                decoration: const InputDecoration(labelText: 'Price'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _updateEngineering(
+                engineering.id!,
+                EngineeringItem(
+                  id: engineering.id,
+                  name: nameController.text.trim(),
+                  code: codeController.text.trim(),
+                  unit: unitController.text.trim(),
+                  price: double.tryParse(priceController.text) ?? 0.0,
+                ),
+              );
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateEngineering(String id, EngineeringItem engineering) async {
+    setState(() => _isLoading = true);
+    try {
+      final result = await controller.updateEngineering(id, engineering);
+      if (result['success'] == true) {
+        _showSuccess(result['message'] ?? 'Engineering updated successfully!');
+        await _loadEngineering();
+      } else {
+        _showError(result['message'] ?? 'Failed to update engineering');
+      }
+    } catch (e) {
+      _showError('Failed to update engineering: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deleteEngineering(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: const Text('Are you sure you want to delete this engineering item?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        final result = await controller.deleteEngineering(id);
+        if (result['success'] == true) {
+          _showSuccess(result['message'] ?? 'Engineering deleted successfully!');
+          await _loadEngineering();
+        } else {
+          _showError(result['message'] ?? 'Failed to delete engineering');
+        }
+      } catch (e) {
+        _showError('Failed to delete engineering: $e');
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -323,6 +633,10 @@ class _ServicesPageState extends State<ServicesPage> {
 
   @override
   void dispose() {
+    _packageScrollController.dispose();
+    _servicesScrollController.dispose();
+    _engineeringScrollController.dispose();
+    
     for (var table in [packageControllers, servicesControllers, engineeringControllers]) {
       for (var row in table) {
         for (var ctrl in row) {
@@ -346,11 +660,15 @@ class _ServicesPageState extends State<ServicesPage> {
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      if (constraints.maxWidth < 1200) {
+                      // Always use horizontal scroll for smaller screens
+                      if (constraints.maxWidth < 1400) {
                         return SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: _buildTableSections(constraints),
+                          child: SizedBox(
+                            width: 1400, // Minimum width for all three tables
+                            child: Row(
+                              children: _buildTableSections(constraints),
+                            ),
                           ),
                         );
                       } else {
@@ -389,8 +707,9 @@ class _ServicesPageState extends State<ServicesPage> {
         gradient: AppTheme.primaryGradient,
         constraints: constraints,
         onSave: _savePackages,
-        selectedIndices: selectedPackageIndices,
-        isPackage: true,
+        onUpdate: (item, index) => _showUpdatePackageDialog(item as PackageItem, index),
+        onDelete: _deletePackage,
+        scrollController: _packageScrollController,
       ),
       const SizedBox(width: 12),
       _tableSection(
@@ -401,8 +720,9 @@ class _ServicesPageState extends State<ServicesPage> {
         gradient: AppTheme.secondaryGradient,
         constraints: constraints,
         onSave: _saveServices,
-        selectedIndices: selectedServiceIndices,
-        isService: true,
+        onUpdate: (item, index) => _showUpdateServiceDialog(item as ServiceItem, index),
+        onDelete: _deleteService,
+        scrollController: _servicesScrollController,
       ),
       const SizedBox(width: 12),
       _tableSection(
@@ -413,8 +733,9 @@ class _ServicesPageState extends State<ServicesPage> {
         gradient: AppTheme.accentGradient,
         constraints: constraints,
         onSave: _saveEngineering,
-        selectedIndices: selectedEngineeringIndices,
-        isEngineering: true,
+        onUpdate: (item, index) => _showUpdateEngineeringDialog(item as EngineeringItem, index),
+        onDelete: _deleteEngineering,
+        scrollController: _engineeringScrollController,
       ),
     ];
   }
@@ -427,16 +748,10 @@ class _ServicesPageState extends State<ServicesPage> {
     required Gradient gradient,
     required BoxConstraints constraints,
     required VoidCallback onSave,
-    required Set<int> selectedIndices,
-    bool isPackage = false,
-    bool isService = false,
-    bool isEngineering = false,
+    required Function(dynamic, int) onUpdate,
+    required Function(String) onDelete,
+    required ScrollController scrollController,
   }) {
-    final isSmallScreen = constraints.maxWidth < 400;
-    final widths = isSmallScreen
-        ? [25.0, 100.0, 50.0, 40.0, 50.0]
-        : [35.0, 150.0, 75.0, 65.0, 75.0];
-
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
@@ -452,15 +767,16 @@ class _ServicesPageState extends State<ServicesPage> {
         ),
         child: Column(
           children: [
-            _sectionHeader(title, icon, gradient, selectedIndices.length),
-            _tableHeader(widths),
+            _sectionHeader(title, icon, gradient),
+            _tableHeader(),
             Container(height: 1, color: Colors.grey.shade300),
             Expanded(
               child: _tableRows(
                 existingData,
                 controllers,
-                widths,
-                selectedIndices,
+                onUpdate,
+                onDelete,
+                scrollController,
               ),
             ),
             _tableSaveButton(onSave, title),
@@ -470,7 +786,7 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget _sectionHeader(String title, IconData icon, Gradient gradient, int selectedCount) {
+  Widget _sectionHeader(String title, IconData icon, Gradient gradient) {
     return Container(
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -504,28 +820,12 @@ class _ServicesPageState extends State<ServicesPage> {
               ),
             ),
           ),
-          if (selectedCount > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'Selected: $selectedCount',
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
 
-  Widget _tableHeader(List<double> widths) {
+  Widget _tableHeader() {
     return Container(
       height: 32,
       decoration: BoxDecoration(
@@ -538,11 +838,12 @@ class _ServicesPageState extends State<ServicesPage> {
       ),
       child: Row(
         children: [
-          _HeaderCell(width: widths[0], text: '', icon: Icons.numbers),
-          _HeaderCell(width: widths[1], text: 'Name', icon: Icons.text_fields),
-          _HeaderCell(width: widths[2], text: 'Code', icon: Icons.code),
-          _HeaderCell(width: widths[3], text: 'Unit', icon: Icons.linear_scale),
-          Expanded(child: _HeaderCell(text: 'Price (\$)', icon: Icons.attach_money)),
+          _HeaderCell(width: 40, text: '#', icon: Icons.numbers),
+          Expanded(flex: 3, child: _HeaderCell(text: 'Name', icon: Icons.text_fields)),
+          Expanded(flex: 2, child: _HeaderCell(text: 'Code', icon: Icons.code)),
+          Expanded(flex: 1, child: _HeaderCell(text: 'Unit', icon: Icons.linear_scale)),
+          Expanded(flex: 2, child: _HeaderCell(text: 'Price (\$)', icon: Icons.attach_money)),
+          _HeaderCell(width: 100, text: 'Actions', icon: Icons.settings),
         ],
       ),
     );
@@ -551,67 +852,55 @@ class _ServicesPageState extends State<ServicesPage> {
   Widget _tableRows(
     List<dynamic> existingData,
     List<List<TextEditingController>> controllers,
-    List<double> widths,
-    Set<int> selectedIndices,
+    Function(dynamic, int) onUpdate,
+    Function(String) onDelete,
+    ScrollController scrollController,
   ) {
     return Scrollbar(
+      controller: scrollController,
       thumbVisibility: true,
       child: ListView.builder(
+        controller: scrollController,
         itemCount: existingData.length + controllers.length,
         itemBuilder: (_, index) {
           final isExisting = index < existingData.length;
-          final isSelected = selectedIndices.contains(index);
           
-          return InkWell(
-            onTap: isExisting
-                ? () {
-                    setState(() {
-                      if (selectedIndices.contains(index)) {
-                        selectedIndices.remove(index);
-                      } else {
-                        selectedIndices.add(index);
-                      }
-                    });
-                  }
-                : null,
-            child: Container(
-              height: 28,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.primaryColor.withOpacity(0.2)
-                    : (isExisting
-                        ? const Color(0xffF3F4F6)
-                        : (index % 2 == 0 ? Colors.white : AppTheme.cardColor)),
-                border: Border(
-                  bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
-                ),
+          return Container(
+            height: 32,
+            decoration: BoxDecoration(
+              color: isExisting
+                  ? const Color(0xffF3F4F6)
+                  : (index % 2 == 0 ? Colors.white : AppTheme.cardColor),
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
               ),
-              child: Material(
-                color: Colors.transparent,
-                child: Row(
-                  children: [
-                    _numberCell(index + 1, widths[0], isExisting, isSelected),
-                    Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                    if (isExisting) ...[
-                      _lockedCell(widths[1], existingData[index].name),
-                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                      _lockedCell(widths[2], existingData[index].code),
-                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                      _lockedCell(widths[3], existingData[index].unit),
-                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                      _lockedCell(widths[4], existingData[index].price.toString()),
-                    ] else ...[
-                      _editCell(widths[1], controllers[index - existingData.length][0]),
-                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                      _editCell(widths[2], controllers[index - existingData.length][1]),
-                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                      _editCell(widths[3], controllers[index - existingData.length][2]),
-                      Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                      _editCell(widths[4], controllers[index - existingData.length][3]),
-                    ],
-                  ],
-                ),
-              ),
+            ),
+            child: Row(
+              children: [
+                _numberCell(index + 1, 40, isExisting),
+                Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                if (isExisting) ...[
+                  Expanded(flex: 3, child: _lockedCell(existingData[index].name)),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  Expanded(flex: 2, child: _lockedCell(existingData[index].code)),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  Expanded(flex: 1, child: _lockedCell(existingData[index].unit)),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  Expanded(flex: 2, child: _lockedCell(existingData[index].price.toString())),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  _actionButtons(existingData[index], index, onUpdate, onDelete),
+                ] else ...[
+                  Expanded(flex: 3, child: _editCell(controllers[index - existingData.length][0])),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  Expanded(flex: 2, child: _editCell(controllers[index - existingData.length][1])),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  Expanded(flex: 1, child: _editCell(controllers[index - existingData.length][2])),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  Expanded(flex: 2, child: _editCell(controllers[index - existingData.length][3])),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  SizedBox(width: 100),
+                ],
+              ],
             ),
           );
         },
@@ -619,7 +908,7 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget _numberCell(int number, double width, bool isLocked, bool isSelected) {
+  Widget _numberCell(int number, double width, bool isLocked) {
     return SizedBox(
       width: width,
       child: Center(
@@ -630,9 +919,9 @@ class _ServicesPageState extends State<ServicesPage> {
               Padding(
                 padding: const EdgeInsets.only(right: 4),
                 child: Icon(
-                  isSelected ? Icons.check_circle : Icons.lock,
+                  Icons.lock,
                   size: 10,
-                  color: isSelected ? AppTheme.primaryColor : Colors.grey,
+                  color: Colors.grey,
                 ),
               ),
             Container(
@@ -640,11 +929,9 @@ class _ServicesPageState extends State<ServicesPage> {
               height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isSelected
-                    ? AppTheme.primaryColor.withOpacity(0.3)
-                    : (isLocked
-                        ? Colors.grey.withOpacity(0.3)
-                        : AppTheme.secondaryColor.withOpacity(0.2)),
+                color: isLocked
+                    ? Colors.grey.withOpacity(0.3)
+                    : AppTheme.secondaryColor.withOpacity(0.2),
               ),
               child: Center(
                 child: Text(
@@ -652,7 +939,7 @@ class _ServicesPageState extends State<ServicesPage> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
               ),
@@ -663,10 +950,9 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget _lockedCell(double width, String value) {
+  Widget _lockedCell(String value) {
     return Container(
-      width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       alignment: Alignment.centerLeft,
       child: Text(
         value,
@@ -679,18 +965,64 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget _editCell(double width, TextEditingController controller) {
+  Widget _editCell(TextEditingController controller) {
     return Container(
-      width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: TextField(
         controller: controller,
         style: TextStyle(fontSize: 11, color: AppTheme.textPrimary),
         decoration: const InputDecoration(
           border: InputBorder.none,
           isDense: true,
-          contentPadding: EdgeInsets.symmetric(vertical: 8),
+          contentPadding: EdgeInsets.symmetric(vertical: 10),
         ),
+      ),
+    );
+  }
+
+  Widget _actionButtons(
+    dynamic item,
+    int index,
+    Function(dynamic, int) onUpdate,
+    Function(String) onDelete,
+  ) {
+    return SizedBox(
+      width: 100,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          InkWell(
+            onTap: () => onUpdate(item, index),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(
+                Icons.edit,
+                size: 14,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () => onDelete(item.id!),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppTheme.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(
+                Icons.delete,
+                size: 14,
+                color: AppTheme.errorColor,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -726,10 +1058,6 @@ class _ServicesPageState extends State<ServicesPage> {
   }
 
   Widget _footerButtons() {
-    final totalSelected = selectedPackageIndices.length +
-        selectedServiceIndices.length +
-        selectedEngineeringIndices.length;
-
     return Container(
       height: 52,
       margin: const EdgeInsets.only(top: 12),
@@ -748,18 +1076,6 @@ class _ServicesPageState extends State<ServicesPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          if (totalSelected > 0)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Text(
-                'Total Selected: $totalSelected',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryColor,
-                ),
-              ),
-            ),
           OutlinedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -772,18 +1088,6 @@ class _ServicesPageState extends State<ServicesPage> {
             ),
             child: const Text('Close'),
           ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: totalSelected == 0 ? null : _applySelectedServices,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: Colors.grey.shade300,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-            ),
-            child: const Text('Apply Selected'),
-          ),
         ],
       ),
     );
@@ -794,8 +1098,14 @@ class _HeaderCell extends StatelessWidget {
   final double? width;
   final String text;
   final IconData icon;
+  final int? flex;
 
-  const _HeaderCell({this.width, required this.text, required this.icon});
+  const _HeaderCell({
+    this.width,
+    required this.text,
+    required this.icon,
+    this.flex,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -812,7 +1122,7 @@ class _HeaderCell extends StatelessWidget {
         children: [
           Icon(icon, size: 12, color: Colors.white),
           const SizedBox(width: 4),
-          Expanded(
+          Flexible(
             child: Text(
               text,
               style: const TextStyle(

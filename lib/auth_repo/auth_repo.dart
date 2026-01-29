@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:mudpro_desktop_app/api_endpoint/api_endpoint.dart';
+import 'package:mudpro_desktop_app/modules/UG/model/pit_model.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/company_model.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/engineers_model.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
@@ -96,6 +97,82 @@ class AuthRepository {
       };
     }
   }
+
+
+  // Add these methods to your existing AuthRepository class
+
+// Update Engineer
+Future<Map<String, dynamic>> updateEngineer(String engineerId, Engineer engineer) async {
+  try {
+
+    print('$baseUrl${ApiEndpoint.updateEngineer}/$engineerId');
+    final url = Uri.parse('$baseUrl${ApiEndpoint.updateEngineer}/$engineerId');
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(engineer.toJson()),
+    );
+
+    final data = jsonDecode(response.body);
+        print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+    if (response.statusCode == 200) {
+      return {
+        'success': true,
+        'data': Engineer.fromJson(data['data']),
+        'message': data['message'] ?? 'Engineer updated successfully',
+      };
+    } else {
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to update engineer',
+      };
+    }
+  } catch (e) {
+    return {
+      'success': false,
+      'message': 'Error: ${e.toString()}',
+    };
+  }
+}
+
+// Delete Engineer
+Future<Map<String, dynamic>> deleteEngineer(String engineerId) async {
+  try {
+     print('$baseUrl${ApiEndpoint.deleteEngineer}/$engineerId');
+    final url = Uri.parse('$baseUrl${ApiEndpoint.deleteEngineer}/$engineerId');
+    final response = await http.delete(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+      print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+    if (response.statusCode == 200) {
+      return {
+        'success': true,
+        'message': data['message'] ?? 'Engineer deleted successfully',
+      };
+    } else {
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to delete engineer',
+      };
+    }
+  } catch (e) {
+    return {
+      'success': false,
+      'message': 'Error: ${e.toString()}',
+    };
+  }
+}
 
 
    // Add Company Details with Image
@@ -294,6 +371,78 @@ class AuthRepository {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
+
+
+  // UPDATE OPERATOR
+Future<Map<String, dynamic>> updateOperator(
+    String id, Map<String, dynamic> operatorData) async {
+  try {
+    final response = await http.put(
+      Uri.parse('${ApiEndpoint.baseUrl}${ApiEndpoint.updateOperator}/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode(operatorData),
+    );
+
+    final responseData = jsonDecode(response.body);
+    print("Update operator response: ${response.body}");
+    print("Status code: ${response.statusCode}");
+
+    if (response.statusCode == 200) {
+      return {
+        'success': true,
+        'message': responseData['message'] ?? 'Operator updated successfully',
+        'data': responseData['data'],
+      };
+    } else {
+      return {
+        'success': false,
+        'message': responseData['message'] ?? 'Failed to update operator',
+      };
+    }
+  } catch (e) {
+    return {
+      'success': false,
+      'message': 'Error: $e',
+    };
+  }
+}
+
+// DELETE OPERATOR
+Future<Map<String, dynamic>> deleteOperator(String id) async {
+  try {
+    final response = await http.delete(
+      Uri.parse('${ApiEndpoint.baseUrl}${ApiEndpoint.deleteOperator}/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
+
+    final responseData = jsonDecode(response.body);
+    print("Delete operator response: ${response.body}");
+    print("Status code: ${response.statusCode}");
+
+    if (response.statusCode == 200) {
+      return {
+        'success': true,
+        'message': responseData['message'] ?? 'Operator deleted successfully',
+      };
+    } else {
+      return {
+        'success': false,
+        'message': responseData['message'] ?? 'Failed to delete operator',
+      };
+    }
+  } catch (e) {
+    return {
+      'success': false,
+      'message': 'Error: $e',
+    };
+  }
+}
 
   // Add single product
   Future<Map<String, dynamic>> addProduct(ProductModel product) async {
@@ -510,56 +659,113 @@ class AuthRepository {
     }
   }
 
-  // Delete product
-  Future<Map<String, dynamic>> deleteProduct(String id) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/products/$id'),
-        headers: _headers,
-      );
+ // Add these methods to your existing AuthRepository class
 
-      final responseData = jsonDecode(response.body);
+// Update Product
+Future<Map<String, dynamic>> updateProduct(String productId, ProductModel product) async {
+  try {
 
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'message': 'Product deleted successfully',
-        };
-      } else {
-        return {
-          'success': false,
-          'message': responseData['message'] ?? 'Failed to delete product',
-        };
-      }
-    } on SocketException {
+     print('${baseUrl}v1/products/$productId');
+    final response = await http.put(
+      Uri.parse('${baseUrl}v1/products/$productId'),
+      headers: _headers,
+      body: jsonEncode(product.toJson()),
+    );
+
+    final responseData = jsonDecode(response.body);
+
+     print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return {
-        'success': false,
-        'message': 'No internet connection',
+        'success': true,
+        'data': ProductModel.fromJson(responseData['data']),
+        'message': responseData['message'] ?? 'Product updated successfully',
       };
-    } on FormatException {
+    } else {
       return {
         'success': false,
-        'message': 'Invalid response format',
-      };
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'An unexpected error occurred: $e',
+        'message': responseData['message'] ?? 'Failed to update product',
       };
     }
+  } on SocketException {
+    return {
+      'success': false,
+      'message': 'No internet connection',
+    };
+  } on FormatException {
+    return {
+      'success': false,
+      'message': 'Invalid response format',
+    };
+  } catch (e) {
+    return {
+      'success': false,
+      'message': 'An unexpected error occurred: $e',
+    };
   }
+}
+
+// Delete Product
+Future<Map<String, dynamic>> deleteProduct(String productId) async {
+  try {
+
+    print('${baseUrl}v1/products/$productId');
+
+    final response = await http.delete(
+      Uri.parse('${baseUrl}v1/products/$productId'),
+      headers: _headers,
+    );
+
+    final responseData = jsonDecode(response.body);
+
+     print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return {
+        'success': true,
+        'message': responseData['message'] ?? 'Product deleted successfully',
+      };
+    } else {
+      return {
+        'success': false,
+        'message': responseData['message'] ?? 'Failed to delete product',
+      };
+    }
+  } on SocketException {
+    return {
+      'success': false,
+      'message': 'No internet connection',
+    };
+  } on FormatException {
+    return {
+      'success': false,
+      'message': 'Invalid response format',
+    };
+  } catch (e) {
+    return {
+      'success': false,
+      'message': 'An unexpected error occurred: $e',
+    };
+  }
+}
 
   // Restore product
   Future<Map<String, dynamic>> restoreProduct(String id) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/products/restore/$id'),
+        Uri.parse('${baseUrl}v1/products/restore/$id'),
         headers: _headers,
       );
 
       final responseData = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
+       print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return {
           'success': true,
           'message': 'Product restored successfully',
@@ -584,6 +790,434 @@ class AuthRepository {
       return {
         'success': false,
         'message': 'An unexpected error occurred: $e',
+      };
+    }
+  }
+
+
+  // ============= CREATE OPERATIONS =============
+  
+  /// Add single pit
+  Future<Map<String, dynamic>> addPit({
+    required String pitName,
+    required double capacity,
+    required bool initialActive,
+    required String wellId,
+    String? reportId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}pit/add'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'pitName': pitName,
+          'capacity': capacity,
+          'initialActive': initialActive,
+          'wellId': wellId,
+          if (reportId != null) 'reportId': reportId,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': PitModel.fromJson(data['data']),
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to add pit',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Bulk add pits
+  Future<Map<String, dynamic>> bulkAddPits({
+    required List<Map<String, dynamic>> pits,
+    required String wellId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}pit/bulk-add'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'pits': pits,
+          'wellId': wellId,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 201) {
+        final List<PitModel> insertedPits = (data['data'] as List)
+            .map((pit) => PitModel.fromJson(pit))
+            .toList();
+        
+        return {
+          'success': true,
+          'data': insertedPits,
+          'message': data['message'],
+          'skipped': data['skipped'] ?? 0,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to add pits',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  // ============= READ OPERATIONS =============
+  
+  /// Get all pits for a well
+  Future<Map<String, dynamic>> getAllPits(String wellId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}pit/well/$wellId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+
+      print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+      
+      if (response.statusCode == 200) {
+        final List<PitModel> pits = (data['data'] as List)
+            .map((pit) => PitModel.fromJson(pit))
+            .toList();
+        
+        return {
+          'success': true,
+          'data': pits,
+          'totalCapacity': data['totalCapacity'],
+          'count': data['count'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch pits',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Get selected (active) pits
+  Future<Map<String, dynamic>> getSelectedPits(String wellId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}pit/well/$wellId/selected'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        final List<PitModel> pits = (data['data'] as List)
+            .map((pit) => PitModel.fromJson(pit))
+            .toList();
+        
+        return {
+          'success': true,
+          'data': pits,
+          'totalCapacity': data['totalCapacity'],
+          'count': data['count'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch selected pits',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Get unselected (inactive) pits
+  Future<Map<String, dynamic>> getUnselectedPits(String wellId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}pit/well/$wellId/unselected'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        final List<PitModel> pits = (data['data'] as List)
+            .map((pit) => PitModel.fromJson(pit))
+            .toList();
+        
+        return {
+          'success': true,
+          'data': pits,
+          'totalCapacity': data['totalCapacity'],
+          'count': data['count'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch unselected pits',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Get single pit by ID
+  Future<Map<String, dynamic>> getPitById(String id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}pit/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': PitModel.fromJson(data['data']),
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch pit',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  // ============= UPDATE OPERATIONS =============
+  
+  /// Update single pit
+  Future<Map<String, dynamic>> updatePit({
+    required String id,
+    String? pitName,
+    double? capacity,
+    bool? initialActive,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${baseUrl}pit/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          if (pitName != null) 'pitName': pitName,
+          if (capacity != null) 'capacity': capacity,
+          if (initialActive != null) 'initialActive': initialActive,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': PitModel.fromJson(data['data']),
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to update pit',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Bulk update pits
+  Future<Map<String, dynamic>> bulkUpdatePits(
+    List<Map<String, dynamic>> updates,
+  ) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${baseUrl}pit/bulk-update'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'updates': updates}),
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'modifiedCount': data['modifiedCount'],
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to update pits',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Toggle lock/unlock pit
+  Future<Map<String, dynamic>> toggleLockPit({
+    required String id,
+    required bool isLocked,
+  }) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('${baseUrl}pit/$id/toggle-lock'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'isLocked': isLocked}),
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': PitModel.fromJson(data['data']),
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to toggle lock',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  // ============= DELETE OPERATIONS =============
+  
+  /// Delete single pit
+  Future<Map<String, dynamic>> deletePit(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${baseUrl}pit/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to delete pit',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Bulk delete pits
+  Future<Map<String, dynamic>> bulkDeletePits(List<String> ids) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${baseUrl}pit/bulk-delete'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'ids': ids}),
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'deletedCount': data['deletedCount'],
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to delete pits',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Delete all pits for a well
+  Future<Map<String, dynamic>> deleteAllPitsByWell(String wellId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${baseUrl}pit/well/$wellId/all'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'deletedCount': data['deletedCount'],
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to delete pits',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
       };
     }
   }

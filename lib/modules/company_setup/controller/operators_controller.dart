@@ -18,7 +18,7 @@ class OperatorController extends GetxController {
   }
 
   /// SAVE FROM UI CONTROLLERS
-  Future<void> saveOperators(
+  Future<Map<String, dynamic>> saveOperators(
       List<List<TextEditingController>> uiControllers) async {
     isSaving.value = true;
 
@@ -51,9 +51,11 @@ class OperatorController extends GetxController {
     }
 
     if (list.isEmpty) {
-      Get.snackbar("Info", "No new operator data to save");
       isSaving.value = false;
-      return;
+      return {
+        'success': false,
+        'message': 'No new operator data to save',
+      };
     }
 
     final body = list.map((e) => e.toJson()).toList();
@@ -61,19 +63,23 @@ class OperatorController extends GetxController {
 
     print("response body====${body}");
     print("response res====${res}");
-    print(
-        "response statuscode====${res['statusCode']}"
-    );
+    print("response statuscode====${res['statusCode']}");
 
     if (res['success'] == true || res['statusCode'] == 200) {
-      Get.snackbar("Success", "Operators saved successfully");
       // Refresh the operators list after saving
       await fetchOperators();
+      isSaving.value = false;
+      return {
+        'success': true,
+        'message': 'Operators saved successfully',
+      };
     } else {
-      Get.snackbar("Error", res['message'] ?? "Save failed");
+      isSaving.value = false;
+      return {
+        'success': false,
+        'message': res['message'] ?? 'Save failed',
+      };
     }
-
-    isSaving.value = false;
   }
 
   /// FETCH OPERATORS
@@ -84,12 +90,59 @@ class OperatorController extends GetxController {
 
     if (result['success'] == true) {
       operators.value = (result['data'] as List<dynamic>?)
-          ?.map((item) => OperatorModel.fromJson(item as Map<String, dynamic>))
-          .toList() ?? [];
+              ?.map((item) =>
+                  OperatorModel.fromJson(item as Map<String, dynamic>))
+              .toList() ??
+          [];
     } else {
-      Get.snackbar("Error", result['message'] ?? "Failed to fetch operators");
+      // No snackbar, handle in widget if needed
+      operators.value = [];
     }
 
     isLoading.value = false;
+  }
+
+  /// UPDATE OPERATOR
+  Future<Map<String, dynamic>> updateOperator(String id, OperatorModel operator) async {
+    isSaving.value = true;
+
+    final result = await _repo.updateOperator(id, operator.toJson());
+
+    if (result['success'] == true) {
+      await fetchOperators();
+      isSaving.value = false;
+      return {
+        'success': true,
+        'message': 'Operator updated successfully',
+      };
+    } else {
+      isSaving.value = false;
+      return {
+        'success': false,
+        'message': result['message'] ?? 'Failed to update operator',
+      };
+    }
+  }
+
+  /// DELETE OPERATOR
+  Future<Map<String, dynamic>> deleteOperator(String id) async {
+    isSaving.value = true;
+
+    final result = await _repo.deleteOperator(id);
+
+    if (result['success'] == true) {
+      await fetchOperators();
+      isSaving.value = false;
+      return {
+        'success': true,
+        'message': 'Operator deleted successfully',
+      };
+    } else {
+      isSaving.value = false;
+      return {
+        'success': false,
+        'message': result['message'] ?? 'Failed to delete operator',
+      };
+    }
   }
 }

@@ -178,24 +178,24 @@ final otherSce = <OtherSceModel>[
 
   // ---------------- PIT DATA ----------------
   
-  final pits = <PitModel>[
-    PitModel(id: 1, pit: 'TRIP TANK', capacity: '120.00', active: true),
-    PitModel(id: 2, pit: 'SANDTRAP # 1A', capacity: '150.00', active: true),
-    PitModel(id: 3, pit: 'SETTLING # 1B', capacity: '150.00', active: true),
-    PitModel(id: 4, pit: 'DEGASSER # 1C', capacity: '150.00', active: true),
-    PitModel(id: 5, pit: 'DESANDER # 2A', capacity: '170.00', active: true),
-    PitModel(id: 6, pit: 'DESILTER # 2B', capacity: '170.00', active: true),
-    PitModel(id: 7, pit: 'INT # 2C', capacity: '190.00', active: false),
-    PitModel(id: 8, pit: 'INT # 3A', capacity: '190.00', active: false),
-    PitModel(id: 9, pit: 'INT # 3B', capacity: '190.00', active: false),
-    PitModel(id: 10, pit: 'INT # 3C', capacity: '100.00', active: false),
-    PitModel(id: 11, pit: 'SUCTION # 4A', capacity: '315.00', active: true),
-    PitModel(id: 12, pit: 'SUCTION # 4B', capacity: '315.00', active: true),
-    PitModel(id: 13, pit: 'RES # 5A', capacity: '315.00', active: false),
-    PitModel(id: 14, pit: 'RES # 5B', capacity: '315.00', active: false),
-    PitModel(id: 15, pit: 'RES # 6A', capacity: '315.00', active: false),
-    PitModel(id: 16, pit: 'RES # 6B', capacity: '315.00', active: false),
-  ].obs;
+  // final pits = <PitModel>[
+  //   PitModel(id: 1, pit: 'TRIP TANK', capacity: '120.00', active: true),
+  //   PitModel(id: 2, pit: 'SANDTRAP # 1A', capacity: '150.00', active: true),
+  //   PitModel(id: 3, pit: 'SETTLING # 1B', capacity: '150.00', active: true),
+  //   PitModel(id: 4, pit: 'DEGASSER # 1C', capacity: '150.00', active: true),
+  //   PitModel(id: 5, pit: 'DESANDER # 2A', capacity: '170.00', active: true),
+  //   PitModel(id: 6, pit: 'DESILTER # 2B', capacity: '170.00', active: true),
+  //   PitModel(id: 7, pit: 'INT # 2C', capacity: '190.00', active: false),
+  //   PitModel(id: 8, pit: 'INT # 3A', capacity: '190.00', active: false),
+  //   PitModel(id: 9, pit: 'INT # 3B', capacity: '190.00', active: false),
+  //   PitModel(id: 10, pit: 'INT # 3C', capacity: '100.00', active: false),
+  //   PitModel(id: 11, pit: 'SUCTION # 4A', capacity: '315.00', active: true),
+  //   PitModel(id: 12, pit: 'SUCTION # 4B', capacity: '315.00', active: true),
+  //   PitModel(id: 13, pit: 'RES # 5A', capacity: '315.00', active: false),
+  //   PitModel(id: 14, pit: 'RES # 5B', capacity: '315.00', active: false),
+  //   PitModel(id: 15, pit: 'RES # 6A', capacity: '315.00', active: false),
+  //   PitModel(id: 16, pit: 'RES # 6B', capacity: '315.00', active: false),
+  // ].obs;
 
   // 添加总容量响应式变量
   final totalCapacity = 0.0.obs;
@@ -204,7 +204,7 @@ final otherSce = <OtherSceModel>[
   void onInit() {
     super.onInit();
     // 初始化时计算总容量
-    updateTotalCapacity();
+    // updateTotalCapacity();
     fetchProducts();
   }
 
@@ -324,91 +324,91 @@ final otherSce = <OtherSceModel>[
   }
 
   // ================= 计算总容量方法 =================
-  void updateTotalCapacity() {
-    double sum = 0.0;
+  // void updateTotalCapacity() {
+  //   double sum = 0.0;
     
-    for (var pit in pits) {
-      // 解析容量字符串为数字
-      final capacityStr = pit.capacity;
-      if (capacityStr != null && capacityStr.isNotEmpty) {
-        try {
-          final capacityValue = double.tryParse(capacityStr);
-          if (capacityValue != null) {
-            sum += capacityValue;
-          }
-        } catch (e) {
-          print('解析容量时出错: ${pit.pit} - $capacityStr');
-        }
-      }
-    }
+  //   for (var pit in pits) {
+  //     // 解析容量字符串为数字
+  //     final capacityStr = pit.capacity;
+  //     if (capacityStr != null && capacityStr.isNotEmpty) {
+  //       try {
+  //         final capacityValue = double.tryParse(capacityStr);
+  //         if (capacityValue != null) {
+  //           sum += capacityValue;
+  //         }
+  //       } catch (e) {
+  //         print('解析容量时出错: ${pit.pit} - $capacityStr');
+  //       }
+  //     }
+  //   }
     
-    totalCapacity.value = sum;
-  }
+  //   totalCapacity.value = sum;
+  // }
 
-  // ================= 更新单个坑的容量 =================
-  void updatePitCapacity(int pitId, String newCapacity) {
-    final pit = pits.firstWhereOrNull((p) => p.id == pitId);
-    if (pit != null) {
-      pit.capacity = newCapacity;
-      updateTotalCapacity(); // 更新总容量
-    }
-  }
+  // // ================= 更新单个坑的容量 =================
+  // void updatePitCapacity(int pitId, String newCapacity) {
+  //   final pit = pits.firstWhereOrNull((p) => p.id == pitId);
+  //   if (pit != null) {
+  //     pit.capacity = newCapacity;
+  //     updateTotalCapacity(); // 更新总容量
+  //   }
+  // }
 
-  // ================= 切换坑的激活状态 =================
-  void togglePitActive(int pitId) {
-    final pit = pits.firstWhereOrNull((p) => p.id == pitId);
-    if (pit != null) {
-      pit.active.value = !pit.active.value;
-      // 如果需要，可以根据激活状态更新总容量
-      updateTotalCapacity();
-    }
-  }
+  // // ================= 切换坑的激活状态 =================
+  // void togglePitActive(int pitId) {
+  //   final pit = pits.firstWhereOrNull((p) => p.id == pitId);
+  //   if (pit != null) {
+  //     pit.active.value = !pit.active.value;
+  //     // 如果需要，可以根据激活状态更新总容量
+  //     updateTotalCapacity();
+  //   }
+  // }
 
-  // ================= 获取激活坑的总容量 =================
-  double getActivePitsTotalCapacity() {
-    double sum = 0.0;
+  // // ================= 获取激活坑的总容量 =================
+  // double getActivePitsTotalCapacity() {
+  //   double sum = 0.0;
     
-    for (var pit in pits) {
-      if (pit.active.value) {
-        final capacityStr = pit.capacity;
-        if (capacityStr != null && capacityStr.isNotEmpty) {
-          try {
-            final capacityValue = double.tryParse(capacityStr);
-            if (capacityValue != null) {
-              sum += capacityValue;
-            }
-          } catch (e) {
-            print('解析容量时出错: ${pit.pit} - $capacityStr');
-          }
-        }
-      }
-    }
+  //   for (var pit in pits) {
+  //     if (pit.active.value) {
+  //       final capacityStr = pit.capacity;
+  //       if (capacityStr != null && capacityStr.isNotEmpty) {
+  //         try {
+  //           final capacityValue = double.tryParse(capacityStr);
+  //           if (capacityValue != null) {
+  //             sum += capacityValue;
+  //           }
+  //         } catch (e) {
+  //           print('解析容量时出错: ${pit.pit} - $capacityStr');
+  //         }
+  //       }
+  //     }
+  //   }
     
-    return sum;
-  }
+  //   return sum;
+  // }
 
-  // ================= 获取激活坑的数量 =================
-  int getActivePitsCount() {
-    return pits.where((pit) => pit.active.value).length;
-  }
+  // // ================= 获取激活坑的数量 =================
+  // int getActivePitsCount() {
+  //   return pits.where((pit) => pit.active.value).length;
+  // }
 
-  // ================= 添加新坑 =================
-  void addNewPit(String pitName, String capacity, bool isActive) {
-    final newId = pits.isNotEmpty ? pits.last.id! + 1 : 1;
-    pits.add(PitModel(
-      id: newId,
-      pit: pitName,
-      capacity: capacity,
-      active: isActive,
-    ));
-    updateTotalCapacity();
-  }
+  // // ================= 添加新坑 =================
+  // void addNewPit(String pitName, String capacity, bool isActive) {
+  //   final newId = pits.isNotEmpty ? pits.last.id! + 1 : 1;
+  //   pits.add(PitModel(
+  //     id: newId,
+  //     pit: pitName,
+  //     capacity: capacity,
+  //     active: isActive,
+  //   ));
+  //   updateTotalCapacity();
+  // }
 
-  // ================= 删除坑 =================
-  void removePit(int pitId) {
-    pits.removeWhere((pit) => pit.id == pitId);
-    updateTotalCapacity();
-  }
+  // // ================= 删除坑 =================
+  // void removePit(int pitId) {
+  //   pits.removeWhere((pit) => pit.id == pitId);
+  //   updateTotalCapacity();
+  // }
 
 
   void switchRightTab(String tab) {

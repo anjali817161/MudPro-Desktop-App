@@ -37,8 +37,8 @@ class InventoryView extends StatelessWidget {
             color: Colors.grey.shade50,
             child: Obx(() {
               return c.inventoryTab.value == 'Products'
-                  ? InventoryProductsView()
-                  : InventoryServicesView();
+                  ? const InventoryProductsView()
+                  : const InventoryServicesView();
             }),
           ),
         ),
