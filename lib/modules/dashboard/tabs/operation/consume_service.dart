@@ -27,14 +27,21 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
   final RxList<ServiceRowData> serviceRows = <ServiceRowData>[].obs;
   final RxList<EngineeringRowData> engineeringRows = <EngineeringRowData>[].obs;
 
+  // Selected row indices for each table
+  final RxInt selectedPackageRow = 0.obs;
+  final RxInt selectedServiceRow = 0.obs;
+  final RxInt selectedEngineeringRow = 0.obs;
+
   @override
   void initState() {
     super.initState();
     _loadData();
-    // Initialize with one empty row each
-    packageRows.add(PackageRowData());
-    serviceRows.add(ServiceRowData());
-    engineeringRows.add(EngineeringRowData());
+    // Initialize with 5 empty rows each
+    for (int i = 0; i < 5; i++) {
+      packageRows.add(PackageRowData());
+      serviceRows.add(ServiceRowData());
+      engineeringRows.add(EngineeringRowData());
+    }
   }
 
   Future<void> _loadData() async {
@@ -84,6 +91,7 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
                 title: "Package",
                 rows: packageRows,
                 dropdownItems: packages,
+                selectedRowIndex: selectedPackageRow,
                 onDropdownChanged: (index, item) {
                   packageRows[index].selectedItem = item.name;
                   packageRows[index].code = item.code;
@@ -104,6 +112,7 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
                 title: "Services",
                 rows: serviceRows,
                 dropdownItems: services,
+                selectedRowIndex: selectedServiceRow,
                 onDropdownChanged: (index, item) {
                   serviceRows[index].selectedItem = item.name;
                   serviceRows[index].code = item.code;
@@ -124,6 +133,7 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
                 title: "Engineering",
                 rows: engineeringRows,
                 dropdownItems: engineering,
+                selectedRowIndex: selectedEngineeringRow,
                 onDropdownChanged: (index, item) {
                   engineeringRows[index].selectedItem = item.name;
                   engineeringRows[index].code = item.code;
@@ -144,14 +154,17 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
   }
 
   void _checkAndAddRow<T extends BaseRowData>(RxList<T> rows) {
-    final lastRow = rows.last;
-    if (lastRow.selectedItem.isNotEmpty) {
-      if (T == PackageRowData) {
-        rows.add(PackageRowData() as T);
-      } else if (T == ServiceRowData) {
-        rows.add(ServiceRowData() as T);
-      } else if (T == EngineeringRowData) {
-        rows.add(EngineeringRowData() as T);
+    // Check if last row (5th or beyond) is filled
+    if (rows.length >= 5) {
+      final lastRow = rows.last;
+      if (lastRow.selectedItem.isNotEmpty) {
+        if (T == PackageRowData) {
+          rows.add(PackageRowData() as T);
+        } else if (T == ServiceRowData) {
+          rows.add(ServiceRowData() as T);
+        } else if (T == EngineeringRowData) {
+          rows.add(EngineeringRowData() as T);
+        }
       }
     }
   }
@@ -222,6 +235,7 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
     required String title,
     required RxList<T> rows,
     required RxList<I> dropdownItems,
+    required RxInt selectedRowIndex,
     required Function(int, I) onDropdownChanged,
     required Function(int) onFieldChanged,
     required List<String> headers,
@@ -255,127 +269,173 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
             ),
           ),
 
-          // Table
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Obx(() => Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: Colors.grey.shade300),
-                ),
-              ),
-              child: DataTable(
-                headingRowHeight: 36,
-                dataRowHeight: 40,
-                columnSpacing: 0,
-                horizontalMargin: 0,
-                dividerThickness: 1,
-                headingRowColor: MaterialStateProperty.all(Colors.grey.shade50),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade300),
-                  ),
-                ),
-                headingTextStyle: AppTheme.bodySmall.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-                dataTextStyle: AppTheme.bodySmall.copyWith(
-                  fontSize: 11,
-                ),
-                columns: headers.map((h) => DataColumn(
-                  label: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(h),
-                  ),
-                )).toList(),
-                rows: List.generate(rows.length, (index) {
-                  final row = rows[index];
-                  return DataRow(
-                    color: MaterialStateProperty.all(
-                      index % 2 == 0 ? Colors.white : Colors.grey.shade50,
+          // Table with fixed height and scrollable content
+          SizedBox(
+            height: 220, // Fixed height
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Obx(() => Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: Colors.grey.shade300),
                     ),
-                    cells: _buildRowCells(
-                      row: row,
-                      index: index,
-                      dropdownItems: dropdownItems,
-                      onDropdownChanged: onDropdownChanged,
-                      onFieldChanged: onFieldChanged,
-                      headers: headers,
+                  ),
+                  child: DataTable(
+                    headingRowHeight: 32,
+                    dataRowHeight: 32,
+                    columnSpacing: 0,
+                    horizontalMargin: 0,
+                    dividerThickness: 0,
+                    headingRowColor: MaterialStateProperty.all(Colors.grey.shade50),
+                    border: TableBorder(
+                      verticalInside: BorderSide(color: Colors.grey.shade300, width: 1),
+                      horizontalInside: BorderSide(color: Colors.grey.shade200, width: 1),
                     ),
-                  );
-                }),
+                    headingTextStyle: AppTheme.bodySmall.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                    ),
+                    dataTextStyle: AppTheme.bodySmall.copyWith(
+                      fontSize: 10,
+                    ),
+                    columns: headers.map((h) => DataColumn(
+                      label: Container(
+                        width: _getColumnWidth(h),
+                        alignment: h.contains('Price') || h.contains('Cost') || h.contains('Initial') || h.contains('Used') || h.contains('Final') || h.contains('Usage')
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(h),
+                      ),
+                    )).toList(),
+                    rows: List.generate(rows.length, (index) {
+                      final row = rows[index];
+                      final isSelected = selectedRowIndex.value == index;
+                      
+                      return DataRow(
+                        color: MaterialStateProperty.all(
+                          index % 2 == 0 ? Colors.white : Colors.grey.shade50,
+                        ),
+                        cells: _buildRowCells(
+                          row: row,
+                          index: index,
+                          isSelected: isSelected,
+                          dropdownItems: dropdownItems,
+                          onDropdownChanged: onDropdownChanged,
+                          onFieldChanged: onFieldChanged,
+                          onRowSelected: () => selectedRowIndex.value = index,
+                          headers: headers,
+                        ),
+                      );
+                    }),
+                  ),
+                )),
               ),
-            )),
+            ),
           ),
         ],
       ),
     );
   }
 
+  double _getColumnWidth(String header) {
+    if (header.contains('Package') || header.contains('Services') || header.contains('Engineering')) {
+      return 180;
+    } else if (header == 'Code') {
+      return 100;
+    } else if (header == 'Unit') {
+      return 80;
+    } else if (header.contains('Price') || header.contains('Cost')) {
+      return 100;
+    } else {
+      return 90;
+    }
+  }
+
   List<DataCell> _buildRowCells<T extends BaseRowData, I>({
     required T row,
     required int index,
+    required bool isSelected,
     required RxList<I> dropdownItems,
     required Function(int, I) onDropdownChanged,
     required Function(int) onFieldChanged,
+    required VoidCallback onRowSelected,
     required List<String> headers,
   }) {
     List<DataCell> cells = [];
 
-    // First column - Dropdown
+    // First column - Dropdown with icon
     cells.add(DataCell(
-      Container(
-        width: 180,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(color: Colors.grey.shade300, width: 1),
-          ),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<I>(
-            value: row.selectedItem.isNotEmpty 
-                ? dropdownItems.firstWhereOrNull((item) {
-                    if (item is PackageItem) return item.name == row.selectedItem;
-                    if (item is ServiceItem) return item.name == row.selectedItem;
-                    if (item is EngineeringItem) return item.name == row.selectedItem;
-                    return false;
-                  })
-                : null,
-            hint: Text(
-              "Select",
-              style: AppTheme.bodySmall.copyWith(
-                fontSize: 11,
-                color: Colors.grey,
-              ),
-            ),
-            isExpanded: true,
-            isDense: true,
-            icon: Icon(Icons.arrow_drop_down, size: 18),
-            items: dropdownItems.map((item) {
-              String name = '';
-              if (item is PackageItem) name = item.name;
-              if (item is ServiceItem) name = item.name;
-              if (item is EngineeringItem) name = item.name;
-              
-              return DropdownMenuItem<I>(
-                value: item,
-                child: Text(
-                  name,
-                  style: AppTheme.bodySmall.copyWith(fontSize: 11),
-                  overflow: TextOverflow.ellipsis,
+      GestureDetector(
+        onTap: onRowSelected,
+        child: Container(
+          width: 180,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              // Dropdown icon - shows only in selected row
+              if (isSelected)
+                Icon(
+                  Icons.arrow_drop_down,
+                  size: 16,
+                  color: AppTheme.primaryColor,
                 ),
-              );
-            }).toList(),
-            onChanged: dashboardController.isLocked.value 
-                ? null 
-                : (I? value) {
-                    if (value != null) {
-                      onDropdownChanged(index, value);
-                    }
-                  },
+              if (isSelected)
+                const SizedBox(width: 4),
+              
+              // Dropdown
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<I>(
+                    value: row.selectedItem.isNotEmpty 
+                        ? dropdownItems.firstWhereOrNull((item) {
+                            if (item is PackageItem) return item.name == row.selectedItem;
+                            if (item is ServiceItem) return item.name == row.selectedItem;
+                            if (item is EngineeringItem) return item.name == row.selectedItem;
+                            return false;
+                          })
+                        : null,
+                    hint: Text(
+                      "Select",
+                      style: AppTheme.bodySmall.copyWith(
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    isExpanded: true,
+                    isDense: true,
+                    icon: const SizedBox.shrink(),
+                    menuMaxHeight: 250,
+                    items: dropdownItems.map((item) {
+                      String name = '';
+                      if (item is PackageItem) name = item.name;
+                      if (item is ServiceItem) name = item.name;
+                      if (item is EngineeringItem) name = item.name;
+                      
+                      return DropdownMenuItem<I>(
+                        value: item,
+                        child: Text(
+                          name,
+                          style: AppTheme.bodySmall.copyWith(fontSize: 10),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: dashboardController.isLocked.value 
+                        ? null 
+                        : (I? value) {
+                            if (value != null) {
+                              onRowSelected();
+                              onDropdownChanged(index, value);
+                            }
+                          },
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -385,13 +445,8 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
     cells.add(DataCell(
       Container(
         width: 100,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(color: Colors.grey.shade300, width: 1),
-          ),
-        ),
-        child: Text(row.code, style: AppTheme.bodySmall.copyWith(fontSize: 11)),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Text(row.code, style: AppTheme.bodySmall.copyWith(fontSize: 10)),
       ),
     ));
 
@@ -399,13 +454,8 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
     cells.add(DataCell(
       Container(
         width: 80,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(color: Colors.grey.shade300, width: 1),
-          ),
-        ),
-        child: Text(row.unit, style: AppTheme.bodySmall.copyWith(fontSize: 11)),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Text(row.unit, style: AppTheme.bodySmall.copyWith(fontSize: 10)),
       ),
     ));
 
@@ -413,15 +463,10 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
     cells.add(DataCell(
       Container(
         width: 100,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(color: Colors.grey.shade300, width: 1),
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Text(
           row.price > 0 ? row.price.toStringAsFixed(2) : '',
-          style: AppTheme.bodySmall.copyWith(fontSize: 11),
+          style: AppTheme.bodySmall.copyWith(fontSize: 10),
           textAlign: TextAlign.right,
         ),
       ),
@@ -445,11 +490,11 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
       cells.add(DataCell(
         Container(
           width: 100,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Text(
             row.calculateCost().toStringAsFixed(2),
             style: AppTheme.bodySmall.copyWith(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.right,
@@ -469,11 +514,11 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
       cells.add(DataCell(
         Container(
           width: 100,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Text(
             row.calculateCost().toStringAsFixed(2),
             style: AppTheme.bodySmall.copyWith(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.right,
@@ -489,19 +534,14 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
     return DataCell(
       Container(
         width: width,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(color: Colors.grey.shade300, width: 1),
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: TextField(
           controller: TextEditingController(text: value),
           enabled: !dashboardController.isLocked.value,
-          style: AppTheme.bodySmall.copyWith(fontSize: 11),
+          style: AppTheme.bodySmall.copyWith(fontSize: 10),
           decoration: const InputDecoration(
             isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
             border: InputBorder.none,
           ),
           keyboardType: TextInputType.number,

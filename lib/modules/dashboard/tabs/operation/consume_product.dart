@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mudpro_desktop_app/modules/UG/controller/ug_pit_controller.dart';
+import 'package:mudpro_desktop_app/modules/UG/model/pit_model.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/controller/products_controller.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
 import '../../controller/operation_controller.dart';
@@ -17,6 +19,7 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
   final OperationController operationController = Get.find<OperationController>();
   final DashboardController dashboardController = Get.find<DashboardController>();
   final ProductsController productsController = Get.put(ProductsController());
+  final PitController pitController = Get.put(PitController());
   
   final RxString selectedMethod = "Used".obs;
   final RxBool addWater = false.obs;
@@ -27,12 +30,23 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
   final RxList<ProductRowData> productRows = <ProductRowData>[].obs;
   final RxList<DistributeRowData> distributeRows = <DistributeRowData>[].obs;
 
+  // Selected row indices
+  final RxInt selectedProductRow = 0.obs;
+  final RxInt selectedDistributeRow = 0.obs;
+
+  // Selected products for top dropdown
+  final Rx<ProductModel?> selectedTopProduct = Rx<ProductModel?>(null);
+
   @override
   void initState() {
     super.initState();
-    // Initialize with one empty row each
-    productRows.add(ProductRowData());
-    distributeRows.add(DistributeRowData());
+    // Initialize with 5 empty rows each
+    for (int i = 0; i < 5; i++) {
+      productRows.add(ProductRowData());
+      distributeRows.add(DistributeRowData());
+    }
+    // Fetch pits data
+    pitController.fetchAllPits();
   }
 
   @override
@@ -75,10 +89,7 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
           // Select Products Dropdown
           Expanded(
             flex: 2,
-            child: _buildDropdown(
-              hint: "Select Products",
-              icon: Icons.inventory_2_outlined,
-            ),
+            child: _buildProductDropdown(),
           ),
           const SizedBox(width: 10),
 
@@ -110,6 +121,60 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
                 _buildCompactRadio("Final", "Final"),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductDropdown() {
+    return Container(
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.inventory_2_outlined, size: 14, color: AppTheme.textSecondary),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Obx(() => DropdownButtonHideUnderline(
+              child: DropdownButton<ProductModel>(
+                value: selectedTopProduct.value != null &&
+                       productsController.products.any((p) => p.id == selectedTopProduct.value?.id)
+                    ? selectedTopProduct.value
+                    : null,
+                hint: Text(
+                  "Select Products",
+                  style: AppTheme.bodySmall.copyWith(
+                    fontSize: 10,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                icon: Icon(Icons.arrow_drop_down, size: 16),
+                isExpanded: true,
+                isDense: true,
+                menuMaxHeight: 300,
+                items: productsController.products.where((p) => p.id != null).map((product) {
+                  return DropdownMenuItem<ProductModel>(
+                    value: product,
+                    child: Text(
+                      product.product,
+                      style: AppTheme.bodySmall.copyWith(fontSize: 10),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+                onChanged: dashboardController.isLocked.value 
+                    ? null 
+                    : (ProductModel? value) {
+                        selectedTopProduct.value = value;
+                      },
+              ),
+            )),
           ),
         ],
       ),
@@ -260,108 +325,160 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
             ),
           ),
 
-          // Table
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Obx(() => Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: Colors.grey.shade300),
-                ),
-              ),
-              child: DataTable(
-                headingRowHeight: 32,
-                dataRowHeight: 36,
-                columnSpacing: 0,
-                horizontalMargin: 0,
-                dividerThickness: 1,
-                headingRowColor: MaterialStateProperty.all(Colors.grey.shade50),
-                headingTextStyle: AppTheme.bodySmall.copyWith(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryColor,
-                ),
-                dataTextStyle: AppTheme.bodySmall.copyWith(fontSize: 10),
-                columns: headers.map((h) => DataColumn(
-                  label: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(h),
-                  ),
-                )).toList(),
-                rows: List.generate(productRows.length, (index) {
-                  final row = productRows[index];
-                  return DataRow(
-                    color: MaterialStateProperty.all(
-                      index % 2 == 0 ? Colors.white : Colors.grey.shade50,
+          // Table with fixed height and scrollable content
+          SizedBox(
+            height: 220, // Fixed height
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Obx(() => Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: Colors.grey.shade300),
                     ),
-                    cells: _buildProductCells(row, index),
-                  );
-                }),
+                  ),
+                  child: DataTable(
+                    headingRowHeight: 32,
+                    dataRowHeight: 32,
+                    columnSpacing: 0,
+                    horizontalMargin: 0,
+                    dividerThickness: 0,
+                    headingRowColor: MaterialStateProperty.all(Colors.grey.shade50),
+                    border: TableBorder(
+                      verticalInside: BorderSide(color: Colors.grey.shade300, width: 1),
+                      horizontalInside: BorderSide(color: Colors.grey.shade200, width: 1),
+                    ),
+                    headingTextStyle: AppTheme.bodySmall.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.primaryColor,
+                    ),
+                    dataTextStyle: AppTheme.bodySmall.copyWith(fontSize: 10),
+                    columns: headers.map((h) => DataColumn(
+                      label: Container(
+                        width: _getProductColumnWidth(h),
+                        alignment: h.contains('Price') || h.contains('Cost') || h.contains('Initial') || 
+                                   h.contains('Adjust') || h.contains('Used') || h.contains('Final') || h.contains('Vol')
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(h),
+                      ),
+                    )).toList(),
+                    rows: List.generate(productRows.length, (index) {
+                      final row = productRows[index];
+                      final isSelected = selectedProductRow.value == index;
+                      
+                      return DataRow(
+                        color: MaterialStateProperty.all(
+                          index % 2 == 0 ? Colors.white : Colors.grey.shade50,
+                        ),
+                        cells: _buildProductCells(row, index, isSelected),
+                      );
+                    }),
+                  ),
+                )),
               ),
-            )),
+            ),
           ),
         ],
       ),
     );
   }
 
-  List<DataCell> _buildProductCells(ProductRowData row, int index) {
+  double _getProductColumnWidth(String header) {
+    if (header == 'Product') {
+      return 150;
+    } else if (header == 'Code') {
+      return 80;
+    } else if (header == 'SG' || header == 'Unit') {
+      return 70;
+    } else if (header.contains('Price') || header.contains('Cost')) {
+      return 85;
+    } else {
+      return 75;
+    }
+  }
+
+  List<DataCell> _buildProductCells(ProductRowData row, int index, bool isSelected) {
     List<DataCell> cells = [];
 
-    // Product Dropdown
+    // Product Dropdown with icon
     cells.add(DataCell(
-      Container(
-        width: 150,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(color: Colors.grey.shade300, width: 1),
+      GestureDetector(
+        onTap: () => selectedProductRow.value = index,
+        child: Container(
+          width: 150,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            border: Border(
+              right: BorderSide(color: Colors.grey.shade300, width: 1),
+            ),
+          ),
+          child: Row(
+            children: [
+              // Dropdown icon - shows only in selected row
+              if (isSelected)
+                Icon(
+                  Icons.arrow_drop_down,
+                  size: 16,
+                  color: AppTheme.primaryColor,
+                ),
+              if (isSelected)
+                const SizedBox(width: 4),
+              
+              Expanded(
+                child: Obx(() => DropdownButtonHideUnderline(
+                  child: DropdownButton<ProductModel>(
+                    value: row.selectedProduct.value != null &&
+                           productsController.products.any((p) => p.id == row.selectedProduct.value?.id)
+                        ? row.selectedProduct.value
+                        : null,
+                    hint: Text(
+                      "Select",
+                      style: AppTheme.bodySmall.copyWith(
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    isExpanded: true,
+                    isDense: true,
+                    icon: const SizedBox.shrink(), // Hide default icon
+                    menuMaxHeight: 300,
+                    items: productsController.products.where((p) => p.id != null).map((product) {
+                      return DropdownMenuItem<ProductModel>(
+                        value: product,
+                        child: Text(
+                          product.product,
+                          style: AppTheme.bodySmall.copyWith(fontSize: 10),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: dashboardController.isLocked.value 
+                        ? null 
+                        : (ProductModel? value) {
+                            if (value != null) {
+                              selectedProductRow.value = index;
+                              row.selectedProduct.value = value;
+                              row.code = value.code;
+                              row.sg = value.sg;
+                              row.unit = value.unitClass;
+                              row.price = value.a.isNotEmpty 
+                                  ? double.tryParse(value.a) ?? 0.0 
+                                  : 0.0;
+                                  row.initial = value.initial;
+                              productRows.refresh();
+                              _checkAndAddProductRow();
+                            }
+                          },
+                  ),
+                )),
+              ),
+            ],
           ),
         ),
-        child: Obx(() => DropdownButtonHideUnderline(
-          child: DropdownButton<ProductModel>(
-            value: row.selectedProduct.value != null &&
-                   productsController.products.any((p) => p.id == row.selectedProduct.value?.id)
-                ? row.selectedProduct.value
-                : null,
-            hint: Text(
-              "Select",
-              style: AppTheme.bodySmall.copyWith(
-                fontSize: 10,
-                color: Colors.grey,
-              ),
-            ),
-            isExpanded: true,
-            isDense: true,
-            icon: Icon(Icons.arrow_drop_down, size: 16),
-            menuMaxHeight: 300,
-            items: productsController.products.where((p) => p.id != null).map((product) {
-              return DropdownMenuItem<ProductModel>(
-                value: product,
-                child: Text(
-                  product.product,
-                  style: AppTheme.bodySmall.copyWith(fontSize: 10),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              );
-            }).toList(),
-            onChanged: dashboardController.isLocked.value 
-                ? null 
-                : (ProductModel? value) {
-                    if (value != null) {
-                      row.selectedProduct.value = value;
-                      row.code = value.code;
-                      row.sg = value.sg;
-                      row.unit = value.unitClass;
-                      row.price = value.price.isNotEmpty 
-                          ? double.tryParse(value.price) ?? 0.0 
-                          : 0.0;
-                      productRows.refresh();
-                      _checkAndAddProductRow();
-                    }
-                  },
-          ),
-        )),
       ),
     ));
 
@@ -435,11 +552,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
       Container(
         width: width,
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(color: Colors.grey.shade300, width: 1),
-          ),
-        ),
         child: Text(
           text,
           style: AppTheme.bodySmall.copyWith(
@@ -462,11 +574,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
       Container(
         width: width,
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          border: Border(
-            right: BorderSide(color: Colors.grey.shade300, width: 1),
-          ),
-        ),
         child: TextField(
           controller: TextEditingController(text: value),
           enabled: !dashboardController.isLocked.value,
@@ -485,9 +592,11 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
   }
 
   void _checkAndAddProductRow() {
-    final lastRow = productRows.last;
-    if (lastRow.selectedProduct.value != null) {
-      productRows.add(ProductRowData());
+    if (productRows.length >= 5) {
+      final lastRow = productRows.last;
+      if (lastRow.selectedProduct.value != null) {
+        productRows.add(ProductRowData());
+      }
     }
   }
 
@@ -545,16 +654,20 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
             ),
           ),
 
-          // Table
+          // Table with fixed height and scrollable content
           Expanded(
             child: SingleChildScrollView(
               child: Obx(() => DataTable(
                 headingRowHeight: 32,
-                dataRowHeight: 36,
+                dataRowHeight: 32,
                 columnSpacing: 0,
                 horizontalMargin: 0,
-                dividerThickness: 1,
+                dividerThickness: 0,
                 headingRowColor: MaterialStateProperty.all(Colors.grey.shade50),
+                border: TableBorder(
+                  verticalInside: BorderSide(color: Colors.grey.shade300, width: 1),
+                  horizontalInside: BorderSide(color: Colors.grey.shade200, width: 1),
+                ),
                 headingTextStyle: AppTheme.bodySmall.copyWith(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -564,12 +677,15 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
                 columns: [
                   DataColumn(
                     label: Container(
+                      width: 150,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text("Pit"),
                     ),
                   ),
                   DataColumn(
                     label: Container(
+                      width: 100,
+                      alignment: Alignment.centerRight,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text("Vol (bbl)"),
                     ),
@@ -577,50 +693,81 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
                 ],
                 rows: List.generate(distributeRows.length, (index) {
                   final row = distributeRows[index];
+                  final isSelected = selectedDistributeRow.value == index;
+                  
                   return DataRow(
                     color: MaterialStateProperty.all(
                       index % 2 == 0 ? Colors.white : Colors.grey.shade50,
                     ),
                     cells: [
-                      // Pit Dropdown
+                      // Pit Dropdown with icon
                       DataCell(
-                        Container(
-                          width: 150,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              right: BorderSide(color: Colors.grey.shade300, width: 1),
-                            ),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: row.pit,
-                              isExpanded: true,
-                              isDense: true,
-                              icon: Icon(Icons.arrow_drop_down, size: 16),
-                              items: [
-                                "Active System",
-                                "Reserve 1",
-                                "Reserve 2",
-                                "Reserve 3",
-                              ].map((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value,
-                                    style: AppTheme.bodySmall.copyWith(fontSize: 10),
+                        GestureDetector(
+                          onTap: () => selectedDistributeRow.value = index,
+                          child: Container(
+                            width: 150,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Row(
+                              children: [
+                                // Dropdown icon - shows only in selected row
+                                if (isSelected)
+                                  Icon(
+                                    Icons.arrow_drop_down,
+                                    size: 16,
+                                    color: AppTheme.successColor,
                                   ),
-                                );
-                              }).toList(),
-                              onChanged: dashboardController.isLocked.value 
-                                  ? null 
-                                  : (String? newValue) {
-                                      if (newValue != null) {
-                                        row.pit = newValue;
-                                        distributeRows.refresh();
-                                        _checkAndAddDistributeRow();
-                                      }
-                                    },
+                                if (isSelected)
+                                  const SizedBox(width: 4),
+                                
+                                Expanded(
+                                  child: Obx(() => DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: row.pit.isNotEmpty ? row.pit : null,
+                                      hint: Text(
+                                        "Select Pit",
+                                        style: AppTheme.bodySmall.copyWith(
+                                          fontSize: 10,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      isExpanded: true,
+                                      isDense: true,
+                                      icon: const SizedBox.shrink(),
+                                      menuMaxHeight: 250,
+                                      items: pitController.pits
+                                          .where((pit) => pit.id != null && pit.pitName.isNotEmpty)
+                                          .map((pit) {
+                                        return DropdownMenuItem<String>(
+                                          value: pit.pitName,
+                                          child: Text(
+                                            pit.pitName,
+                                            style: AppTheme.bodySmall.copyWith(fontSize: 10),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: dashboardController.isLocked.value
+                                          ? null
+                                          : (String? newValue) {
+                                              if (newValue != null) {
+                                                selectedDistributeRow.value = index;
+                                                row.pit = newValue;
+                                                // Find the selected pit and set volume to its capacity
+                                                final selectedPit = pitController.pits.firstWhere(
+                                                  (pit) => pit.pitName == newValue,
+                                                  orElse: () => PitModel(pitName: '', capacity: 0.0, initialActive: false),
+                                                );
+                                                if (selectedPit.pitName.isNotEmpty) {
+                                                  row.volume = selectedPit.capacity.value.toString();
+                                                }
+                                                distributeRows.refresh();
+                                                _checkAndAddDistributeRow();
+                                              }
+                                            },
+                                    ),
+                                  )),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -661,9 +808,11 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
   }
 
   void _checkAndAddDistributeRow() {
-    final lastRow = distributeRows.last;
-    if (lastRow.volume.isNotEmpty) {
-      distributeRows.add(DistributeRowData());
+    if (distributeRows.length >= 5) {
+      final lastRow = distributeRows.last;
+      if (lastRow.volume.isNotEmpty) {
+        distributeRows.add(DistributeRowData());
+      }
     }
   }
 
@@ -799,73 +948,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
     );
   }
 
-  Widget _buildInputField({
-    required String label,
-    required TextEditingController controller,
-    required String suffix,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTheme.bodySmall.copyWith(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 5),
-        Obx(() => Container(
-          height: 32,
-          decoration: BoxDecoration(
-            color: dashboardController.isLocked.value 
-                ? Colors.grey.shade50 
-                : Colors.white,
-            borderRadius: BorderRadius.circular(3),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  enabled: !dashboardController.isLocked.value,
-                  style: AppTheme.bodySmall.copyWith(fontSize: 10),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    border: InputBorder.none,
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(3),
-                    bottomRight: Radius.circular(3),
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    suffix,
-                    style: AppTheme.bodySmall.copyWith(
-                      fontSize: 10,
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        )),
-      ],
-    );
-  }
-
   Widget _buildCompactInputField({
     required TextEditingController controller,
     required String suffix,
@@ -941,6 +1023,6 @@ class ProductRowData {
 
 // Distribute Row Data Model
 class DistributeRowData {
-  String pit = 'Active System';
+  String pit = '';
   String volume = '';
 }

@@ -52,109 +52,116 @@ class OperationPage extends StatelessWidget {
     );
   }
 
-  // ----------------- LEFT PANEL -----------------R
+  // ----------------- LEFT PANEL -----------------
 
-Widget _buildLeftPanel() {
-  return Container(
-    width: 280,
-    decoration: BoxDecoration(
-      color: AppTheme.cardColor,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: Colors.grey.shade200,
-        width: 1,
+  Widget _buildLeftPanel() {
+    return Container(
+      width: 280,
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
       ),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Panel Header (no changes)
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: AppTheme.primaryGradient,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Panel Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.list_alt_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "Operations Menu",
+                  style: AppTheme.bodyLarge.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.list_alt_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                "Operations Menu",
-                style: AppTheme.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-        
-        // Operations List - Modified for smaller rows
-        Expanded(
-          child: Scrollbar(
-            controller: scrollController,
-            child: ListView.separated(
+          
+          // Operations List - Dynamic rows
+          Expanded(
+            child: Scrollbar(
               controller: scrollController,
-              padding: const EdgeInsets.all(8),
-              itemCount: controller.labels.length,
-              separatorBuilder: (_, __) => const Divider(
-                height: 1,
-                thickness: 0.5,
-                color: Color(0xffE2E8F0),
-              ),
-              itemBuilder: (context, index) {
-                return Obx(() {
-                  final isSelected = controller.selectedRowIndex.value == index;
+              child: Obx(() {
+                // Calculate visible row count - start with 1, add more as selections are made
+                int visibleRowCount = 1;
+                for (int i = 0; i < controller.dropdownValues.length; i++) {
+                  if (controller.dropdownValues[i] != null) {
+                    visibleRowCount = i + 2; // Show next row after selection
+                  }
+                }
+                
+                return ListView.separated(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(8),
+                  itemCount: visibleRowCount,
+                  separatorBuilder: (_, __) => const Divider(
+                    height: 1,
+                    thickness: 0.5,
+                    color: Color(0xffE2E8F0),
+                  ),
+                  itemBuilder: (context, index) {
+                    return Obx(() {
+                      final isSelected = controller.selectedRowIndex.value == index;
 
-                  // Container with reduced height
-                  return Container(
-                    height: 36, // Reduced height
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(6),
-                      border: isSelected ? Border.all(
-                        color: AppTheme.primaryColor.withOpacity(0.3),
-                        width: 1,
-                      ) : null,
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 0.5),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4, // Adjusted vertical padding
-                      ),
-                      child: Row(
-                        children: [
-                          // Selection chevron
-                          GestureDetector(
-                            onTap: () => controller.selectedRowIndex.value = index,
-                            child: Container(
-                              width: 24,
-                              height: 24,
-                              alignment: Alignment.center,
-                              child: Icon(
-                                Icons.chevron_right_rounded,
-                                size: 16,
-                                color: isSelected
-                                  ? AppTheme.primaryColor
-                                  : AppTheme.textSecondary,
-                              ),
-                            ),
+                      return Container(
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(6),
+                          border: isSelected ? Border.all(
+                            color: AppTheme.primaryColor.withOpacity(0.3),
+                            width: 1,
+                          ) : null,
+                        ),
+                        margin: const EdgeInsets.symmetric(vertical: 0.5),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                           ),
-                          const SizedBox(width: 4),
+                          child: Row(
+                            children: [
+                              // Row number instead of chevron
+                              Container(
+                                width: 24,
+                                height: 24,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  "${index + 1}",
+                                  style: AppTheme.bodySmall.copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isSelected
+                                      ? AppTheme.primaryColor
+                                      : AppTheme.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
 
-                          // Dropdown or text based on open state
-                          Expanded(
-                            child: controller.isDropdownOpen[index]
-                              ? DropdownButtonHideUnderline(
+                              // Always show dropdown
+                              Expanded(
+                                child: DropdownButtonHideUnderline(
                                   child: DropdownButton<OperationType?>(
                                     isExpanded: true,
                                     isDense: true,
@@ -171,12 +178,17 @@ Widget _buildLeftPanel() {
                                     onChanged: (v) {
                                       controller.dropdownValues[index] = v;
                                       controller.selectedRowIndex.value = index;
-                                      if (v == null) {
-                                        controller.isDropdownOpen[index] = false;
-                                      }
                                     },
                                     menuMaxHeight: 200,
-                                    itemHeight: null, // Use default height
+                                    itemHeight: null,
+                                    hint: Text(
+                                      "",
+                                      style: AppTheme.bodySmall.copyWith(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
                                     style: AppTheme.bodySmall.copyWith(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
@@ -210,95 +222,71 @@ Widget _buildLeftPanel() {
                                       ),
                                     ],
                                   ),
-                                )
-                              : GestureDetector(
-                                  onTap: () => controller.isDropdownOpen[index] = true,
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          controller.dropdownValues[index] != null
-                                            ? controller.labels[controller.dropdownValues[index]]!
-                                            : "",
-                                          style: AppTheme.bodySmall.copyWith(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w500,
-                                            color: AppTheme.textPrimary,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Icon(
-                                        Icons.arrow_drop_down_rounded,
-                                        size: 18,
-                                        color: AppTheme.textSecondary,
-                                      ),
-                                    ],
+                                ),
+                              ),
+
+                              // Selection Indicator
+                              if (isSelected)
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  margin: const EdgeInsets.only(left: 6),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppTheme.primaryColor,
                                   ),
                                 ),
+                            ],
                           ),
-
-                          // Selection Indicator
-                          if (isSelected)
-                            Container(
-                              width: 6,
-                              height: 6,
-                              margin: const EdgeInsets.only(left: 6),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppTheme.primaryColor,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                });
-              },
+                        ),
+                      );
+                    });
+                  },
+                );
+              }),
             ),
           ),
-        ),
-        
-        // Panel Footer (no changes)
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: Colors.grey.shade200,
-                width: 1,
-              ),
-            ),
-            color: Colors.white,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(12),
-              bottomRight: Radius.circular(12),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.info_outline_rounded,
-                size: 14,
-                color: AppTheme.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  "Select an operation to view details",
-                  style: AppTheme.caption.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+          
+          // Panel Footer
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: Colors.grey.shade200,
+                  width: 1,
                 ),
               ),
-            ],
+              color: Colors.white,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(12),
+                bottomRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 14,
+                  color: AppTheme.textSecondary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    "Select an operation to view details",
+                    style: AppTheme.caption.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   // ----------------- RIGHT PANEL -----------------
   Widget _buildRightPanel() {
