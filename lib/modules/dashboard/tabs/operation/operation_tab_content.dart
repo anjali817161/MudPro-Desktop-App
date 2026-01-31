@@ -100,7 +100,6 @@ class OperationPage extends StatelessWidget {
           // Operations List - Dynamic rows
           Expanded(
             child: Scrollbar(
-              controller: scrollController,
               child: Obx(() {
                 // Calculate visible row count - start with 1, add more as selections are made
                 int visibleRowCount = 1;
@@ -109,7 +108,9 @@ class OperationPage extends StatelessWidget {
                     visibleRowCount = i + 2; // Show next row after selection
                   }
                 }
-                
+                // Ensure visibleRowCount doesn't exceed the available dropdown values
+                visibleRowCount = visibleRowCount.clamp(1, controller.dropdownValues.length);
+
                 return ListView.separated(
                   controller: scrollController,
                   padding: const EdgeInsets.all(8),

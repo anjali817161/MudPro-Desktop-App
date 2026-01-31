@@ -39,13 +39,13 @@ class _SwitchPitViewState extends State<SwitchPitView> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Active Pits Section
           _buildActivePitsSection(),
-          const SizedBox(height: 30),
+          const SizedBox(height: 16),
           // Storage Pits Section
           _buildStoragePitsSection(),
         ],
@@ -58,13 +58,14 @@ class _SwitchPitViewState extends State<SwitchPitView> {
   // ===================================================
   Widget _buildActivePitsSection() {
     return Container(
+      width: MediaQuery.of(context).size.width * 0.6, // Reduced width
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade300),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -75,9 +76,14 @@ class _SwitchPitViewState extends State<SwitchPitView> {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor,
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primaryColor.withOpacity(0.95),
+                  AppTheme.primaryColor,
+                ],
+              ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -85,12 +91,21 @@ class _SwitchPitViewState extends State<SwitchPitView> {
             ),
             child: Row(
               children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
                 Text(
                   "Active Pits - Uncheck to Move to Storage",
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -109,13 +124,14 @@ class _SwitchPitViewState extends State<SwitchPitView> {
   // ===================================================
   Widget _buildStoragePitsSection() {
     return Container(
+      width: MediaQuery.of(context).size.width * 0.45, // More reduced width
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade300),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -126,21 +142,39 @@ class _SwitchPitViewState extends State<SwitchPitView> {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor,
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primaryColor.withOpacity(0.95),
+                  AppTheme.primaryColor,
+                ],
+              ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
               ),
             ),
-            child: Text(
-              "Storage - Uncheck to Move to Active Pits",
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
-              ),
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+                Text(
+                  "Storage - Check to Move to Active Pits",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -160,7 +194,7 @@ class _SwitchPitViewState extends State<SwitchPitView> {
         // Fixed Header
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: AppTheme.primaryColor.withOpacity(0.08),
             border: Border(
               top: BorderSide(color: Colors.grey.shade300, width: 1),
               bottom: BorderSide(color: Colors.grey.shade300, width: 1),
@@ -168,10 +202,10 @@ class _SwitchPitViewState extends State<SwitchPitView> {
           ),
           child: Table(
             columnWidths: const {
-              0: FlexColumnWidth(0.6), // #
+              0: FlexColumnWidth(0.5), // #
               1: FlexColumnWidth(2.0), // Pit
-              2: FlexColumnWidth(1.0), // Checked
-              3: FlexColumnWidth(1.5), // Measured Vol.
+              2: FlexColumnWidth(0.8), // Checked
+              3: FlexColumnWidth(1.2), // Measured Vol.
             },
             children: [
               TableRow(
@@ -190,22 +224,23 @@ class _SwitchPitViewState extends State<SwitchPitView> {
         Obx(() {
           if (pitController.isLoading.value) {
             return Container(
-              height: 200,
+              height: 120,
               alignment: Alignment.center,
               child: CircularProgressIndicator(
                 color: AppTheme.primaryColor,
+                strokeWidth: 2,
               ),
             );
           }
 
           if (pitController.selectedPits.isEmpty) {
             return Container(
-              height: 200,
+              height: 120,
               alignment: Alignment.center,
               child: Text(
                 "No active pits",
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 11,
                   color: AppTheme.textSecondary,
                 ),
               ),
@@ -213,7 +248,7 @@ class _SwitchPitViewState extends State<SwitchPitView> {
           }
 
           return Container(
-            constraints: const BoxConstraints(maxHeight: 250),
+            constraints: const BoxConstraints(maxHeight: 180), // Reduced height
             child: Scrollbar(
               controller: activePitScrollController,
               thumbVisibility: true,
@@ -232,10 +267,10 @@ class _SwitchPitViewState extends State<SwitchPitView> {
                     ),
                     child: Table(
                       columnWidths: const {
-                        0: FlexColumnWidth(0.6),
+                        0: FlexColumnWidth(0.5),
                         1: FlexColumnWidth(2.0),
-                        2: FlexColumnWidth(1.0),
-                        3: FlexColumnWidth(1.5),
+                        2: FlexColumnWidth(0.8),
+                        3: FlexColumnWidth(1.2),
                       },
                       children: [
                         TableRow(
@@ -267,7 +302,7 @@ class _SwitchPitViewState extends State<SwitchPitView> {
         // Fixed Header
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: AppTheme.primaryColor.withOpacity(0.08),
             border: Border(
               top: BorderSide(color: Colors.grey.shade300, width: 1),
               bottom: BorderSide(color: Colors.grey.shade300, width: 1),
@@ -275,9 +310,9 @@ class _SwitchPitViewState extends State<SwitchPitView> {
           ),
           child: Table(
             columnWidths: const {
-              0: FlexColumnWidth(0.6), // #
+              0: FlexColumnWidth(0.5), // #
               1: FlexColumnWidth(2.5), // Pit
-              2: FlexColumnWidth(1.0), // Checked
+              2: FlexColumnWidth(0.8), // Checked
             },
             children: [
               TableRow(
@@ -295,22 +330,23 @@ class _SwitchPitViewState extends State<SwitchPitView> {
         Obx(() {
           if (pitController.isLoading.value) {
             return Container(
-              height: 200,
+              height: 120,
               alignment: Alignment.center,
               child: CircularProgressIndicator(
                 color: AppTheme.primaryColor,
+                strokeWidth: 2,
               ),
             );
           }
 
           if (pitController.unselectedPits.isEmpty) {
             return Container(
-              height: 200,
+              height: 120,
               alignment: Alignment.center,
               child: Text(
                 "No storage pits",
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 11,
                   color: AppTheme.textSecondary,
                 ),
               ),
@@ -318,7 +354,7 @@ class _SwitchPitViewState extends State<SwitchPitView> {
           }
 
           return Container(
-            constraints: const BoxConstraints(maxHeight: 250),
+            constraints: const BoxConstraints(maxHeight: 180), // Reduced height
             child: Scrollbar(
               controller: storagePitScrollController,
               thumbVisibility: true,
@@ -337,9 +373,9 @@ class _SwitchPitViewState extends State<SwitchPitView> {
                     ),
                     child: Table(
                       columnWidths: const {
-                        0: FlexColumnWidth(0.6),
+                        0: FlexColumnWidth(0.5),
                         1: FlexColumnWidth(2.5),
-                        2: FlexColumnWidth(1.0),
+                        2: FlexColumnWidth(0.8),
                       },
                       children: [
                         TableRow(
@@ -367,13 +403,13 @@ class _SwitchPitViewState extends State<SwitchPitView> {
   
   Widget _buildHeaderCell(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), // Reduced padding
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 11, // Reduced font size
           fontWeight: FontWeight.w600,
-          color: AppTheme.textPrimary,
+          color: AppTheme.primaryColor,
         ),
         textAlign: text == "#" || text == "Checked" ? TextAlign.center : TextAlign.left,
       ),
@@ -382,12 +418,12 @@ class _SwitchPitViewState extends State<SwitchPitView> {
 
   Widget _buildDataCell(String text, {bool isLeft = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), // Reduced padding
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w400,
+          fontSize: 11, // Reduced font size
+          fontWeight: FontWeight.w500,
           color: AppTheme.textPrimary,
         ),
         textAlign: isLeft ? TextAlign.left : TextAlign.center,
@@ -398,7 +434,7 @@ class _SwitchPitViewState extends State<SwitchPitView> {
 
   Widget _buildCheckboxCell(dynamic pit, bool isActive) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced padding
       alignment: Alignment.center,
       child: Obx(() {
         // For active pits: checkbox is checked when initialActive is true
@@ -406,7 +442,7 @@ class _SwitchPitViewState extends State<SwitchPitView> {
         bool checkboxValue = isActive ? pit.initialActive.value : !pit.initialActive.value;
         
         return Transform.scale(
-          scale: 1.0,
+          scale: 0.85, // Slightly smaller checkbox
           child: Checkbox(
             value: checkboxValue,
             onChanged: dashboardController.isLocked.value

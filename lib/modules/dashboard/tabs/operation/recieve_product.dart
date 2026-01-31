@@ -85,7 +85,6 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
                   productRows[index].selectedItem = item.product ?? '';
                   productRows[index].code = item.code ?? '';
                   productRows[index].unit =  item.unitClass ?? '';
-                  productRows[index].amount = item.a?.toString() ?? '';
                   productRows.refresh();
                   _checkAndAddRow(productRows);
                 },
@@ -107,7 +106,6 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
                   packageRows[index].selectedItem = item.name;
                   packageRows[index].code = item.code;
                   packageRows[index].unit = item.unit;
-                  packageRows[index].amount = item.price.toString();
                   packageRows.refresh();
                   _checkAndAddRow(packageRows);
                 },
@@ -486,11 +484,20 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
         width: _getColumnWidth('Amount'),
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        alignment: Alignment.centerLeft,
-        child: Text(
-          row.amount,
+        child: TextField(
+          controller: TextEditingController(text: row.amount),
+          enabled: !dashboardController.isLocked.value,
           style: AppTheme.bodySmall.copyWith(fontSize: 10),
-          overflow: TextOverflow.ellipsis,
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            border: InputBorder.none,
+          ),
+          keyboardType: TextInputType.number,
+          onChanged: (val) {
+            row.amount = val;
+            onFieldChanged(index);
+          },
         ),
       ),
     );

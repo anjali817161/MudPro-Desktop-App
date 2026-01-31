@@ -230,7 +230,7 @@ class _TransferMudViewState extends State<TransferMudView> {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Container(
-                width: 600, // Fixed width
+                width: 500, // Fixed width for 3 columns
                 child: Column(
                   children: [
                     // Table Header - Fixed
@@ -243,9 +243,9 @@ class _TransferMudViewState extends State<TransferMudView> {
                       ),
                       child: Row(
                         children: [
+                          _buildHeaderCell("No", 50),
                           _buildHeaderCell("Pit", 300),
                           _buildHeaderCell("Vol. (bbl)", 150),
-                          
                         ],
                       ),
                     ),
@@ -270,12 +270,12 @@ class _TransferMudViewState extends State<TransferMudView> {
                               ),
                               child: Row(
                                 children: [
+                                  // Number cell
+                                  _buildNumberCell(index + 1, 50),
                                   // Pit dropdown cell
                                   _buildPitDropdownCell(row, index, isSelected, 300),
                                   // Volume cell
                                   _buildVolumeCell(row, 150),
-                                  // Empty cell
-                                
                                 ],
                               ),
                             );
@@ -373,7 +373,6 @@ class _TransferMudViewState extends State<TransferMudView> {
                           if (value != null) {
                             selectedRow.value = index;
                             row.selectedPit = value;
-                            row.volume = value.capacity.value.toString();
                             transferRows.refresh();
                             _checkAndAddRow();
                           }
@@ -383,6 +382,24 @@ class _TransferMudViewState extends State<TransferMudView> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNumberCell(int number, double width) {
+    return Container(
+      width: width,
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        border: Border(
+          right: BorderSide(color: Colors.grey.shade300, width: 0.5),
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        number.toString(),
+        style: AppTheme.bodySmall.copyWith(fontSize: 10),
       ),
     );
   }
@@ -397,14 +414,20 @@ class _TransferMudViewState extends State<TransferMudView> {
           right: BorderSide(color: Colors.grey.shade300, width: 0.5),
         ),
       ),
-      alignment: Alignment.centerRight,
-      child: Text(
-        row.volume.isEmpty ? "" : row.volume,
-        style: AppTheme.bodySmall.copyWith(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
+      child: TextField(
+        controller: TextEditingController(text: row.volume),
+        enabled: !dashboardController.isLocked.value,
+        style: AppTheme.bodySmall.copyWith(fontSize: 10),
+        decoration: const InputDecoration(
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          border: InputBorder.none,
         ),
+        keyboardType: TextInputType.number,
         textAlign: TextAlign.right,
+        onChanged: (val) {
+          row.volume = val;
+        },
       ),
     );
   }

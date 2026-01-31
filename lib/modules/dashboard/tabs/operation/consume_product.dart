@@ -752,14 +752,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
                                               if (newValue != null) {
                                                 selectedDistributeRow.value = index;
                                                 row.pit = newValue;
-                                                // Find the selected pit and set volume to its capacity
-                                                final selectedPit = pitController.pits.firstWhere(
-                                                  (pit) => pit.pitName == newValue,
-                                                  orElse: () => PitModel(pitName: '', capacity: 0.0, initialActive: false),
-                                                );
-                                                if (selectedPit.pitName.isNotEmpty) {
-                                                  row.volume = selectedPit.capacity.value.toString();
-                                                }
                                                 distributeRows.refresh();
                                                 _checkAndAddDistributeRow();
                                               }
