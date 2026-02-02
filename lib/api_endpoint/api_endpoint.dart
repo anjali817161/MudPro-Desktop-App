@@ -81,6 +81,20 @@ static const String deleteOperator = 'operators'; // DELETE /:id
   static const String getSynthetic = "synthetic/get-synthetic";
   static const String updateSynthetic = "synthetic"; // /:id
   static const String deleteSynthetic = "synthetic"; // /:id
+
+
+  // ============ PREMIXED ENDPOINTS ============
+  static const String addPremixed = "inventory/add-premixed"; // POST /:wellId
+  static const String getPremixed = "inventory/get-premixed"; // GET /:wellId
+  static const String updatePremixed = "inventory/update-premixed"; // PUT /:id
+  static const String deletePremixed = "inventory/delete-premixed"; // DELETE /:id
+
+  // ============ OBM ENDPOINTS ============
+  static const String getObm = "inventory/get-obm"; // GET /:wellId
+  static const String addObm = "inventory/add-obm"; // POST /:wellId
+  static const String updateObm = "inventory/update-obm"; // PUT /:id
+  static const String deleteObm = "inventory/delete-obm"; // DELETE /:id
+
   
 
 }

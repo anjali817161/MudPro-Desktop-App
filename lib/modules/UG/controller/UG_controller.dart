@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:mudpro_desktop_app/auth_repo/auth_repo.dart';
 import 'package:mudpro_desktop_app/modules/UG/model/formation_row_model.dart';
+import 'package:mudpro_desktop_app/modules/UG/model/inventory_model.dart';
 import 'package:mudpro_desktop_app/modules/UG/model/pit_model.dart';
 import 'package:mudpro_desktop_app/modules/UG/model/producst_model.dart' hide ProductModel;
 import 'package:mudpro_desktop_app/modules/UG/model/pump_model.dart';
@@ -64,54 +65,39 @@ final safetyMargin = '80.0'.obs;
     FormationRow(),
   ].obs;
 
+  /// Load premixed and OBM data from API
+  Future<void> loadInventoryData(String wellId) async {
+    try {
+      // Load Premixed
+      final premixedList = await repository.getPremixed(wellId);
+      premixed.value = premixedList;
 
- 
- var premixed = <PremixModel>[
-  PremixModel(
-    id: '1',
-    description: '8.0 ppg OBM (70/30) with Bar',
-    mw: '8.00',
-    leasingFee: '8.64',
-    mudType: 'Oil-based',
-  ),
-  PremixModel(
-    id: '2',
-    description: '10.6 ppg OBM (70/30) with Bar',
-    mw: '10.60',
-    leasingFee: '11.59',
-    mudType: 'Oil-based',
-  ),
-  PremixModel(
-    id: '3',
-    description: '11.0 ppg OBM (70/30) with Bar',
-    mw: '11.00',
-    leasingFee: '12.17',
-    mudType: 'Oil-based',
-  ),
-  PremixModel(
-    id: '4',
-    description: '11.5 ppg OBM (80/20) with Bar',
-    mw: '11.50',
-    leasingFee: '13.58',
-    mudType: 'Oil-based',
-  ),
-  PremixModel(
-    id: '5',
-    description: '12.8 ppg OBM (80/20) with Bar',
-    mw: '12.80',
-    leasingFee: '15.27',
-    mudType: 'Oil-based',
-  ),
-].obs;
+      // Load OBM
+      final obmList = await repository.getObm(wellId);
+      obm.value = obmList;
+
+      print('✅ Inventory data loaded successfully');
+      print('Premixed count: ${premixedList.length}');
+      print('OBM count: ${obmList.length}');
+    } catch (e) {
+      print('❌ Error loading inventory data: $e');
+
+      // Initialize with empty lists if loading fails
+      if (premixed.isEmpty) {
+        premixed.value = [];
+      }
+      if (obm.isEmpty) {
+        obm.value = [];
+      }
+    }
+  }
 
 
-var obm = <ObmModel>[
-  ObmModel(id: '1', product: '', code: '', sg: '', conc: ''),
-  ObmModel(id: '2', product: '', code: '', sg: '', conc: ''),
-  ObmModel(id: '3', product: '', code: '', sg: '', conc: ''),
-  ObmModel(id: '4', product: '', code: '', sg: '', conc: ''),
-  ObmModel(id: '5', product: '', code: '', sg: '', conc: ''),
-].obs;
+
+
+
+var premixed = <PremixModel>[].obs;
+var obm = <ObmModel>[].obs;
 
 final packages = <PackageModel>[
   PackageModel('1', '', '', '', '', '', false),
@@ -203,8 +189,11 @@ final otherSce = <OtherSceModel>[
   @override
   void onInit() {
     super.onInit();
-    // 初始化时计算总容量
-    // updateTotalCapacity();
+    
+    // Initialize with empty lists
+    premixed.value = [];
+    obm.value = [];
+    
     fetchProducts();
   }
 

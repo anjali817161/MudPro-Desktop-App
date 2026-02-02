@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:mudpro_desktop_app/api_endpoint/api_endpoint.dart';
+import 'package:mudpro_desktop_app/modules/UG/model/inventory_model.dart';
 import 'package:mudpro_desktop_app/modules/UG/model/pit_model.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/company_model.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/engineers_model.dart';
@@ -1219,6 +1220,225 @@ Future<Map<String, dynamic>> deleteProduct(String productId) async {
         'success': false,
         'message': 'Error: $e',
       };
+    }
+  }
+
+
+  // ==================== PREMIXED API ====================
+
+  Future<List<PremixModel>> getPremixed(String wellId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}${ApiEndpoint.getPremixed}/$wellId'),
+        headers: _headers,
+      );
+
+       print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          List<PremixModel> premixedList = (data['data'] as List)
+              .map((item) => PremixModel.fromJson(item))
+              .toList();
+          return premixedList;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to fetch premixed');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching premixed: $e');
+      throw e;
+    }
+  }
+
+  Future<PremixModel> createPremixed(String wellId, PremixModel premixed) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}${ApiEndpoint.addPremixed}/$wellId'),
+        headers: _headers,
+        body: json.encode(premixed.toJson()),
+      );
+
+       print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          return PremixModel.fromJson(data['data']);
+        } else {
+          throw Exception(data['message'] ?? 'Failed to create premixed');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error creating premixed: $e');
+      throw e;
+    }
+  }
+
+  Future<PremixModel> updatePremixed(String id, PremixModel premixed) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${baseUrl}${ApiEndpoint.updatePremixed}/$id'),
+        headers: _headers,
+        body: json.encode(premixed.toJson()),
+      );
+
+       print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          return PremixModel.fromJson(data['data']);
+        } else {
+          throw Exception(data['message'] ?? 'Failed to update premixed');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error updating premixed: $e');
+      throw e;
+    }
+  }
+
+  Future<void> deletePremixed(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${baseUrl}${ApiEndpoint.deletePremixed}/$id'),
+        headers: _headers,
+      );
+
+ print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        if (!data['success']) {
+          throw Exception(data['message'] ?? 'Failed to delete premixed');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error deleting premixed: $e');
+      throw e;
+    }
+  }
+
+  // ==================== OBM API ====================
+
+  Future<List<ObmModel>> getObm(String wellId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}${ApiEndpoint.getObm}/$wellId'),
+        headers: _headers,
+      );
+
+       print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          List<ObmModel> obmList = (data['data'] as List)
+              .map((item) => ObmModel.fromJson(item))
+              .toList();
+          return obmList;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to fetch OBM');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching OBM: $e');
+      throw e;
+    }
+  }
+
+  Future<ObmModel> createObm(String wellId, ObmModel obm) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}${ApiEndpoint.addObm}/$wellId'),
+        headers: _headers,
+        body: json.encode(obm.toJson()),
+      );
+
+       print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          return ObmModel.fromJson(data['data']);
+        } else {
+          throw Exception(data['message'] ?? 'Failed to create OBM');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error creating OBM: $e');
+      throw e;
+    }
+  }
+
+  Future<ObmModel> updateObm(String id, ObmModel obm) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${baseUrl}${ApiEndpoint.updateObm}/$id'),
+        headers: _headers,
+        body: json.encode(obm.toJson()),
+      );
+
+       print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          return ObmModel.fromJson(data['data']);
+        } else {
+          throw Exception(data['message'] ?? 'Failed to update OBM');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error updating OBM: $e');
+      throw e;
+    }
+  }
+
+  Future<void> deleteObm(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${baseUrl}${ApiEndpoint.deleteObm}/$id'),
+        headers: _headers,
+      );
+
+      print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        if (!data['success']) {
+          throw Exception(data['message'] ?? 'Failed to delete OBM');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error deleting OBM: $e');
+      throw e;
     }
   }
   
