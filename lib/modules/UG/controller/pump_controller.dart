@@ -5,13 +5,16 @@ import '../model/pump_model.dart';
 
 class PumpController extends GetxController {
   final AuthRepository repository = AuthRepository();
-  
+
   // Pump list with 10 rows initially
   final pumps = <PumpModel>[].obs;
-  
+
+  // Available pump models from API
+  final availablePumpModels = <String>[].obs;
+
   // Loading state
   final isLoading = false.obs;
-  
+
   // Current well ID - always set to static ID
   String currentWellId = '507f1f77bcf86cd799439011';
 
@@ -20,6 +23,8 @@ class PumpController extends GetxController {
     super.onInit();
     // Initialize with 10 empty rows
     _initializeEmptyRows();
+    // Load available pump models
+    _loadAvailablePumpModels();
   }
 
   // Initialize 10 empty rows
@@ -27,6 +32,17 @@ class PumpController extends GetxController {
     pumps.clear();
     for (int i = 0; i < 10; i++) {
       pumps.add(PumpModel(rowNumber: i + 1));
+    }
+  }
+
+  // Load available pump models from API
+  Future<void> _loadAvailablePumpModels() async {
+    try {
+      final models = await getAvailablePumpModels();
+      availablePumpModels.assignAll(models);
+      print('✅ Loaded ${models.length} pump models');
+    } catch (e) {
+      print('❌ Error loading pump models: $e');
     }
   }
 
@@ -197,5 +213,44 @@ class PumpController extends GetxController {
   // Get pump count (only counting pumps with data)
   int get pumpCount {
     return pumps.where((pump) => pump.hasData).length;
+  }
+
+  // Get all available pump models from API
+  Future<List<String>> getAvailablePumpModels() async {
+    try {
+      final result = await repository.getPumps(currentWellId);
+      if (result['success']) {
+        final List<dynamic> pumpData = result['data'] ?? [];
+        final Set<String> models = {};
+        for (var pump in pumpData) {
+          if (pump['model'] != null && pump['model'].toString().isNotEmpty) {
+            models.add(pump['model'].toString());
+          }
+        }
+        return models.toList()..sort();
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching pump models: $e');
+      return [];
+    }
+  }
+
+  // Get pump data by model
+  Future<Map<String, dynamic>?> getPumpDataByModel(String model) async {
+    try {
+      final result = await repository.getPumps(currentWellId);
+      if (result['success']) {
+        final List<dynamic> pumpData = result['data'] ?? [];
+        return pumpData.firstWhere(
+          (pump) => pump['model'] == model,
+          orElse: () => null,
+        );
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching pump data: $e');
+      return null;
+    }
   }
 }

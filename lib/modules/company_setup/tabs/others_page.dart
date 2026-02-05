@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/controller/others_controller.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/others_model.dart';
+import 'package:mudpro_desktop_app/modules/company_setup/default_mud_properties_page.dart';
 
 class OthersPage extends StatefulWidget {
   const OthersPage({super.key});
@@ -758,31 +760,46 @@ class _OthersPageState extends State<OthersPage> {
     );
   }
 
-  Widget _footerButtons() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-      margin: const EdgeInsets.only(top: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6, offset: const Offset(0, -2))],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          OutlinedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
-              side: BorderSide(color: Colors.grey.shade400),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+ // In OthersPage, update the _footerButtons widget:
+Widget _footerButtons() {
+  return Container(
+    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+    margin: const EdgeInsets.only(top: 12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6, offset: const Offset(0, -2))],
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        ElevatedButton.icon(
+          onPressed: () => Get.to(() => const DefaultMudPropertiesPage()), // Remove data passing
+          icon: const Icon(Icons.settings, size: 16),
+          label: const Text('Mud Properties'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.primaryColor,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
             ),
-            child: const Text('Close', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.grey)),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(width: 12),
+        OutlinedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+            side: BorderSide(color: Colors.grey.shade400),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          ),
+          child: const Text('Cancel', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.grey)),
+        ),
+      ],
+    ),
+  );
+}
 
   Future<void> _showUpdateDialog(dynamic item, String tableType) async {
     final controller = TextEditingController(

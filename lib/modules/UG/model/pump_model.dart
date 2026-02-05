@@ -14,6 +14,8 @@ class PumpModel {
   RxString maxHp;
   RxString surfaceLen;
   RxString surfaceId;
+  RxString stroke;
+  RxString rate;
 
   PumpModel({
     this.id,
@@ -29,6 +31,8 @@ class PumpModel {
     String? maxHp,
     String? surfaceLen,
     String? surfaceId,
+    String? stroke,
+    String? rate,
   })  : rowNumber = (rowNumber ?? 0).obs,
         type = (type ?? '').obs,
         model = (model ?? '').obs,
@@ -40,7 +44,9 @@ class PumpModel {
         maxPumpP = (maxPumpP ?? '').obs,
         maxHp = (maxHp ?? '').obs,
         surfaceLen = (surfaceLen ?? '').obs,
-        surfaceId = (surfaceId ?? '').obs;
+        surfaceId = (surfaceId ?? '').obs,
+        stroke = (stroke ?? '').obs,
+        rate = (rate ?? '').obs;
 
   // From JSON
   factory PumpModel.fromJson(Map<String, dynamic> json) {
@@ -58,6 +64,8 @@ class PumpModel {
       maxHp: json['maxHp'] ?? '',
       surfaceLen: json['surfaceLen'] ?? '',
       surfaceId: json['surfaceId'] ?? '',
+      stroke: json['stroke'] ?? '',
+      rate: json['rate'] ?? '',
     );
   }
 
@@ -76,12 +84,14 @@ class PumpModel {
       'maxHp': maxHp.value,
       'surfaceLen': surfaceLen.value,
       'surfaceId': surfaceId.value,
+      'stroke': stroke.value,
+      'rate': rate.value,
     };
-    
+
     if (id != null) {
       data['_id'] = id;
     }
-    
+
     return data;
   }
 
@@ -116,6 +126,8 @@ class PumpModel {
       maxHp: maxHp.value,
       surfaceLen: surfaceLen.value,
       surfaceId: surfaceId.value,
+      stroke: stroke.value,
+      rate: rate.value,
     );
   }
 }

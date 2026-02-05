@@ -1625,5 +1625,236 @@ Future<Map<String, dynamic>> deleteProduct(String productId) async {
       };
     }
   }
+
+  // ==================== SHAKER API METHODS ====================
+  
+  // Get all shakers for a well
+  Future<Map<String, dynamic>> getShakers(String wellId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}sce/shakers/$wellId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      
+        print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to get shakers',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Create a new shaker
+  Future<Map<String, dynamic>> createShaker(
+    String wellId,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}sce/shakers/$wellId'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+      
+        print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to create shaker',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Update a shaker
+  Future<Map<String, dynamic>> updateShaker(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${baseUrl}sce/shakers/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+
+         print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to update shaker',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Delete a shaker
+  Future<Map<String, dynamic>> deleteShaker(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${baseUrl}sce/shakers/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      
+ print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to delete shaker',
+        };
+      }    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // ==================== OTHER SCE API METHODS ====================
+  
+  // Get all other SCE for a well
+  Future<Map<String, dynamic>> getOtherSce(String wellId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}sce/other-sce/$wellId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      
+ print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to get other SCE',
+        };
+      }    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Create a new other SCE
+  Future<Map<String, dynamic>> createOtherSce(
+    String wellId,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}sce/other-sce/$wellId'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+      
+ print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to create other SCE',
+        };
+      }    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Update an other SCE
+  Future<Map<String, dynamic>> updateOtherSce(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${baseUrl}sce/other-sce/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+      
+ print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to update other SCE',
+        };
+      }    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Delete an other SCE
+  Future<Map<String, dynamic>> deleteOtherSce(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${baseUrl}sce/other-sce/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      
+ print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to delete other SCE',
+        };
+      }    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
   
 }

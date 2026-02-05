@@ -146,19 +146,19 @@ final services = <ServiceModel>[
 
 
 // ================= SCE =================
-final shakers = <ShakerModel>[
-  ShakerModel(id: 1, shaker: '1', model: 'DERRICK # 1', screens: '4', plot: true),
-  ShakerModel(id: 2, shaker: '2', model: 'DERRICK # 2', screens: '4', plot: true),
-  ShakerModel(id: 10, shaker: 'Mud Cleaner', model: 'DERRICK # 3', screens: '4', plot: true),
-].obs;
+// final shakers = <ShakerModel>[
+//   ShakerModel(id: 1, shaker: '1', model: 'DERRICK # 1', screens: '4', plot: true),
+//   ShakerModel(id: 2, shaker: '2', model: 'DERRICK # 2', screens: '4', plot: true),
+//   ShakerModel(id: 10, shaker: 'Mud Cleaner', model: 'DERRICK # 3', screens: '4', plot: true),
+// ].obs;
 
-final otherSce = <OtherSceModel>[
-  OtherSceModel(type: 'Degasser', model1: 'CHENGDU', plot: true),
-  OtherSceModel(type: 'Desander', model1: 'DERRICK', plot: true),
-  OtherSceModel(type: 'Desilter', model1: 'DERRICK', plot: true),
-  OtherSceModel(type: 'Centrifuge', model1: 'KEMTRON', plot: true),
-  OtherSceModel(type: 'Barite Rec.', plot: false),
-];
+// final otherSce = <OtherSceModel>[
+//   OtherSceModel(type: 'Degasser', model1: 'CHENGDU', plot: true),
+//   OtherSceModel(type: 'Desander', model1: 'DERRICK', plot: true),
+//   OtherSceModel(type: 'Desilter', model1: 'DERRICK', plot: true),
+//   OtherSceModel(type: 'Centrifuge', model1: 'KEMTRON', plot: true),
+//   OtherSceModel(type: 'Barite Rec.', plot: false),
+// ];
 
 
 
