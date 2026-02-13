@@ -14,7 +14,7 @@ class MudCompanyPage extends StatefulWidget {
 
 class _MudCompanyPageState extends State<MudCompanyPage> {
   final EngineerController engineerController = Get.put(EngineerController());
-  final CompanyController companyController = Get.put(CompanyController());
+  final CompanyController companyController   = Get.put(CompanyController());
 
   final ScrollController _tableScrollController = ScrollController();
 
@@ -45,11 +45,11 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
             top: 20,
             right: 20,
             child: Obx(() {
-              final alertMsg = engineerController.alertMessage.value.isNotEmpty 
-                  ? engineerController.alertMessage.value 
+              final alertMsg = engineerController.alertMessage.value.isNotEmpty
+                  ? engineerController.alertMessage.value
                   : companyController.alertMessage.value;
-              final errorMsg = engineerController.errorMessage.value.isNotEmpty 
-                  ? engineerController.errorMessage.value 
+              final errorMsg = engineerController.errorMessage.value.isNotEmpty
+                  ? engineerController.errorMessage.value
                   : companyController.errorMessage.value;
 
               if (alertMsg.isNotEmpty) {
@@ -191,21 +191,21 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
                     _twoColumnRow('Phone', companyController.phoneController, Icons.phone),
                     const SizedBox(height: 6),
                     _twoColumnRow('E-mail', companyController.emailController, Icons.email),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     _sectionTitle('Company Logo'),
                     const SizedBox(height: 8),
                     _logoUploadSection(),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     _sectionTitle('Currency Settings'),
                     const SizedBox(height: 8),
                     _currencyRow(),
                     const SizedBox(height: 6),
                     _currencyFormatRow(),
-                    
+
                     const SizedBox(height: 24),
 
                     // Save Button
@@ -240,7 +240,7 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -352,7 +352,6 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
         ),
         child: Column(
           children: [
-            // Preview
             Container(
               height: 100,
               decoration: BoxDecoration(
@@ -368,10 +367,7 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
                               size: 36,
                               color: AppTheme.textSecondary.withOpacity(0.4)),
                           const SizedBox(height: 6),
-                          const Text(
-                            "No Logo Selected",
-                            style: TextStyle(fontSize: 11),
-                          ),
+                          const Text('No Logo Selected', style: TextStyle(fontSize: 11)),
                         ],
                       )
                     : ClipRRect(
@@ -389,10 +385,7 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
                                     size: 36,
                                     color: AppTheme.textSecondary.withOpacity(0.4)),
                                 const SizedBox(height: 6),
-                                const Text(
-                                  "Failed to load",
-                                  style: TextStyle(fontSize: 11),
-                                ),
+                                const Text('Failed to load', style: TextStyle(fontSize: 11)),
                               ],
                             );
                           },
@@ -400,24 +393,19 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
                       ),
               ),
             ),
-
-            // Button
             Container(
               height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(8)),
-                border: Border(
-                  top: BorderSide(color: Colors.grey.shade300),
-                ),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                border: Border(top: BorderSide(color: Colors.grey.shade300)),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      hasLogo ? "Logo uploaded" : "No file selected",
+                      hasLogo ? 'Logo uploaded' : 'No file selected',
                       style: const TextStyle(fontSize: 11),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -425,12 +413,12 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
                   ElevatedButton.icon(
                     onPressed: () => companyController.pickLogoAndConvert(),
                     icon: const Icon(Icons.upload_file, size: 12),
-                    label: const Text("Browse", style: TextStyle(fontSize: 11)),
+                    label: const Text('Browse', style: TextStyle(fontSize: 11)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,
                       minimumSize: const Size(80, 28),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -469,11 +457,7 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
                 const SizedBox(width: 6),
                 Text(
                   'Symbol',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textPrimary,
-                  ),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.textPrimary),
                 ),
               ],
             ),
@@ -506,7 +490,7 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
             ),
           ),
         ],
-      )
+      ),
     );
   }
 
@@ -539,11 +523,7 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
                 const SizedBox(width: 6),
                 Text(
                   'Format',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textPrimary,
-                  ),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.textPrimary),
                 ),
               ],
             ),
@@ -581,17 +561,16 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
   }
 
   // ======================================================
-  // RIGHT SECTION - Engineers Table (WITH ACTIONS COLUMN)
+  // RIGHT SECTION — Engineers Table
   // ======================================================
   Widget _rightSection() {
-    // Fixed column widths
-    const double numberWidth = 50.0;
+    const double numberWidth   = 50.0;
     const double firstNameWidth = 130.0;
-    const double lastNameWidth = 130.0;
-    const double cellWidth = 130.0;
-    const double officeWidth = 180.0;
-    const double emailWidth = 230.0;
-    const double actionsWidth = 100.0;
+    const double lastNameWidth  = 130.0;
+    const double cellWidth      = 130.0;
+    const double officeWidth    = 180.0;
+    const double emailWidth     = 230.0;
+    const double actionsWidth   = 100.0;
 
     return Container(
       decoration: AppTheme.elevatedCardDecoration,
@@ -643,32 +622,79 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
                   controller: _tableScrollController,
                   itemCount: rowCount,
                   itemBuilder: (_, index) {
-                    final row = engineerController.rowControllers[index];
+                    final row     = engineerController.rowControllers[index];
                     final isSaved = row.engineerId != null;
+                    final isEditing = isSaved &&
+                        engineerController.editingEngineerId.value == row.engineerId;
 
                     return Container(
                       height: 36,
                       decoration: BoxDecoration(
-                        color: index % 2 == 0 ? Colors.white : AppTheme.cardColor,
+                        color: isEditing
+                            ? const Color(0xffEFF6FF)
+                            : isSaved
+                                ? const Color(0xffF3F4F6)
+                                : (index % 2 == 0 ? Colors.white : AppTheme.cardColor),
                         border: Border(
                           bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
                         ),
                       ),
                       child: Row(
                         children: [
-                          _numberCell(numberWidth, index + 1, isSaved),
+                          _numberCell(numberWidth, index + 1, isSaved, isEditing: isEditing),
                           _verticalDivider(),
-                          _editableCell(firstNameWidth, row.firstNameController, 'First name', index, isSaved),
+                          _editableCell(
+                            firstNameWidth,
+                            isEditing
+                                ? engineerController.inlineFirstName
+                                : row.firstNameController,
+                            'First name',
+                            index,
+                            // Locked if saved and NOT currently being edited
+                            isSaved && !isEditing,
+                          ),
                           _verticalDivider(),
-                          _editableCell(lastNameWidth, row.lastNameController, 'Last name', index, isSaved),
+                          _editableCell(
+                            lastNameWidth,
+                            isEditing
+                                ? engineerController.inlineLastName
+                                : row.lastNameController,
+                            'Last name',
+                            index,
+                            isSaved && !isEditing,
+                          ),
                           _verticalDivider(),
-                          _editableCell(cellWidth, row.cellController, 'Cell', index, isSaved),
+                          _editableCell(
+                            cellWidth,
+                            isEditing
+                                ? engineerController.inlineCell
+                                : row.cellController,
+                            'Cell',
+                            index,
+                            isSaved && !isEditing,
+                          ),
                           _verticalDivider(),
-                          _editableCell(officeWidth, row.officeController, 'Office', index, isSaved),
+                          _editableCell(
+                            officeWidth,
+                            isEditing
+                                ? engineerController.inlineOffice
+                                : row.officeController,
+                            'Office',
+                            index,
+                            isSaved && !isEditing,
+                          ),
                           _verticalDivider(),
-                          _editableCell(emailWidth, row.emailController, 'Email', index, isSaved),
+                          _editableCell(
+                            emailWidth,
+                            isEditing
+                                ? engineerController.inlineEmail
+                                : row.emailController,
+                            'Email',
+                            index,
+                            isSaved && !isEditing,
+                          ),
                           _verticalDivider(),
-                          _actionsCell(actionsWidth, row, index),
+                          _actionsCell(actionsWidth, row, index, isEditing),
                         ],
                       ),
                     );
@@ -761,24 +787,40 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
   }
 
   Widget _verticalDivider() {
-    return Container(
-      width: 1,
-      height: double.infinity,
-      color: Colors.grey.shade300,
-    );
+    return Container(width: 1, height: double.infinity, color: Colors.grey.shade300);
   }
 
-  Widget _numberCell(double width, int number, bool isSaved) {
+  Widget _numberCell(double width, int number, bool isSaved, {bool isEditing = false}) {
     return Container(
       width: width,
       alignment: Alignment.center,
-      child: Text(
-        number.toString(),
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: isSaved ? AppTheme.primaryColor : AppTheme.textPrimary,
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isSaved && !isEditing)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(Icons.lock, size: 10, color: Colors.grey.shade400),
+            ),
+          if (isEditing)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(Icons.edit, size: 10, color: Colors.blue.shade400),
+            ),
+          Text(
+            number.toString(),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: isEditing
+                  ? Colors.blue
+                  : isSaved
+                      ? AppTheme.primaryColor
+                      : AppTheme.textPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -788,27 +830,32 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
     TextEditingController controller,
     String hint,
     int rowIndex,
-    bool isSaved,
+    bool isLocked,
   ) {
     return Container(
       width: width,
+      color: isLocked ? null : Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       alignment: Alignment.centerLeft,
       child: TextField(
         controller: controller,
-        enabled: !isSaved,
+        enabled: !isLocked,
         onChanged: (_) {
-          engineerController.checkAndAddRow(rowIndex);
+          // Only trigger auto-add for truly new (unsaved) rows
+          final row = engineerController.rowControllers[rowIndex];
+          if (row.engineerId == null) {
+            engineerController.checkAndAddRow(rowIndex);
+          }
         },
         style: TextStyle(
           fontSize: 12,
-          color: isSaved ? AppTheme.textSecondary : AppTheme.textPrimary,
+          color: isLocked ? AppTheme.textSecondary : AppTheme.textPrimary,
         ),
         decoration: InputDecoration(
           border: InputBorder.none,
           isDense: true,
           contentPadding: EdgeInsets.zero,
-          hintText: isSaved ? '' : hint,
+          hintText: isLocked ? '' : hint,
           hintStyle: TextStyle(
             fontSize: 11,
             color: AppTheme.textSecondary.withOpacity(0.4),
@@ -818,19 +865,22 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
     );
   }
 
-  Widget _actionsCell(double width, EngineerRowControllers row, int rowIndex) {
+  Widget _actionsCell(
+    double width,
+    EngineerRowControllers row,
+    int rowIndex,
+    bool isEditing,
+  ) {
     final isSaved = row.engineerId != null;
-    
+
+    // New unsaved row — no actions
     if (!isSaved) {
       return Container(
         width: width,
         alignment: Alignment.center,
         child: Text(
           '-',
-          style: TextStyle(
-            fontSize: 12,
-            color: AppTheme.textSecondary.withOpacity(0.3),
-          ),
+          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary.withOpacity(0.3)),
         ),
       );
     }
@@ -840,125 +890,68 @@ class _MudCompanyPageState extends State<MudCompanyPage> {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Update Button
-          IconButton(
-            onPressed: () => _showUpdateDialog(row),
-            icon: const Icon(Icons.edit, size: 16),
-            color: Colors.blue,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-            tooltip: 'Update',
-          ),
-          const SizedBox(width: 4),
-          // Delete Button
-          IconButton(
-            onPressed: () {
-              final engineerName = '${row.firstNameController.text} ${row.lastNameController.text}';
-              engineerController.showDeleteConfirmation(
-                context,
-                row.engineerId!,
-                engineerName,
-              );
-            },
-            icon: const Icon(Icons.delete, size: 16),
-            color: Colors.red,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-            tooltip: 'Delete',
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showUpdateDialog(EngineerRowControllers row) {
-    final firstNameController = TextEditingController(text: row.firstNameController.text);
-    final lastNameController = TextEditingController(text: row.lastNameController.text);
-    final cellController = TextEditingController(text: row.cellController.text);
-    final officeController = TextEditingController(text: row.officeController.text);
-    final emailController = TextEditingController(text: row.emailController.text);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Update Engineer', style: TextStyle(fontSize: 16)),
-          content: SizedBox(
-            width: 400,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _dialogTextField('First Name', firstNameController, Icons.person),
-                  const SizedBox(height: 12),
-                  _dialogTextField('Last Name', lastNameController, Icons.person_outline),
-                  const SizedBox(height: 12),
-                  _dialogTextField('Cell', cellController, Icons.phone_android),
-                  const SizedBox(height: 12),
-                  _dialogTextField('Office', officeController, Icons.phone),
-                  const SizedBox(height: 12),
-                  _dialogTextField('Email', emailController, Icons.email),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                firstNameController.dispose();
-                lastNameController.dispose();
-                cellController.dispose();
-                officeController.dispose();
-                emailController.dispose();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final updatedEngineer = Engineer(
-                  id: row.engineerId,
-                  firstName: firstNameController.text.trim(),
-                  lastName: lastNameController.text.trim(),
-                  cell: cellController.text.trim(),
-                  office: officeController.text.trim(),
-                  email: emailController.text.trim(),
-                  photo: row.photoController.text.trim().isEmpty
+        children: isEditing
+            ? [
+                // Save inline edit
+                IconButton(
+                  onPressed: engineerController.isSaving.value
                       ? null
-                      : row.photoController.text.trim(),
-                );
-
-                engineerController.updateEngineer(row.engineerId!, updatedEngineer);
-                
-                firstNameController.dispose();
-                lastNameController.dispose();
-                cellController.dispose();
-                officeController.dispose();
-                emailController.dispose();
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-              ),
-              child: const Text('Update'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _dialogTextField(String label, TextEditingController controller, IconData icon) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, size: 18),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      : () => engineerController.saveInlineEdit(),
+                  icon: engineerController.isSaving.value
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.green,
+                          ),
+                        )
+                      : const Icon(Icons.save, size: 16),
+                  color: Colors.green,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  tooltip: 'Save',
+                ),
+                const SizedBox(width: 4),
+                // Cancel inline edit
+                IconButton(
+                  onPressed: () => engineerController.cancelInlineEdit(),
+                  icon: const Icon(Icons.close, size: 16),
+                  color: Colors.orange,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  tooltip: 'Cancel',
+                ),
+              ]
+            : [
+                // Start inline edit
+                IconButton(
+                  onPressed: () => engineerController.startInlineEdit(row),
+                  icon: const Icon(Icons.edit, size: 16),
+                  color: Colors.blue,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  tooltip: 'Edit',
+                ),
+                const SizedBox(width: 4),
+                // Delete
+                IconButton(
+                  onPressed: () {
+                    final engineerName =
+                        '${row.firstNameController.text} ${row.lastNameController.text}';
+                    engineerController.showDeleteConfirmation(
+                      context,
+                      row.engineerId!,
+                      engineerName,
+                    );
+                  },
+                  icon: const Icon(Icons.delete, size: 16),
+                  color: Colors.red,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  tooltip: 'Delete',
+                ),
+              ],
       ),
     );
   }

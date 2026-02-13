@@ -5,6 +5,7 @@ import 'package:mudpro_desktop_app/modules/company_setup/controller/products_con
 import 'package:mudpro_desktop_app/modules/company_setup/controller/service_controller.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/service_model.dart';
+import 'package:mudpro_desktop_app/modules/dashboard/controller/return_product_controller.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
 
 class ReturnProductView extends StatefulWidget {
@@ -18,9 +19,7 @@ class _ReturnProductViewState extends State<ReturnProductView> {
   final DashboardController dashboardController = Get.find<DashboardController>();
   final ProductsController productsController = Get.put(ProductsController());
   final ServiceController serviceController = Get.put(ServiceController());
-
-  // Alert messages
-  final RxString alertMessage = ''.obs;
+  final ReturnProductController returnProductController = Get.put(ReturnProductController()); 
 
   // Data lists
   final RxList<ProductModel> products = <ProductModel>[].obs;
@@ -36,6 +35,13 @@ class _ReturnProductViewState extends State<ReturnProductView> {
 
   // BOL Number controller
   final TextEditingController bolController = TextEditingController();
+
+  // Alert state
+  final RxString alertMessage = ''.obs;
+  final RxBool alertIsError = false.obs;
+
+  // Save button loading
+  final RxBool isSaving = false.obs;
 
   @override
   void initState() {
@@ -64,8 +70,20 @@ class _ReturnProductViewState extends State<ReturnProductView> {
     }
   }
 
+  void _showAlert(String message, {bool isError = false}) {
+    alertMessage.value = message;
+    alertIsError.value = isError;
+    
+    // Auto hide after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      alertMessage.value = '';
+    });
+  }
+
   // Return All Inventory function
   void _returnAllInventory() {
+    if (dashboardController.isLocked.value) return;
+
     // Clear all existing rows
     productRows.clear();
     packageRows.clear();
@@ -88,8 +106,84 @@ class _ReturnProductViewState extends State<ReturnProductView> {
       packageRows.add(row);
     }
 
-    // Show success message using alert
-    // _showSuccessAlert('All inventory items added for return');
+    _showAlert('All inventory items added for return');
+  }
+
+  Future<void> _saveAllData() async {
+    if (dashboardController.isLocked.value) return;
+
+    isSaving.value = true;
+
+    try {
+      // Prepare data for saving
+      List<Map<String, dynamic>> productData = [];
+      List<Map<String, dynamic>> packageData = [];
+
+      // Collect product data
+      for (var row in productRows) {
+        if (row.selectedItem.isNotEmpty && row.amount.isNotEmpty) {
+          productData.add({
+            'productName': row.selectedItem,
+            'code': row.code,
+            'unit': row.unit,
+            'amount': row.amount,
+          });
+        }
+      }
+
+      // Collect package data
+      for (var row in packageRows) {
+        if (row.selectedItem.isNotEmpty && row.amount.isNotEmpty) {
+          packageData.add({
+            'packageName': row.selectedItem,
+            'code': row.code,
+            'unit': row.unit,
+            'amount': row.amount,
+          });
+        }
+      }
+
+      if (productData.isEmpty && packageData.isEmpty) {
+        _showAlert('No data to save', isError: true);
+        return;
+      }
+
+      final result = await returnProductController.saveAllReturnData(
+        products: productData,
+        packages: packageData,
+      );
+
+      if (result['success']) {
+        _showAlert(result['message']);
+        // Clear rows after successful save
+        productRows.clear();
+        packageRows.clear();
+        for (int i = 0; i < 5; i++) {
+          productRows.add(ProductRowData());
+          packageRows.add(PackageRowData());
+        }
+        bolController.clear();
+      } else {
+        _showAlert(result['message'], isError: true);
+      }
+
+      // Temporary success message
+      _showAlert('${productData.length + packageData.length} items saved successfully');
+      
+      // Clear rows after successful save
+      productRows.clear();
+      packageRows.clear();
+      for (int i = 0; i < 5; i++) {
+        productRows.add(ProductRowData());
+        packageRows.add(PackageRowData());
+      }
+      bolController.clear();
+
+    } catch (e) {
+      _showAlert('Failed to save data: $e', isError: true);
+    } finally {
+      isSaving.value = false;
+    }
   }
 
   @override
@@ -98,177 +192,217 @@ class _ReturnProductViewState extends State<ReturnProductView> {
       children: [
         Container(
           color: Colors.white,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // BOL Number and Return All Inventory Button Section
-                  _buildBolSection(),
-                  const SizedBox(height: 16),
-
-                  // Product Table
-                  _buildCompactTable(
-                    title: "Product",
-                    rows: productRows,
-                    dropdownItems: products,
-                    selectedRowIndex: selectedProductRow,
-                    onDropdownChanged: (index, item) {
-                      productRows[index].selectedItem = item.product ?? '';
-                      productRows[index].code = item.code ?? '';
-                      productRows[index].unit = item.unitClass ?? '';
-                      productRows.refresh();
-                      _checkAndAddRow(productRows);
-                    },
-                    onFieldChanged: (index) => _checkAndAddRow(productRows),
-                    headers: ["No", "Product", "Code", "Unit", "Amount"],
-                    color: AppTheme.primaryColor,
-                    itemNameGetter: (item) => (item as ProductModel).product ?? '',
+          child: Column(
+            children: [
+              // Top bar with BOL, Return All Inventory, and Save button
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade300),
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Package Table
-                  _buildCompactTable(
-                    title: "Package",
-                    rows: packageRows,
-                    dropdownItems: packages,
-                    selectedRowIndex: selectedPackageRow,
-                    onDropdownChanged: (index, item) {
-                      packageRows[index].selectedItem = item.name;
-                      packageRows[index].code = item.code;
-                      packageRows[index].unit = item.unit;
-                      packageRows.refresh();
-                      _checkAndAddRow(packageRows);
-                    },
-                    onFieldChanged: (index) => _checkAndAddRow(packageRows),
-                    headers: ["No", "Package", "Code", "Unit", "Amount"],
-                    color: AppTheme.successColor,
-                    itemNameGetter: (item) => (item as PackageItem).name,
-                  ),
-                ],
+                ),
+                child: Row(
+                  children: [
+                    // BOL No. Label
+                    Text(
+                      "BOL No.",
+                      style: AppTheme.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    
+                    // BOL Text Field
+                    Expanded(
+                      child: Container(
+                        height: 32,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: TextField(
+                          controller: bolController,
+                          enabled: !dashboardController.isLocked.value,
+                          style: AppTheme.bodySmall.copyWith(fontSize: 11),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            border: InputBorder.none,
+                            hintText: "Enter BOL number...",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(width: 16),
+                    
+                    // Return All Inventory Button
+                    Obx(() => ElevatedButton(
+                      onPressed: dashboardController.isLocked.value ? null : _returnAllInventory,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.successColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        elevation: 0,
+                        minimumSize: const Size(0, 32),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.all_inbox_rounded, size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Return All Inventory",
+                            style: AppTheme.bodySmall.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+                    
+                    const SizedBox(width: 12),
+                    
+                    // Save button
+                    Obx(() => ElevatedButton.icon(
+                      onPressed: dashboardController.isLocked.value || isSaving.value
+                          ? null
+                          : _saveAllData,
+                      icon: isSaving.value
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.save, size: 16),
+                      label: Text(
+                        isSaving.value ? 'Saving...' : 'Save',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        minimumSize: const Size(100, 32),
+                      ),
+                    )),
+                  ],
+                ),
               ),
-            ),
+
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Product Table
+                        _buildCompactTable(
+                          title: "Product",
+                          rows: productRows,
+                          dropdownItems: products,
+                          selectedRowIndex: selectedProductRow,
+                          onDropdownChanged: (index, item) {
+                            productRows[index].selectedItem = item.product ?? '';
+                            productRows[index].code = item.code ?? '';
+                            productRows[index].unit = item.unitClass ?? '';
+                            productRows.refresh();
+                            _checkAndAddRow(productRows);
+                          },
+                          onFieldChanged: (index) => _checkAndAddRow(productRows),
+                          headers: ["No", "Product", "Code", "Unit", "Amount"],
+                          color: AppTheme.primaryColor,
+                          itemNameGetter: (item) => (item as ProductModel).product ?? '',
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Package Table
+                        _buildCompactTable(
+                          title: "Package",
+                          rows: packageRows,
+                          dropdownItems: packages,
+                          selectedRowIndex: selectedPackageRow,
+                          onDropdownChanged: (index, item) {
+                            packageRows[index].selectedItem = item.name;
+                            packageRows[index].code = item.code;
+                            packageRows[index].unit = item.unit;
+                            packageRows.refresh();
+                            _checkAndAddRow(packageRows);
+                          },
+                          onFieldChanged: (index) => _checkAndAddRow(packageRows),
+                          headers: ["No", "Package", "Code", "Unit", "Amount"],
+                          color: AppTheme.successColor,
+                          itemNameGetter: (item) => (item as PackageItem).name,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
 
-        // Top right alerts
+        // Top right alert
         Positioned(
-          top: 20,
-          right: 20,
+          top: 16,
+          right: 16,
           child: Obx(() {
             if (alertMessage.value.isNotEmpty) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.successColor,
-                  borderRadius: BorderRadius.circular(4),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      alertMessage.value,
-                      style: AppTheme.bodySmall.copyWith(
+              return Material(
+                elevation: 4,
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: alertIsError.value ? Colors.red.shade600 : AppTheme.successColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        alertIsError.value ? Icons.error_outline : Icons.check_circle_outline,
                         color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        size: 18,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          alertMessage.value,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
             return const SizedBox.shrink();
           }),
         ),
-      ],
-    );
-  }
-
-  Widget _buildBolSection() {
-    return Row(
-      children: [
-        // BOL No. Label
-        Text(
-          "BOL No.",
-          style: AppTheme.bodySmall.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 11,
-          ),
-        ),
-        const SizedBox(width: 12),
-        
-        // BOL Text Field
-        Expanded(
-          child: Container(
-            height: 32,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: TextField(
-              controller: bolController,
-              enabled: !dashboardController.isLocked.value,
-              style: AppTheme.bodySmall.copyWith(fontSize: 11),
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                border: InputBorder.none,
-                hintText: "Enter BOL number...",
-                hintStyle: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-          ),
-        ),
-        
-        const SizedBox(width: 16),
-        
-        // Return All Inventory Button
-        Obx(() => ElevatedButton(
-          onPressed: dashboardController.isLocked.value ? null : _returnAllInventory,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.successColor,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-            elevation: 0,
-            minimumSize: const Size(0, 32),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.all_inbox_rounded, size: 14),
-              const SizedBox(width: 6),
-              Text(
-                "Return All Inventory",
-                style: AppTheme.bodySmall.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          ),
-        )),
       ],
     );
   }
@@ -326,11 +460,11 @@ class _ReturnProductViewState extends State<ReturnProductView> {
 
           // Table with fixed height
           SizedBox(
-            height: 200, // Fixed height for 5 rows approximately
+            height: 200,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Container(
-                width: _getTableWidth(headers), // Dynamic width based on columns
+                width: _getTableWidth(headers),
                 child: Column(
                   children: [
                     // Table Header - Fixed
@@ -351,6 +485,7 @@ class _ReturnProductViewState extends State<ReturnProductView> {
                                 right: BorderSide(color: Colors.grey.shade300, width: 0.5),
                               ),
                             ),
+                            alignment: header == 'Amount' ? Alignment.centerRight : Alignment.centerLeft,
                             child: Text(
                               header,
                               style: AppTheme.bodySmall.copyWith(
@@ -576,7 +711,7 @@ class _ReturnProductViewState extends State<ReturnProductView> {
       ),
     );
 
-    // Amount column
+    // Amount column - Right aligned
     cells.add(
       Container(
         width: _getColumnWidth('Amount'),
@@ -586,6 +721,7 @@ class _ReturnProductViewState extends State<ReturnProductView> {
           controller: TextEditingController(text: row.amount),
           enabled: !dashboardController.isLocked.value,
           style: AppTheme.bodySmall.copyWith(fontSize: 10),
+          textAlign: TextAlign.right, // Right align the text
           decoration: const InputDecoration(
             isDense: true,
             contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),

@@ -27,6 +27,19 @@ class _ServicesPageState extends State<ServicesPage> {
   final ScrollController _servicesScrollController = ScrollController();
   final ScrollController _engineeringScrollController = ScrollController();
 
+  // Inline editing state — tracks which item id is being edited per table
+  String? _editingPackageId;
+  String? _editingServiceId;
+  String? _editingEngineeringId;
+
+  // Inline edit controllers — one set per table (reused for the active row)
+  final List<TextEditingController> _inlinePackageControllers =
+      List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _inlineServiceControllers =
+      List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _inlineEngineeringControllers =
+      List.generate(4, (_) => TextEditingController());
+
   static List<List<TextEditingController>> _generateControllers() {
     return List.generate(5, (_) => List.generate(4, (_) => TextEditingController()));
   }
@@ -79,77 +92,37 @@ class _ServicesPageState extends State<ServicesPage> {
     }
   }
 
-  // Update Package
-  Future<void> _showUpdatePackageDialog(PackageItem package, int index) async {
-    final nameController = TextEditingController(text: package.name);
-    final codeController = TextEditingController(text: package.code);
-    final unitController = TextEditingController(text: package.unit);
-    final priceController = TextEditingController(text: package.price.toString());
+  // ─── Inline Edit Helpers ───────────────────────────────────────────────────
 
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Update Package'),
-        content: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: codeController,
-                decoration: const InputDecoration(labelText: 'Code'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: unitController,
-                decoration: const InputDecoration(labelText: 'Unit'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: priceController,
-                decoration: const InputDecoration(labelText: 'Price'),
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _updatePackage(
-                package.id!,
-                PackageItem(
-                  id: package.id,
-                  name: nameController.text.trim(),
-                  code: codeController.text.trim(),
-                  unit: unitController.text.trim(),
-                  price: double.tryParse(priceController.text) ?? 0.0,
-                ),
-              );
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
-    );
+  void _startInlinePackageEdit(PackageItem item) {
+    setState(() {
+      _editingPackageId = item.id;
+      _inlinePackageControllers[0].text = item.name;
+      _inlinePackageControllers[1].text = item.code;
+      _inlinePackageControllers[2].text = item.unit;
+      _inlinePackageControllers[3].text = item.price.toString();
+    });
   }
 
-  Future<void> _updatePackage(String id, PackageItem package) async {
+  void _cancelInlinePackageEdit() {
+    setState(() => _editingPackageId = null);
+  }
+
+  Future<void> _saveInlinePackageEdit() async {
+    if (_editingPackageId == null) return;
+    final updated = PackageItem(
+      id: _editingPackageId,
+      name: _inlinePackageControllers[0].text.trim(),
+      code: _inlinePackageControllers[1].text.trim(),
+      unit: _inlinePackageControllers[2].text.trim(),
+      price: double.tryParse(_inlinePackageControllers[3].text.trim()) ?? 0.0,
+    );
     setState(() => _isLoading = true);
     try {
-      final result = await controller.updatePackage(id, package);
+      final result = await controller.updatePackage(_editingPackageId!, updated);
       if (result['success'] == true) {
         _showSuccess(result['message'] ?? 'Package updated successfully!');
+        setState(() => _editingPackageId = null);
         await _loadPackages();
       } else {
         _showError(result['message'] ?? 'Failed to update package');
@@ -161,26 +134,91 @@ class _ServicesPageState extends State<ServicesPage> {
     }
   }
 
-  Future<void> _deletePackage(String id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: const Text('Are you sure you want to delete this package?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+  void _startInlineServiceEdit(ServiceItem item) {
+    setState(() {
+      _editingServiceId = item.id;
+      _inlineServiceControllers[0].text = item.name;
+      _inlineServiceControllers[1].text = item.code;
+      _inlineServiceControllers[2].text = item.unit;
+      _inlineServiceControllers[3].text = item.price.toString();
+    });
+  }
 
+  void _cancelInlineServiceEdit() {
+    setState(() => _editingServiceId = null);
+  }
+
+  Future<void> _saveInlineServiceEdit() async {
+    if (_editingServiceId == null) return;
+    final updated = ServiceItem(
+      id: _editingServiceId,
+      name: _inlineServiceControllers[0].text.trim(),
+      code: _inlineServiceControllers[1].text.trim(),
+      unit: _inlineServiceControllers[2].text.trim(),
+      price: double.tryParse(_inlineServiceControllers[3].text.trim()) ?? 0.0,
+    );
+    setState(() => _isLoading = true);
+    try {
+      final result = await controller.updateService(_editingServiceId!, updated);
+      if (result['success'] == true) {
+        _showSuccess(result['message'] ?? 'Service updated successfully!');
+        setState(() => _editingServiceId = null);
+        await _loadServices();
+      } else {
+        _showError(result['message'] ?? 'Failed to update service');
+      }
+    } catch (e) {
+      _showError('Failed to update service: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _startInlineEngineeringEdit(EngineeringItem item) {
+    setState(() {
+      _editingEngineeringId = item.id;
+      _inlineEngineeringControllers[0].text = item.name;
+      _inlineEngineeringControllers[1].text = item.code;
+      _inlineEngineeringControllers[2].text = item.unit;
+      _inlineEngineeringControllers[3].text = item.price.toString();
+    });
+  }
+
+  void _cancelInlineEngineeringEdit() {
+    setState(() => _editingEngineeringId = null);
+  }
+
+  Future<void> _saveInlineEngineeringEdit() async {
+    if (_editingEngineeringId == null) return;
+    final updated = EngineeringItem(
+      id: _editingEngineeringId,
+      name: _inlineEngineeringControllers[0].text.trim(),
+      code: _inlineEngineeringControllers[1].text.trim(),
+      unit: _inlineEngineeringControllers[2].text.trim(),
+      price: double.tryParse(_inlineEngineeringControllers[3].text.trim()) ?? 0.0,
+    );
+    setState(() => _isLoading = true);
+    try {
+      final result =
+          await controller.updateEngineering(_editingEngineeringId!, updated);
+      if (result['success'] == true) {
+        _showSuccess(result['message'] ?? 'Engineering updated successfully!');
+        setState(() => _editingEngineeringId = null);
+        await _loadEngineering();
+      } else {
+        _showError(result['message'] ?? 'Failed to update engineering');
+      }
+    } catch (e) {
+      _showError('Failed to update engineering: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // ─── Delete Helpers ────────────────────────────────────────────────────────
+
+  Future<void> _deletePackage(String id) async {
+    final confirm = await _confirmDelete('package');
     if (confirm == true) {
       setState(() => _isLoading = true);
       try {
@@ -199,108 +237,8 @@ class _ServicesPageState extends State<ServicesPage> {
     }
   }
 
-  // Update Service
-  Future<void> _showUpdateServiceDialog(ServiceItem service, int index) async {
-    final nameController = TextEditingController(text: service.name);
-    final codeController = TextEditingController(text: service.code);
-    final unitController = TextEditingController(text: service.unit);
-    final priceController = TextEditingController(text: service.price.toString());
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Update Service'),
-        content: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: codeController,
-                decoration: const InputDecoration(labelText: 'Code'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: unitController,
-                decoration: const InputDecoration(labelText: 'Unit'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: priceController,
-                decoration: const InputDecoration(labelText: 'Price'),
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _updateService(
-                service.id!,
-                ServiceItem(
-                  id: service.id,
-                  name: nameController.text.trim(),
-                  code: codeController.text.trim(),
-                  unit: unitController.text.trim(),
-                  price: double.tryParse(priceController.text) ?? 0.0,
-                ),
-              );
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _updateService(String id, ServiceItem service) async {
-    setState(() => _isLoading = true);
-    try {
-      final result = await controller.updateService(id, service);
-      if (result['success'] == true) {
-        _showSuccess(result['message'] ?? 'Service updated successfully!');
-        await _loadServices();
-      } else {
-        _showError(result['message'] ?? 'Failed to update service');
-      }
-    } catch (e) {
-      _showError('Failed to update service: $e');
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> _deleteService(String id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: const Text('Are you sure you want to delete this service?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
+    final confirm = await _confirmDelete('service');
     if (confirm == true) {
       setState(() => _isLoading = true);
       try {
@@ -319,108 +257,8 @@ class _ServicesPageState extends State<ServicesPage> {
     }
   }
 
-  // Update Engineering
-  Future<void> _showUpdateEngineeringDialog(EngineeringItem engineering, int index) async {
-    final nameController = TextEditingController(text: engineering.name);
-    final codeController = TextEditingController(text: engineering.code);
-    final unitController = TextEditingController(text: engineering.unit);
-    final priceController = TextEditingController(text: engineering.price.toString());
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Update Engineering'),
-        content: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: codeController,
-                decoration: const InputDecoration(labelText: 'Code'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: unitController,
-                decoration: const InputDecoration(labelText: 'Unit'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: priceController,
-                decoration: const InputDecoration(labelText: 'Price'),
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _updateEngineering(
-                engineering.id!,
-                EngineeringItem(
-                  id: engineering.id,
-                  name: nameController.text.trim(),
-                  code: codeController.text.trim(),
-                  unit: unitController.text.trim(),
-                  price: double.tryParse(priceController.text) ?? 0.0,
-                ),
-              );
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _updateEngineering(String id, EngineeringItem engineering) async {
-    setState(() => _isLoading = true);
-    try {
-      final result = await controller.updateEngineering(id, engineering);
-      if (result['success'] == true) {
-        _showSuccess(result['message'] ?? 'Engineering updated successfully!');
-        await _loadEngineering();
-      } else {
-        _showError(result['message'] ?? 'Failed to update engineering');
-      }
-    } catch (e) {
-      _showError('Failed to update engineering: $e');
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> _deleteEngineering(String id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: const Text('Are you sure you want to delete this engineering item?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
+    final confirm = await _confirmDelete('engineering item');
     if (confirm == true) {
       setState(() => _isLoading = true);
       try {
@@ -439,6 +277,30 @@ class _ServicesPageState extends State<ServicesPage> {
     }
   }
 
+  Future<bool?> _confirmDelete(String itemName) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: Text('Are you sure you want to delete this $itemName?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Save New Row Helpers ──────────────────────────────────────────────────
+
   Future<void> _savePackages() async {
     setState(() => _isLoading = true);
     try {
@@ -453,24 +315,17 @@ class _ServicesPageState extends State<ServicesPage> {
           ));
         }
       }
-
       if (newPackages.isEmpty) {
         _showError('Please add at least one new package');
         setState(() => _isLoading = false);
         return;
       }
-
       final result = await controller.addPackages(newPackages);
-      
       if (result['success'] == true) {
         _showSuccess(result['message'] ?? 'Packages saved successfully!');
-        
         for (var row in packageControllers) {
-          for (var ctrl in row) {
-            ctrl.clear();
-          }
+          for (var ctrl in row) ctrl.clear();
         }
-        
         await _loadPackages();
       } else {
         _showError(result['message'] ?? 'Failed to save packages');
@@ -496,24 +351,17 @@ class _ServicesPageState extends State<ServicesPage> {
           ));
         }
       }
-
       if (newServices.isEmpty) {
         _showError('Please add at least one new service');
         setState(() => _isLoading = false);
         return;
       }
-
       final result = await controller.addServices(newServices);
-      
       if (result['success'] == true) {
         _showSuccess(result['message'] ?? 'Services saved successfully!');
-        
         for (var row in servicesControllers) {
-          for (var ctrl in row) {
-            ctrl.clear();
-          }
+          for (var ctrl in row) ctrl.clear();
         }
-        
         await _loadServices();
       } else {
         _showError(result['message'] ?? 'Failed to save services');
@@ -539,24 +387,17 @@ class _ServicesPageState extends State<ServicesPage> {
           ));
         }
       }
-
       if (newEngineering.isEmpty) {
         _showError('Please add at least one new engineering item');
         setState(() => _isLoading = false);
         return;
       }
-
       final result = await controller.addEngineering(newEngineering);
-      
       if (result['success'] == true) {
         _showSuccess(result['message'] ?? 'Engineering items saved successfully!');
-        
         for (var row in engineeringControllers) {
-          for (var ctrl in row) {
-            ctrl.clear();
-          }
+          for (var ctrl in row) ctrl.clear();
         }
-        
         await _loadEngineering();
       } else {
         _showError(result['message'] ?? 'Failed to save engineering');
@@ -568,13 +409,10 @@ class _ServicesPageState extends State<ServicesPage> {
     }
   }
 
-  void _showSuccess(String message) {
-    _showAlert(message, const Color(0xff10B981));
-  }
+  // ─── Alerts ────────────────────────────────────────────────────────────────
 
-  void _showError(String message) {
-    _showAlert(message, const Color(0xffEF4444));
-  }
+  void _showSuccess(String message) => _showAlert(message, const Color(0xff10B981));
+  void _showError(String message) => _showAlert(message, const Color(0xffEF4444));
 
   void _showAlert(String message, Color backgroundColor) {
     final overlay = Overlay.of(context);
@@ -626,9 +464,7 @@ class _ServicesPageState extends State<ServicesPage> {
       ),
     );
     overlay.insert(entry);
-    Future.delayed(const Duration(seconds: 3), () {
-      entry.remove();
-    });
+    Future.delayed(const Duration(seconds: 3), () => entry.remove());
   }
 
   @override
@@ -636,16 +472,18 @@ class _ServicesPageState extends State<ServicesPage> {
     _packageScrollController.dispose();
     _servicesScrollController.dispose();
     _engineeringScrollController.dispose();
-    
+    for (var c in _inlinePackageControllers) c.dispose();
+    for (var c in _inlineServiceControllers) c.dispose();
+    for (var c in _inlineEngineeringControllers) c.dispose();
     for (var table in [packageControllers, servicesControllers, engineeringControllers]) {
       for (var row in table) {
-        for (var ctrl in row) {
-          ctrl.dispose();
-        }
+        for (var ctrl in row) ctrl.dispose();
       }
     }
     super.dispose();
   }
+
+  // ─── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -660,12 +498,11 @@ class _ServicesPageState extends State<ServicesPage> {
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      // Always use horizontal scroll for smaller screens
                       if (constraints.maxWidth < 1400) {
                         return SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: SizedBox(
-                            width: 1400, // Minimum width for all three tables
+                            width: 1400,
                             child: Row(
                               children: _buildTableSections(constraints),
                             ),
@@ -707,9 +544,13 @@ class _ServicesPageState extends State<ServicesPage> {
         gradient: AppTheme.primaryGradient,
         constraints: constraints,
         onSave: _savePackages,
-        onUpdate: (item, index) => _showUpdatePackageDialog(item as PackageItem, index),
         onDelete: _deletePackage,
         scrollController: _packageScrollController,
+        editingId: _editingPackageId,
+        inlineControllers: _inlinePackageControllers,
+        onStartEdit: (item) => _startInlinePackageEdit(item as PackageItem),
+        onCancelEdit: _cancelInlinePackageEdit,
+        onSaveEdit: _saveInlinePackageEdit,
       ),
       const SizedBox(width: 12),
       _tableSection(
@@ -720,9 +561,13 @@ class _ServicesPageState extends State<ServicesPage> {
         gradient: AppTheme.secondaryGradient,
         constraints: constraints,
         onSave: _saveServices,
-        onUpdate: (item, index) => _showUpdateServiceDialog(item as ServiceItem, index),
         onDelete: _deleteService,
         scrollController: _servicesScrollController,
+        editingId: _editingServiceId,
+        inlineControllers: _inlineServiceControllers,
+        onStartEdit: (item) => _startInlineServiceEdit(item as ServiceItem),
+        onCancelEdit: _cancelInlineServiceEdit,
+        onSaveEdit: _saveInlineServiceEdit,
       ),
       const SizedBox(width: 12),
       _tableSection(
@@ -733,9 +578,13 @@ class _ServicesPageState extends State<ServicesPage> {
         gradient: AppTheme.accentGradient,
         constraints: constraints,
         onSave: _saveEngineering,
-        onUpdate: (item, index) => _showUpdateEngineeringDialog(item as EngineeringItem, index),
         onDelete: _deleteEngineering,
         scrollController: _engineeringScrollController,
+        editingId: _editingEngineeringId,
+        inlineControllers: _inlineEngineeringControllers,
+        onStartEdit: (item) => _startInlineEngineeringEdit(item as EngineeringItem),
+        onCancelEdit: _cancelInlineEngineeringEdit,
+        onSaveEdit: _saveInlineEngineeringEdit,
       ),
     ];
   }
@@ -748,9 +597,13 @@ class _ServicesPageState extends State<ServicesPage> {
     required Gradient gradient,
     required BoxConstraints constraints,
     required VoidCallback onSave,
-    required Function(dynamic, int) onUpdate,
     required Function(String) onDelete,
     required ScrollController scrollController,
+    required String? editingId,
+    required List<TextEditingController> inlineControllers,
+    required Function(dynamic) onStartEdit,
+    required VoidCallback onCancelEdit,
+    required Future<void> Function() onSaveEdit,
   }) {
     return Expanded(
       child: Container(
@@ -774,9 +627,13 @@ class _ServicesPageState extends State<ServicesPage> {
               child: _tableRows(
                 existingData,
                 controllers,
-                onUpdate,
                 onDelete,
                 scrollController,
+                editingId,
+                inlineControllers,
+                onStartEdit,
+                onCancelEdit,
+                onSaveEdit,
               ),
             ),
             _tableSaveButton(onSave, title),
@@ -852,9 +709,13 @@ class _ServicesPageState extends State<ServicesPage> {
   Widget _tableRows(
     List<dynamic> existingData,
     List<List<TextEditingController>> controllers,
-    Function(dynamic, int) onUpdate,
     Function(String) onDelete,
     ScrollController scrollController,
+    String? editingId,
+    List<TextEditingController> inlineControllers,
+    Function(dynamic) onStartEdit,
+    VoidCallback onCancelEdit,
+    Future<void> Function() onSaveEdit,
   ) {
     return Scrollbar(
       controller: scrollController,
@@ -864,74 +725,127 @@ class _ServicesPageState extends State<ServicesPage> {
         itemCount: existingData.length + controllers.length,
         itemBuilder: (_, index) {
           final isExisting = index < existingData.length;
-          
-          return Container(
-            height: 32,
-            decoration: BoxDecoration(
-              color: isExisting
-                  ? const Color(0xffF3F4F6)
-                  : (index % 2 == 0 ? Colors.white : AppTheme.cardColor),
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
+
+          if (isExisting) {
+            final item = existingData[index];
+            final isEditing = editingId != null && editingId == item.id;
+
+            return Container(
+              height: 32,
+              decoration: BoxDecoration(
+                color: isEditing ? const Color(0xffEFF6FF) : const Color(0xffF3F4F6),
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                _numberCell(index + 1, 40, isExisting),
-                Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                if (isExisting) ...[
-                  Expanded(flex: 3, child: _lockedCell(existingData[index].name)),
+              child: Row(
+                children: [
+                  _numberCell(index + 1, 40, true, isEditing: isEditing),
                   Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  Expanded(flex: 2, child: _lockedCell(existingData[index].code)),
+                  // Name
+                  Expanded(
+                    flex: 3,
+                    child: isEditing
+                        ? _inlineEditCell(inlineControllers[0])
+                        : _lockedCell(item.name),
+                  ),
                   Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  Expanded(flex: 1, child: _lockedCell(existingData[index].unit)),
+                  // Code
+                  Expanded(
+                    flex: 2,
+                    child: isEditing
+                        ? _inlineEditCell(inlineControllers[1])
+                        : _lockedCell(item.code),
+                  ),
                   Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  Expanded(flex: 2, child: _lockedCell(existingData[index].price.toString())),
+                  // Unit
+                  Expanded(
+                    flex: 1,
+                    child: isEditing
+                        ? _inlineEditCell(inlineControllers[2])
+                        : _lockedCell(item.unit),
+                  ),
                   Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  _actionButtons(existingData[index], index, onUpdate, onDelete),
-                ] else ...[
-                  Expanded(flex: 3, child: _editCell(controllers[index - existingData.length][0])),
+                  // Price
+                  Expanded(
+                    flex: 2,
+                    child: isEditing
+                        ? _inlineEditCell(inlineControllers[3], isNumeric: true)
+                        : _lockedCell(item.price.toString()),
+                  ),
                   Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  Expanded(flex: 2, child: _editCell(controllers[index - existingData.length][1])),
-                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  Expanded(flex: 1, child: _editCell(controllers[index - existingData.length][2])),
-                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  Expanded(flex: 2, child: _editCell(controllers[index - existingData.length][3])),
-                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
-                  SizedBox(width: 100),
+                  // Actions
+                  _inlineActionButtons(
+                    item: item,
+                    isEditing: isEditing,
+                    onStartEdit: () => onStartEdit(item),
+                    onCancelEdit: onCancelEdit,
+                    onSaveEdit: onSaveEdit,
+                    onDelete: () => onDelete(item.id!),
+                  ),
                 ],
-              ],
-            ),
-          );
+              ),
+            );
+          } else {
+            // New row (empty input row)
+            final rowIndex = index - existingData.length;
+            return Container(
+              height: 32,
+              decoration: BoxDecoration(
+                color: index % 2 == 0 ? Colors.white : AppTheme.cardColor,
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.shade200, width: 0.5),
+                ),
+              ),
+              child: Row(
+                children: [
+                  _numberCell(index + 1, 40, false),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  Expanded(flex: 3, child: _editCell(controllers[rowIndex][0])),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  Expanded(flex: 2, child: _editCell(controllers[rowIndex][1])),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  Expanded(flex: 1, child: _editCell(controllers[rowIndex][2])),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  Expanded(flex: 2, child: _editCell(controllers[rowIndex][3])),
+                  Container(width: 1, height: double.infinity, color: Colors.grey.shade300),
+                  const SizedBox(width: 100),
+                ],
+              ),
+            );
+          }
         },
       ),
     );
   }
 
-  Widget _numberCell(int number, double width, bool isLocked) {
+  Widget _numberCell(int number, double width, bool isLocked, {bool isEditing = false}) {
     return SizedBox(
       width: width,
       child: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (isLocked)
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Icon(
-                  Icons.lock,
-                  size: 10,
-                  color: Colors.grey,
-                ),
+            if (isLocked && !isEditing)
+              const Padding(
+                padding: EdgeInsets.only(right: 4),
+                child: Icon(Icons.lock, size: 10, color: Colors.grey),
+              ),
+            if (isEditing)
+              const Padding(
+                padding: EdgeInsets.only(right: 4),
+                child: Icon(Icons.edit, size: 10, color: Colors.blue),
               ),
             Container(
               width: 20,
               height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isLocked
-                    ? Colors.grey.withOpacity(0.3)
-                    : AppTheme.secondaryColor.withOpacity(0.2),
+                color: isEditing
+                    ? Colors.blue.withOpacity(0.15)
+                    : isLocked
+                        ? Colors.grey.withOpacity(0.3)
+                        : AppTheme.secondaryColor.withOpacity(0.2),
               ),
               child: Center(
                 child: Text(
@@ -956,10 +870,7 @@ class _ServicesPageState extends State<ServicesPage> {
       alignment: Alignment.centerLeft,
       child: Text(
         value,
-        style: TextStyle(
-          fontSize: 11,
-          color: AppTheme.textSecondary,
-        ),
+        style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
         overflow: TextOverflow.ellipsis,
       ),
     );
@@ -980,49 +891,100 @@ class _ServicesPageState extends State<ServicesPage> {
     );
   }
 
-  Widget _actionButtons(
-    dynamic item,
-    int index,
-    Function(dynamic, int) onUpdate,
-    Function(String) onDelete,
-  ) {
+  /// Inline edit cell — white background to distinguish from locked rows
+  Widget _inlineEditCell(TextEditingController controller, {bool isNumeric = false}) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: TextField(
+        controller: controller,
+        keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
+        style: TextStyle(fontSize: 11, color: AppTheme.textPrimary),
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(vertical: 10),
+        ),
+      ),
+    );
+  }
+
+  Widget _inlineActionButtons({
+    required dynamic item,
+    required bool isEditing,
+    required VoidCallback onStartEdit,
+    required VoidCallback onCancelEdit,
+    required Future<void> Function() onSaveEdit,
+    required VoidCallback onDelete,
+  }) {
     return SizedBox(
       width: 100,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          InkWell(
-            onTap: () => onUpdate(item, index),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Icon(
-                Icons.edit,
-                size: 14,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: () => onDelete(item.id!),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppTheme.errorColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Icon(
-                Icons.delete,
-                size: 14,
-                color: AppTheme.errorColor,
-              ),
-            ),
-          ),
-        ],
+        children: isEditing
+            ? [
+                // Save
+                InkWell(
+                  onTap: _isLoading ? null : onSaveEdit,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.green,
+                            ),
+                          )
+                        : const Icon(Icons.save, size: 14, color: Colors.green),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Cancel
+                InkWell(
+                  onTap: onCancelEdit,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Icon(Icons.close, size: 14, color: Colors.orange),
+                  ),
+                ),
+              ]
+            : [
+                // Edit
+                InkWell(
+                  onTap: onStartEdit,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(Icons.edit, size: 14, color: AppTheme.primaryColor),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Delete
+                InkWell(
+                  onTap: onDelete,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(Icons.delete, size: 14, color: AppTheme.errorColor),
+                  ),
+                ),
+              ],
       ),
     );
   }
@@ -1041,16 +1003,11 @@ class _ServicesPageState extends State<ServicesPage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primaryColor,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
           ),
           child: Text(
             'Save $title',
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -1077,9 +1034,7 @@ class _ServicesPageState extends State<ServicesPage> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           OutlinedButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: AppTheme.errorColor),
               foregroundColor: AppTheme.errorColor,

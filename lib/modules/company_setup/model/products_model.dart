@@ -45,19 +45,27 @@ class ProductModel {
 
   // Convert to JSON for API (single product)
   Map<String, dynamic> toJson() {
-    return {
-      'Product': product,
-      'Code': code,
-      'SG': sg.isNotEmpty ? double.tryParse(sg) ?? 0 : 0,
+    final json = <String, dynamic>{
+      'Product': product.trim(),
+      'Code': code.trim(),
+      'SG': num.tryParse(sg.trim()) ?? 0,
       'Unit': {
-        'Num': unitNum.isNotEmpty ? int.tryParse(unitNum) ?? 0 : 0,
-        'Class': unitClass,
+        'Num': int.tryParse(unitNum.trim()) ?? 0,
+        'Class': unitClass.trim(),
       },
-      'Group': group,
-      'Retail': retail.isEmpty ? '' : retail,
-      'A': a.isNotEmpty ? int.tryParse(a) ?? 0 : null,
-      'B': b.isNotEmpty ? int.tryParse(b) ?? 0 : null,
+      'Group': group.trim(),
+      'Retail': retail.trim().isEmpty ? 'No' : retail.trim(),
     };
+
+    // Add optional fields only if they have values
+    if (a.trim().isNotEmpty) {
+      json['A'] = num.tryParse(a.trim()) ?? 0;
+    }
+    if (b.trim().isNotEmpty) {
+      json['B'] = num.tryParse(b.trim()) ?? 0;
+    }
+
+    return json;
   }
 
   // Convert from API response
@@ -85,25 +93,25 @@ class ProductModel {
 
   // Check if product has any data
   bool hasData() {
-    return product.isNotEmpty ||
-           code.isNotEmpty ||
-           sg.isNotEmpty ||
-           unitNum.isNotEmpty ||
-           unitClass.isNotEmpty ||
-           group.isNotEmpty ||
-           retail.isNotEmpty ||
-           a.isNotEmpty ||
-           b.isNotEmpty;
+    return product.trim().isNotEmpty ||
+           code.trim().isNotEmpty ||
+           sg.trim().isNotEmpty ||
+           unitNum.trim().isNotEmpty ||
+           unitClass.trim().isNotEmpty ||
+           group.trim().isNotEmpty ||
+           retail.trim().isNotEmpty ||
+           a.trim().isNotEmpty ||
+           b.trim().isNotEmpty;
   }
 
   // Check if product is valid (all required fields filled)
   bool isValid() {
-    return product.isNotEmpty &&
-           code.isNotEmpty &&
-           sg.isNotEmpty &&
-           unitNum.isNotEmpty &&
-           unitClass.isNotEmpty &&
-           group.isNotEmpty;
+    return product.trim().isNotEmpty &&
+           code.trim().isNotEmpty &&
+           sg.trim().isNotEmpty &&
+           unitNum.trim().isNotEmpty &&
+           unitClass.trim().isNotEmpty &&
+           group.trim().isNotEmpty;
   }
 
   // Create a copy

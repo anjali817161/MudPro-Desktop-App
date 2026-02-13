@@ -6,6 +6,8 @@ import 'package:mudpro_desktop_app/modules/company_setup/controller/service_cont
 import 'package:mudpro_desktop_app/modules/company_setup/model/products_model.dart';
 import 'package:mudpro_desktop_app/modules/company_setup/model/service_model.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
+// Import your new receive product controller
+// import 'package:mudpro_desktop_app/modules/receive_product/controller/receive_product_controller.dart';
 
 class ReceiveProductView extends StatefulWidget {
   const ReceiveProductView({super.key});
@@ -18,12 +20,17 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
   final DashboardController dashboardController = Get.find<DashboardController>();
   final ProductsController productsController = Get.put(ProductsController());
   final ServiceController serviceController = Get.put(ServiceController());
+  // final ReceiveProductController receiveProductController = Get.put(ReceiveProductController()); // Uncomment when added
 
-  // Data lists
+  // Data lists for dropdown
   final RxList<ProductModel> products = <ProductModel>[].obs;
   final RxList<PackageItem> packages = <PackageItem>[].obs;
 
-  // Row data for each table
+  // Saved items from database
+  final RxList<SavedProductItem> savedProducts = <SavedProductItem>[].obs;
+  final RxList<SavedPackageItem> savedPackages = <SavedPackageItem>[].obs;
+
+  // Row data for new entries
   final RxList<ProductRowData> productRows = <ProductRowData>[].obs;
   final RxList<PackageRowData> packageRows = <PackageRowData>[].obs;
 
@@ -34,10 +41,18 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
   // BOL Number controller
   final TextEditingController bolController = TextEditingController();
 
+  // Alert state
+  final RxString alertMessage = ''.obs;
+  final RxBool alertIsError = false.obs;
+
+  // Save button loading
+  final RxBool isSaving = false.obs;
+
   @override
   void initState() {
     super.initState();
     _loadData();
+    _loadSavedData();
     // Initialize with 5 empty rows
     for (int i = 0; i < 5; i++) {
       productRows.add(ProductRowData());
@@ -47,13 +62,13 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
 
   Future<void> _loadData() async {
     try {
-      // Load products
+      // Load products for dropdown
       final result = await productsController.repository.getProducts(page: 1, limit: 1000);
       if (result['success'] == true) {
         products.value = result['products'] ?? [];
       }
 
-      // Load packages
+      // Load packages for dropdown
       final pkgs = await serviceController.getPackages();
       packages.value = pkgs;
     } catch (e) {
@@ -61,102 +76,627 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
     }
   }
 
+  Future<void> _loadSavedData() async {
+    try {
+      // Uncomment when controller is added
+      // final receivedProducts = await receiveProductController.getReceiveProducts();
+      // final receivedPackages = await receiveProductController.getReceivePackages();
+      
+      // savedProducts.value = receivedProducts.map((item) {
+      //   return SavedProductItem(
+      //     id: item['_id'] ?? '',
+      //     productName: item['productName'] ?? '',
+      //     code: item['code'] ?? '',
+      //     unit: item['unit'] ?? '',
+      //     amount: (item['amount'] ?? 0).toString(),
+      //   );
+      // }).toList();
+
+      // savedPackages.value = receivedPackages.map((item) {
+      //   return SavedPackageItem(
+      //     id: item['_id'] ?? '',
+      //     packageName: item['packageName'] ?? '',
+      //     code: item['code'] ?? '',
+      //     unit: item['unit'] ?? '',
+      //     amount: (item['amount'] ?? 0).toString(),
+      //   );
+      // }).toList();
+    } catch (e) {
+      print("Error loading saved data: $e");
+    }
+  }
+
+  void _showAlert(String message, {bool isError = false}) {
+    alertMessage.value = message;
+    alertIsError.value = isError;
+    
+    // Auto hide after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      alertMessage.value = '';
+    });
+  }
+
+  Future<void> _updateSavedProduct(SavedProductItem item) async {
+    try {
+      // Uncomment when controller is added
+      // final result = await receiveProductController.updateReceiveProduct(
+      //   id: item.id,
+      //   productName: item.productName,
+      //   code: item.code,
+      //   unit: item.unit,
+      //   amount: double.tryParse(item.amount) ?? 0.0,
+      // );
+
+      // if (result['success']) {
+      //   _showAlert('Product updated successfully');
+      // } else {
+      //   _showAlert(result['message'], isError: true);
+      // }
+      
+      _showAlert('Product updated successfully');
+    } catch (e) {
+      _showAlert('Failed to update: $e', isError: true);
+    }
+  }
+
+  Future<void> _deleteSavedProduct(String id) async {
+    try {
+      // Uncomment when controller is added
+      // final result = await receiveProductController.deleteReceiveProduct(id);
+
+      // if (result['success']) {
+      //   savedProducts.removeWhere((item) => item.id == id);
+      //   _showAlert('Product deleted successfully');
+      // } else {
+      //   _showAlert(result['message'], isError: true);
+      // }
+      
+      savedProducts.removeWhere((item) => item.id == id);
+      _showAlert('Product deleted successfully');
+    } catch (e) {
+      _showAlert('Failed to delete: $e', isError: true);
+    }
+  }
+
+  Future<void> _updateSavedPackage(SavedPackageItem item) async {
+    try {
+      // Uncomment when controller is added
+      // final result = await receiveProductController.updateReceivePackage(
+      //   id: item.id,
+      //   packageName: item.packageName,
+      //   code: item.code,
+      //   unit: item.unit,
+      //   amount: double.tryParse(item.amount) ?? 0.0,
+      // );
+
+      // if (result['success']) {
+      //   _showAlert('Package updated successfully');
+      // } else {
+      //   _showAlert(result['message'], isError: true);
+      // }
+      
+      _showAlert('Package updated successfully');
+    } catch (e) {
+      _showAlert('Failed to update: $e', isError: true);
+    }
+  }
+
+  Future<void> _deleteSavedPackage(String id) async {
+    try {
+      // Uncomment when controller is added
+      // final result = await receiveProductController.deleteReceivePackage(id);
+
+      // if (result['success']) {
+      //   savedPackages.removeWhere((item) => item.id == id);
+      //   _showAlert('Package deleted successfully');
+      // } else {
+      //   _showAlert(result['message'], isError: true);
+      // }
+      
+      savedPackages.removeWhere((item) => item.id == id);
+      _showAlert('Package deleted successfully');
+    } catch (e) {
+      _showAlert('Failed to delete: $e', isError: true);
+    }
+  }
+
+  Future<void> _saveAllData() async {
+    if (dashboardController.isLocked.value) return;
+
+    isSaving.value = true;
+
+    try {
+      // Prepare data for saving
+      List<Map<String, dynamic>> productData = [];
+      List<Map<String, dynamic>> packageData = [];
+
+      // Collect product data
+      for (var row in productRows) {
+        if (row.selectedItem.isNotEmpty && row.amount.isNotEmpty) {
+          productData.add({
+            'productName': row.selectedItem,
+            'code': row.code,
+            'unit': row.unit,
+            'amount': row.amount,
+          });
+        }
+      }
+
+      // Collect package data
+      for (var row in packageRows) {
+        if (row.selectedItem.isNotEmpty && row.amount.isNotEmpty) {
+          packageData.add({
+            'packageName': row.selectedItem,
+            'code': row.code,
+            'unit': row.unit,
+            'amount': row.amount,
+          });
+        }
+      }
+
+      if (productData.isEmpty && packageData.isEmpty) {
+        _showAlert('No data to save', isError: true);
+        return;
+      }
+
+      // Uncomment when receive product controller is added
+      // final result = await receiveProductController.saveAllReceiveData(
+      //   products: productData,
+      //   packages: packageData,
+      // );
+
+      // if (result['success']) {
+      //   _showAlert(result['message']);
+      //   // Reload saved data
+      //   await _loadSavedData();
+      //   // Clear input rows
+      //   productRows.clear();
+      //   packageRows.clear();
+      //   for (int i = 0; i < 5; i++) {
+      //     productRows.add(ProductRowData());
+      //     packageRows.add(PackageRowData());
+      //   }
+      //   bolController.clear();
+      // } else {
+      //   _showAlert(result['message'], isError: true);
+      // }
+
+      // Temporary success message
+      _showAlert('${productData.length + packageData.length} items saved successfully');
+      
+      // Reload saved data
+      await _loadSavedData();
+      
+      // Clear input rows
+      productRows.clear();
+      packageRows.clear();
+      for (int i = 0; i < 5; i++) {
+        productRows.add(ProductRowData());
+        packageRows.add(PackageRowData());
+      }
+      bolController.clear();
+
+    } catch (e) {
+      _showAlert('Failed to save data: $e', isError: true);
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+    return Stack(
+      children: [
+        Container(
+          color: Colors.white,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // BOL Number Section
-              _buildBolSection(),
-              const SizedBox(height: 16),
-
-              // Product Table
-              _buildCompactTable(
-                title: "Product",
-                rows: productRows,
-                dropdownItems: products,
-                selectedRowIndex: selectedProductRow,
-                onDropdownChanged: (index, item) {
-                  productRows[index].selectedItem = item.product ?? '';
-                  productRows[index].code = item.code ?? '';
-                  productRows[index].unit =  item.unitClass ?? '';
-                  productRows.refresh();
-                  _checkAndAddRow(productRows);
-                },
-                onFieldChanged: (index) => _checkAndAddRow(productRows),
-                headers: ["No", "Product", "Code", "Unit", "Amount"],
-                color: AppTheme.primaryColor,
-                itemNameGetter: (item) => (item as ProductModel).product ?? '',
+              // Top bar with BOL and Save button
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade300),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      "BOL No.",
+                      style: AppTheme.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    
+                    Expanded(
+                      child: Container(
+                        height: 32,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: TextField(
+                          controller: bolController,
+                          enabled: !dashboardController.isLocked.value,
+                          style: AppTheme.bodySmall.copyWith(fontSize: 11),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            border: InputBorder.none,
+                            hintText: "Enter BOL number...",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(width: 16),
+                    
+                    Obx(() => ElevatedButton.icon(
+                      onPressed: dashboardController.isLocked.value || isSaving.value
+                          ? null
+                          : _saveAllData,
+                      icon: isSaving.value
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.save, size: 16),
+                      label: Text(
+                        isSaving.value ? 'Saving...' : 'Save',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        minimumSize: const Size(100, 32),
+                      ),
+                    )),
+                  ],
+                ),
               ),
 
-              const SizedBox(height: 16),
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Saved Products Table
+                        Obx(() {
+                          if (savedProducts.isNotEmpty) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSavedProductsTable(),
+                                const SizedBox(height: 16),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }),
 
-              // Package Table
-              _buildCompactTable(
-                title: "Package",
-                rows: packageRows,
-                dropdownItems: packages,
-                selectedRowIndex: selectedPackageRow,
-                onDropdownChanged: (index, item) {
-                  packageRows[index].selectedItem = item.name;
-                  packageRows[index].code = item.code;
-                  packageRows[index].unit = item.unit;
-                  packageRows.refresh();
-                  _checkAndAddRow(packageRows);
-                },
-                onFieldChanged: (index) => _checkAndAddRow(packageRows),
-                headers: ["No", "Package", "Code", "Unit", "Amount"],
-                color: AppTheme.successColor,
-                itemNameGetter: (item) => (item as PackageItem).name,
+                        // Product Input Table
+                        _buildInputTable(
+                          title: "Add Product",
+                          rows: productRows,
+                          dropdownItems: products,
+                          selectedRowIndex: selectedProductRow,
+                          onDropdownChanged: (index, item) {
+                            productRows[index].selectedItem = item.product ?? '';
+                            productRows[index].code = item.code ?? '';
+                            productRows[index].unit = item.unitClass ?? '';
+                            productRows.refresh();
+                            _checkAndAddRow(productRows);
+                          },
+                          onFieldChanged: (index) => _checkAndAddRow(productRows),
+                          headers: ["No", "Product", "Code", "Unit", "Amount"],
+                          color: AppTheme.primaryColor,
+                          itemNameGetter: (item) => (item as ProductModel).product ?? '',
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Saved Packages Table
+                        Obx(() {
+                          if (savedPackages.isNotEmpty) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSavedPackagesTable(),
+                                const SizedBox(height: 16),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }),
+
+                        // Package Input Table
+                        _buildInputTable(
+                          title: "Add Package",
+                          rows: packageRows,
+                          dropdownItems: packages,
+                          selectedRowIndex: selectedPackageRow,
+                          onDropdownChanged: (index, item) {
+                            packageRows[index].selectedItem = item.name;
+                            packageRows[index].code = item.code;
+                            packageRows[index].unit = item.unit;
+                            packageRows.refresh();
+                            _checkAndAddRow(packageRows);
+                          },
+                          onFieldChanged: (index) => _checkAndAddRow(packageRows),
+                          headers: ["No", "Package", "Code", "Unit", "Amount"],
+                          color: AppTheme.successColor,
+                          itemNameGetter: (item) => (item as PackageItem).name,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
+
+        // Top right alert
+        Positioned(
+          top: 16,
+          right: 16,
+          child: Obx(() {
+            if (alertMessage.value.isNotEmpty) {
+              return Material(
+                elevation: 4,
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: alertIsError.value ? Colors.red.shade600 : AppTheme.successColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        alertIsError.value ? Icons.error_outline : Icons.check_circle_outline,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          alertMessage.value,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSavedProductsTable() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade300),
+              ),
+            ),
+            child: Text(
+              "Received Products",
+              style: AppTheme.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 200,
+            child: SingleChildScrollView(
+              child: Obx(() => DataTable(
+                headingRowHeight: 30,
+                dataRowHeight: 32,
+                columnSpacing: 12,
+                horizontalMargin: 12,
+                headingRowColor: MaterialStateProperty.all(Colors.grey.shade50),
+                columns: [
+                  DataColumn(label: Text('No', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600))),
+                  DataColumn(label: Text('Product', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600))),
+                  DataColumn(label: Text('Code', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600))),
+                  DataColumn(label: Text('Unit', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600))),
+                  DataColumn(label: Text('Amount', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600)), numeric: true),
+                  DataColumn(label: Text('Actions', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600))),
+                ],
+                rows: savedProducts.asMap().entries.map((entry) {
+                  int index = entry.key;
+                  SavedProductItem item = entry.value;
+                  return DataRow(cells: [
+                    DataCell(Text('${index + 1}', style: AppTheme.bodySmall.copyWith(fontSize: 10))),
+                    DataCell(Text(item.productName, style: AppTheme.bodySmall.copyWith(fontSize: 10))),
+                    DataCell(Text(item.code, style: AppTheme.bodySmall.copyWith(fontSize: 10))),
+                    DataCell(Text(item.unit, style: AppTheme.bodySmall.copyWith(fontSize: 10))),
+                    DataCell(
+                      TextField(
+                        controller: TextEditingController(text: item.amount),
+                        enabled: !dashboardController.isLocked.value,
+                        style: AppTheme.bodySmall.copyWith(fontSize: 10),
+                        textAlign: TextAlign.right,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          border: InputBorder.none,
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (val) {
+                          item.amount = val;
+                        },
+                        onSubmitted: (_) => _updateSavedProduct(item),
+                      ),
+                    ),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.check, size: 16, color: AppTheme.successColor),
+                            onPressed: dashboardController.isLocked.value ? null : () => _updateSavedProduct(item),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            tooltip: 'Update',
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                            onPressed: dashboardController.isLocked.value ? null : () => _deleteSavedProduct(item.id),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            tooltip: 'Delete',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ]);
+                }).toList(),
+              )),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildBolSection() {
-    return Row(
-      children: [
-        Text(
-          "BOL No.",
-          style: AppTheme.bodySmall.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 11,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            height: 32,
+  Widget _buildSavedPackagesTable() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(4),
+              color: AppTheme.successColor.withOpacity(0.1),
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade300),
+              ),
             ),
-            child: TextField(
-              controller: bolController,
-              enabled: !dashboardController.isLocked.value,
-              style: AppTheme.bodySmall.copyWith(fontSize: 11),
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                border: InputBorder.none,
-                hintText: "Enter BOL number...",
-                hintStyle: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 11,
-                ),
+            child: Text(
+              "Received Packages",
+              style: AppTheme.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                color: AppTheme.successColor,
               ),
             ),
           ),
-        ),
-      ],
+          SizedBox(
+            height: 200,
+            child: SingleChildScrollView(
+              child: Obx(() => DataTable(
+                headingRowHeight: 30,
+                dataRowHeight: 32,
+                columnSpacing: 12,
+                horizontalMargin: 12,
+                headingRowColor: MaterialStateProperty.all(Colors.grey.shade50),
+                columns: [
+                  DataColumn(label: Text('No', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600))),
+                  DataColumn(label: Text('Package', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600))),
+                  DataColumn(label: Text('Code', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600))),
+                  DataColumn(label: Text('Unit', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600))),
+                  DataColumn(label: Text('Amount', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600)), numeric: true),
+                  DataColumn(label: Text('Actions', style: AppTheme.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.w600))),
+                ],
+                rows: savedPackages.asMap().entries.map((entry) {
+                  int index = entry.key;
+                  SavedPackageItem item = entry.value;
+                  return DataRow(cells: [
+                    DataCell(Text('${index + 1}', style: AppTheme.bodySmall.copyWith(fontSize: 10))),
+                    DataCell(Text(item.packageName, style: AppTheme.bodySmall.copyWith(fontSize: 10))),
+                    DataCell(Text(item.code, style: AppTheme.bodySmall.copyWith(fontSize: 10))),
+                    DataCell(Text(item.unit, style: AppTheme.bodySmall.copyWith(fontSize: 10))),
+                    DataCell(
+                      TextField(
+                        controller: TextEditingController(text: item.amount),
+                        enabled: !dashboardController.isLocked.value,
+                        style: AppTheme.bodySmall.copyWith(fontSize: 10),
+                        textAlign: TextAlign.right,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          border: InputBorder.none,
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (val) {
+                          item.amount = val;
+                        },
+                        onSubmitted: (_) => _updateSavedPackage(item),
+                      ),
+                    ),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.check, size: 16, color: AppTheme.successColor),
+                            onPressed: dashboardController.isLocked.value ? null : () => _updateSavedPackage(item),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            tooltip: 'Update',
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                            onPressed: dashboardController.isLocked.value ? null : () => _deleteSavedPackage(item.id),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            tooltip: 'Delete',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ]);
+                }).toList(),
+              )),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -173,7 +713,7 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
     }
   }
 
-  Widget _buildCompactTable<T extends BaseRowData, I>({
+  Widget _buildInputTable<T extends BaseRowData, I>({
     required String title,
     required RxList<T> rows,
     required RxList<I> dropdownItems,
@@ -192,7 +732,6 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -210,17 +749,14 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
               ),
             ),
           ),
-
-          // Table with fixed height
           SizedBox(
-            height: 200, // Fixed height for 5 rows approximately
+            height: 200,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Container(
-                width: _getTableWidth(headers), // Dynamic width based on columns
+                width: 850,
                 child: Column(
                   children: [
-                    // Table Header - Fixed
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.grey.shade50,
@@ -231,13 +767,14 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
                       child: Row(
                         children: headers.map((header) {
                           return Container(
-                            width: _getColumnWidth(header),
+                            width: header == 'No' ? 50 : (header == 'Product' || header == 'Package') ? 350 : 150,
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                             decoration: BoxDecoration(
                               border: Border(
                                 right: BorderSide(color: Colors.grey.shade300, width: 0.5),
                               ),
                             ),
+                            alignment: header == 'Amount' ? Alignment.centerRight : Alignment.centerLeft,
                             child: Text(
                               header,
                               style: AppTheme.bodySmall.copyWith(
@@ -250,8 +787,6 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
                         }).toList(),
                       ),
                     ),
-
-                    // Table Rows - Scrollable
                     Expanded(
                       child: Obx(() => SingleChildScrollView(
                         child: Column(
@@ -267,7 +802,7 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
                                 ),
                               ),
                               child: Row(
-                                children: _buildRowCells(
+                                children: _buildInputRowCells(
                                   row: row,
                                   index: index,
                                   isSelected: isSelected,
@@ -294,45 +829,7 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
     );
   }
 
-  int _getColumnFlex(String header) {
-    if (header == 'No') {
-      return 1;
-    } else if (header == 'Product' || header == 'Package') {
-      return 4;
-    } else if (header == 'Code') {
-      return 2;
-    } else if (header == 'Unit') {
-      return 2;
-    } else if (header == 'Amount') {
-      return 2;
-    }
-    return 1;
-  }
-
-  double _getTableWidth(List<String> headers) {
-    double totalWidth = 0;
-    for (String header in headers) {
-      totalWidth += _getColumnWidth(header);
-    }
-    return totalWidth;
-  }
-
-  double _getColumnWidth(String header) {
-    if (header == 'No') {
-      return 50;
-    } else if (header == 'Product' || header == 'Package') {
-      return 350;
-    } else if (header == 'Code') {
-      return 150;
-    } else if (header == 'Unit') {
-      return 150;
-    } else if (header == 'Amount') {
-      return 150;
-    }
-    return 100;
-  }
-
-  List<Widget> _buildRowCells<T extends BaseRowData, I>({
+  List<Widget> _buildInputRowCells<T extends BaseRowData, I>({
     required T row,
     required int index,
     required bool isSelected,
@@ -345,10 +842,9 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
   }) {
     List<Widget> cells = [];
 
-    // No column
     cells.add(
       Container(
-        width: _getColumnWidth('No'),
+        width: 50,
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
@@ -364,12 +860,11 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
       ),
     );
 
-    // Second column - Dropdown with icon
     cells.add(
       GestureDetector(
         onTap: onRowSelected,
         child: Container(
-          width: _getColumnWidth(headers[1]),
+          width: 350,
           height: 32,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
@@ -379,15 +874,12 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
           ),
           child: Row(
             children: [
-              // Dropdown icon
               Icon(
                 isSelected ? Icons.arrow_drop_down : Icons.arrow_right,
                 size: 16,
                 color: isSelected ? AppTheme.primaryColor : Colors.grey.shade400,
               ),
               const SizedBox(width: 4),
-
-              // Dropdown
               Expanded(
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<I>(
@@ -411,7 +903,6 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
                     menuMaxHeight: 250,
                     items: dropdownItems.map((item) {
                       String name = itemNameGetter(item);
-
                       return DropdownMenuItem<I>(
                         value: item,
                         child: Text(
@@ -438,10 +929,9 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
       ),
     );
 
-    // Code column
     cells.add(
       Container(
-        width: _getColumnWidth('Code'),
+        width: 150,
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
@@ -458,10 +948,9 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
       ),
     );
 
-    // Unit column
     cells.add(
       Container(
-        width: _getColumnWidth('Unit'),
+        width: 150,
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
@@ -478,16 +967,16 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
       ),
     );
 
-    // Amount column
     cells.add(
       Container(
-        width: _getColumnWidth('Amount'),
+        width: 150,
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: TextField(
           controller: TextEditingController(text: row.amount),
           enabled: !dashboardController.isLocked.value,
           style: AppTheme.bodySmall.copyWith(fontSize: 10),
+          textAlign: TextAlign.right,
           decoration: const InputDecoration(
             isDense: true,
             contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
@@ -512,7 +1001,6 @@ class _ReceiveProductViewState extends State<ReceiveProductView> {
   }
 }
 
-// Base class for row data
 abstract class BaseRowData {
   String selectedItem = '';
   String code = '';
@@ -521,5 +1009,36 @@ abstract class BaseRowData {
 }
 
 class ProductRowData extends BaseRowData {}
-
 class PackageRowData extends BaseRowData {}
+
+class SavedProductItem {
+  String id;
+  String productName;
+  String code;
+  String unit;
+  String amount;
+
+  SavedProductItem({
+    required this.id,
+    required this.productName,
+    required this.code,
+    required this.unit,
+    required this.amount,
+  });
+}
+
+class SavedPackageItem {
+  String id;
+  String packageName;
+  String code;
+  String unit;
+  String amount;
+
+  SavedPackageItem({
+    required this.id,
+    required this.packageName,
+    required this.code,
+    required this.unit,
+    required this.amount,
+  });
+}

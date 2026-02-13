@@ -327,7 +327,7 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
 
           // Table with fixed height and scrollable content
           SizedBox(
-            height: 220, // Fixed height
+            height: 220,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SingleChildScrollView(
@@ -418,7 +418,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
           ),
           child: Row(
             children: [
-              // Dropdown icon - shows only in selected row
               if (isSelected)
                 Icon(
                   Icons.arrow_drop_down,
@@ -444,7 +443,7 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
                     ),
                     isExpanded: true,
                     isDense: true,
-                    icon: const SizedBox.shrink(), // Hide default icon
+                    icon: const SizedBox.shrink(),
                     menuMaxHeight: 300,
                     items: productsController.products.where((p) => p.id != null).map((product) {
                       return DropdownMenuItem<ProductModel>(
@@ -468,9 +467,11 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
                               row.price = value.a.isNotEmpty 
                                   ? double.tryParse(value.a) ?? 0.0 
                                   : 0.0;
-                                  row.initial = value.initial;
+                              row.initial = value.initial;
                               productRows.refresh();
                               _checkAndAddProductRow();
+                              // Auto-calculate on product selection
+                              row.recalculate();
                             }
                           },
                   ),
@@ -502,41 +503,49 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
     // Initial
     cells.add(_buildEditableTableCell(row.initial, (val) {
       row.initial = val;
+      row.recalculate();
       _checkAndAddProductRow();
     }, 75));
 
     // Adjust
     cells.add(_buildEditableTableCell(row.adjust, (val) {
       row.adjust = val;
+      row.recalculate();
       _checkAndAddProductRow();
     }, 75));
 
     // Used
     cells.add(_buildEditableTableCell(row.used, (val) {
       row.used = val;
+      row.recalculate();
       _checkAndAddProductRow();
     }, 75));
 
     // Final
     cells.add(_buildEditableTableCell(row.final_, (val) {
       row.final_ = val;
+      row.recalculate();
       _checkAndAddProductRow();
     }, 75));
 
-    // Cost
+    // Cost (calculated, highlighted)
     cells.add(_buildTableCell(
-      row.calculateCost().toStringAsFixed(2),
+      row.calculatedCost.value > 0 ? row.calculatedCost.value.toStringAsFixed(2) : '',
       85,
       isEditable: false,
       isRightAligned: true,
       isBold: true,
+      isHighlighted: true,
     ));
 
-    // Vol
-    cells.add(_buildEditableTableCell(row.vol, (val) {
-      row.vol = val;
-      _checkAndAddProductRow();
-    }, 80, isRightAligned: true));
+    // Vol (calculated, highlighted)
+    cells.add(_buildTableCell(
+      row.calculatedVolume.value > 0 ? row.calculatedVolume.value.toStringAsFixed(3) : '',
+      80,
+      isEditable: false,
+      isRightAligned: true,
+      isHighlighted: true,
+    ));
 
     return cells;
   }
@@ -547,16 +556,24 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
     bool isEditable = false,
     bool isRightAligned = false,
     bool isBold = false,
+    bool isHighlighted = false,
   }) {
     return DataCell(
       Container(
         width: width,
         padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: isHighlighted
+            ? BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(2),
+              )
+            : null,
         child: Text(
           text,
           style: AppTheme.bodySmall.copyWith(
             fontSize: 10,
             fontWeight: isBold ? FontWeight.w600 : FontWeight.w400,
+            color: isHighlighted ? AppTheme.primaryColor : null,
           ),
           textAlign: isRightAligned ? TextAlign.right : TextAlign.left,
         ),
@@ -604,7 +621,7 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Distribute Table - Compressed width
+        // Distribute Table
         SizedBox(
           width: 280,
           child: _buildDistributeTable(),
@@ -654,7 +671,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
             ),
           ),
 
-          // Table with fixed height and scrollable content
           Expanded(
             child: SingleChildScrollView(
               child: Obx(() => DataTable(
@@ -700,7 +716,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
                       index % 2 == 0 ? Colors.white : Colors.grey.shade50,
                     ),
                     cells: [
-                      // Pit Dropdown with icon
                       DataCell(
                         GestureDetector(
                           onTap: () => selectedDistributeRow.value = index,
@@ -709,7 +724,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Row(
                               children: [
-                                // Dropdown icon - shows only in selected row
                                 if (isSelected)
                                   Icon(
                                     Icons.arrow_drop_down,
@@ -765,7 +779,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
                         ),
                       ),
 
-                      // Volume
                       DataCell(
                         Container(
                           width: 100,
@@ -820,10 +833,8 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Add Water Checkbox and Water Volume in same row
           Obx(() => Row(
             children: [
-              // Add Water Checkbox
               InkWell(
                 onTap: dashboardController.isLocked.value 
                     ? null 
@@ -876,7 +887,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
               
               const SizedBox(width: 10),
               
-              // Water Volume field (conditional, aligned right)
               if (addWater.value)
                 Expanded(
                   child: _buildCompactInputField(
@@ -889,7 +899,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
 
           const SizedBox(height: 10),
 
-          // Total Volume
           Row(
             children: [
               Text(
@@ -911,7 +920,6 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
 
           const Spacer(),
 
-          // Note
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -994,7 +1002,7 @@ class _ConsumeProductViewState extends State<ConsumeProductView> {
   }
 }
 
-// Product Row Data Model
+// Product Row Data Model with Calculation Logic
 class ProductRowData {
   final Rx<ProductModel?> selectedProduct = Rx<ProductModel?>(null);
   String code = '';
@@ -1005,11 +1013,43 @@ class ProductRowData {
   String adjust = '';
   String used = '';
   String final_ = '';
-  String vol = '';
+  
+  // Reactive calculated values
+  final RxDouble calculatedCost = 0.0.obs;
+  final RxDouble calculatedVolume = 0.0.obs;
+
+  // Recalculate cost and volume whenever inputs change
+  void recalculate() {
+    final initialVal = double.tryParse(initial) ?? 0.0;
+    final adjustVal = double.tryParse(adjust) ?? 0.0;
+    final usedVal = double.tryParse(used) ?? 0.0;
+    final finalVal = double.tryParse(final_) ?? 0.0;
+    final sgVal = double.tryParse(sg) ?? 0.0;
+
+    // Calculate cost: used * price
+    calculatedCost.value = usedVal * price;
+
+    // Calculate final if not manually entered
+    if (final_.isEmpty) {
+      final calculatedFinal = initialVal + adjustVal - usedVal;
+      final_ = calculatedFinal.toString();
+    }
+
+    // Calculate volume in BBL
+    // Using numberOfBags and weightPerBag from product selection
+    // For simplicity, assuming 1 bag per unit used if not specified
+    if (sgVal > 0 && usedVal > 0) {
+      final totalWeight = usedVal; // Assuming used is in kg or similar
+      calculatedVolume.value = double.parse(
+        (totalWeight / (sgVal * 158.987)).toStringAsFixed(3)
+      );
+    } else {
+      calculatedVolume.value = 0.0;
+    }
+  }
 
   double calculateCost() {
-    final usedVal = double.tryParse(used) ?? 0.0;
-    return price * usedVal;
+    return calculatedCost.value;
   }
 }
 

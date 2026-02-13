@@ -1856,5 +1856,206 @@ Future<Map<String, dynamic>> deleteProduct(String productId) async {
       };
     }
   }
+
+
+
+   /// Create a new consume product
+  Future<Map<String, dynamic>> createConsumeProduct({
+    required String productId,
+    required double initial,
+    required double adjust,
+    required double used,
+    required double price,
+    required int numberOfBags,
+    required double weightPerBag,
+    required double sg,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}consume-product'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'product': productId,
+          'initial': initial,
+          'adjust': adjust,
+          'used': used,
+          'price': price,
+          'numberOfBags': numberOfBags,
+          'weightPerBag': weightPerBag,
+          'sg': sg,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+        print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+      
+      if (response.statusCode == 201 && data['success'] == true) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to create consume product',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Get all consume products
+  Future<Map<String, dynamic>> getAllConsumeProducts() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}consume-product'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+        print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+      
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'data': data['data'] ?? [],
+          'count': data['count'] ?? 0,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch consume products',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Update a consume product
+  Future<Map<String, dynamic>> updateConsumeProduct({
+    required String id,
+    double? initial,
+    double? adjust,
+    double? used,
+    double? price,
+    int? numberOfBags,
+    double? weightPerBag,
+    double? sg,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {};
+      
+      if (initial != null) body['initial'] = initial;
+      if (adjust != null) body['adjust'] = adjust;
+      if (used != null) body['used'] = used;
+      if (price != null) body['price'] = price;
+      if (numberOfBags != null) body['numberOfBags'] = numberOfBags;
+      if (weightPerBag != null) body['weightPerBag'] = weightPerBag;
+      if (sg != null) body['sg'] = sg;
+
+      final response = await http.put(
+        Uri.parse('${baseUrl}consume-product/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      final data = jsonDecode(response.body);
+        print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+      
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to update consume product',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Delete a consume product
+  Future<Map<String, dynamic>> deleteConsumeProduct(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${baseUrl}consume-product/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+
+        print("statuscode------${response.statusCode}");
+      print("response body------${response.body}");
+      
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to delete consume product',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Error: $e',
+      };
+    }
+  }
+
+  /// Calculate cost and volume locally (for instant feedback)
+  Map<String, double> calculateLocally({
+    required double initial,
+    required double adjust,
+    required double used,
+    required double price,
+    required int numberOfBags,
+    required double weightPerBag,
+    required double sg,
+  }) {
+    // Calculate final
+    final double finalValue = initial + adjust - used;
+    
+    // Calculate cost
+    final double cost = used * price;
+    
+    // Calculate volume in BBL
+    final double totalWeight = numberOfBags * weightPerBag;
+    double volumeBbl = 0.0;
+    
+    if (sg > 0) {
+      volumeBbl = totalWeight / (sg * 158.987);
+    }
+    
+    return {
+      'final': finalValue,
+      'cost': cost,
+      'volumeBbl': double.parse(volumeBbl.toStringAsFixed(3)),
+    };
+  }
   
 }

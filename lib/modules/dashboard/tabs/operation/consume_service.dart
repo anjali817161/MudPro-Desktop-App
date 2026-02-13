@@ -4,6 +4,8 @@ import 'package:mudpro_desktop_app/modules/company_setup/controller/service_cont
 import 'package:mudpro_desktop_app/modules/company_setup/model/service_model.dart';
 import '../../controller/dashboard_controller.dart';
 import 'package:mudpro_desktop_app/theme/app_theme.dart';
+// Import your new consume service controller
+// import 'package:mudpro_desktop_app/modules/consume_services/controller/consume_service_controller.dart';
 
 class ConsumeServicesView extends StatefulWidget {
   const ConsumeServicesView({super.key});
@@ -15,6 +17,7 @@ class ConsumeServicesView extends StatefulWidget {
 class _ConsumeServicesViewState extends State<ConsumeServicesView> {
   final dashboardController = Get.find<DashboardController>();
   final serviceController = Get.put(ServiceController());
+  // final consumeServiceController = Get.put(ConsumeServiceController()); // Uncomment when file is added
   final RxString selectedMethod = "Used".obs;
 
   // Data lists
@@ -32,6 +35,14 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
   final RxInt selectedServiceRow = 0.obs;
   final RxInt selectedEngineeringRow = 0.obs;
 
+  // Loading states for each row
+  final RxList<bool> packageRowLoading = <bool>[].obs;
+  final RxList<bool> serviceRowLoading = <bool>[].obs;
+  final RxList<bool> engineeringRowLoading = <bool>[].obs;
+
+  // Save button loading
+  final RxBool isSaving = false.obs;
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +52,9 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
       packageRows.add(PackageRowData());
       serviceRows.add(ServiceRowData());
       engineeringRows.add(EngineeringRowData());
+      packageRowLoading.add(false);
+      serviceRowLoading.add(false);
+      engineeringRowLoading.add(false);
     }
   }
 
@@ -58,112 +72,420 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
     }
   }
 
+  Future<void> _calculatePackageCost(int index) async {
+    if (dashboardController.isLocked.value) return;
+    
+    final row = packageRows[index];
+    if (row.selectedItem.isEmpty) return;
+
+    packageRowLoading[index] = true;
+    packageRowLoading.refresh();
+
+    try {
+      final initial = double.tryParse(row.initial) ?? 0.0;
+      final used = double.tryParse(row.used) ?? 0.0;
+      
+      // Calculate locally (same as backend)
+      final finalValue = initial - used;
+      final cost = used * row.price;
+
+      setState(() {
+        row.final_ = finalValue.toStringAsFixed(2);
+        row.cost = cost;
+      });
+
+      packageRows.refresh();
+
+      // Show success message - top right alert
+      Get.rawSnackbar(
+        messageText: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white, size: 18),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Cost calculated: \$${cost.toStringAsFixed(2)}',
+                style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Color(0xff10B981),
+        borderRadius: 6,
+        margin: EdgeInsets.only(top: 8, right: 12),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 2),
+        maxWidth: 350,
+      );
+    } catch (e) {
+      Get.rawSnackbar(
+        messageText: Row(
+          children: [
+            Icon(Icons.error, color: Colors.white, size: 18),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Failed to calculate cost',
+                style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Color(0xffEF4444),
+        borderRadius: 6,
+        margin: EdgeInsets.only(top: 8, right: 12),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 2),
+        maxWidth: 350,
+      );
+    } finally {
+      packageRowLoading[index] = false;
+      packageRowLoading.refresh();
+    }
+  }
+
+  Future<void> _calculateServiceCost(int index) async {
+    if (dashboardController.isLocked.value) return;
+    
+    final row = serviceRows[index];
+    if (row.selectedItem.isEmpty) return;
+
+    serviceRowLoading[index] = true;
+    serviceRowLoading.refresh();
+
+    try {
+      final usage = double.tryParse(row.usage) ?? 0.0;
+      
+      // Calculate locally (same as backend)
+      final cost = usage * row.price;
+
+      setState(() {
+        row.cost = cost;
+      });
+
+      serviceRows.refresh();
+
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Cost calculated: \$${cost.toStringAsFixed(2)}',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+        backgroundColor: AppTheme.successColor.withOpacity(0.9),
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to calculate cost: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      serviceRowLoading[index] = false;
+      serviceRowLoading.refresh();
+    }
+  }
+
+  Future<void> _calculateEngineeringCost(int index) async {
+    if (dashboardController.isLocked.value) return;
+    
+    final row = engineeringRows[index];
+    if (row.selectedItem.isEmpty) return;
+
+    engineeringRowLoading[index] = true;
+    engineeringRowLoading.refresh();
+
+    try {
+      final usage = double.tryParse(row.usage) ?? 0.0;
+      
+      // Calculate locally (same as backend)
+      final cost = usage * row.price;
+
+      setState(() {
+        row.cost = cost;
+      });
+
+      engineeringRows.refresh();
+
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Cost calculated: \$${cost.toStringAsFixed(2)}',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+        backgroundColor: AppTheme.successColor.withOpacity(0.9),
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to calculate cost: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      engineeringRowLoading[index] = false;
+      engineeringRowLoading.refresh();
+    }
+  }
+
+  Future<void> _saveAllData() async {
+    if (dashboardController.isLocked.value) return;
+
+    isSaving.value = true;
+
+    try {
+      // Prepare data for saving
+      List<Map<String, dynamic>> packageData = [];
+      List<Map<String, dynamic>> serviceData = [];
+      List<Map<String, dynamic>> engineeringData = [];
+
+      // Collect package data
+      for (var row in packageRows) {
+        if (row.selectedItem.isNotEmpty) {
+          packageData.add({
+            'packageName': row.selectedItem,
+            'code': row.code,
+            'unit': row.unit,
+            'price': row.price,
+            'initial': row.initial,
+            'used': row.used,
+          });
+        }
+      }
+
+      // Collect service data
+      for (var row in serviceRows) {
+        if (row.selectedItem.isNotEmpty) {
+          serviceData.add({
+            'serviceName': row.selectedItem,
+            'code': row.code,
+            'unit': row.unit,
+            'price': row.price,
+            'usage': row.usage,
+          });
+        }
+      }
+
+      // Collect engineering data
+      for (var row in engineeringRows) {
+        if (row.selectedItem.isNotEmpty) {
+          engineeringData.add({
+            'engineeringName': row.selectedItem,
+            'code': row.code,
+            'unit': row.unit,
+            'price': row.price,
+            'usage': row.usage,
+          });
+        }
+      }
+
+      // Uncomment when consume service controller is added
+      // final result = await consumeServiceController.saveAllConsumptions(
+      //   packages: packageData,
+      //   services: serviceData,
+      //   engineering: engineeringData,
+      // );
+
+      // Temporary success message
+      Get.snackbar(
+        'Success',
+        'All data saved successfully!',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+        backgroundColor: AppTheme.successColor.withOpacity(0.9),
+        colorText: Colors.white,
+      );
+
+      // if (result['success']) {
+      //   Get.snackbar(
+      //     'Success',
+      //     result['message'],
+      //     snackPosition: SnackPosition.BOTTOM,
+      //     backgroundColor: AppTheme.successColor,
+      //     colorText: Colors.white,
+      //   );
+      // } else {
+      //   throw Exception(result['message']);
+      // }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to save data: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Radio buttons - compact
-              Row(
-                children: [
-                  Text(
-                    "Input Method",
-                    style: AppTheme.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                    ),
+      child: Column(
+        children: [
+          // Top bar with radio buttons and save button
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade300),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Radio buttons
+                Text(
+                  "Input Method",
+                  style: AppTheme.bodySmall.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
                   ),
-                  const SizedBox(width: 16),
-                  _buildCompactRadio("Used", "Used"),
-                  const SizedBox(width: 12),
-                  _buildCompactRadio("Final", "Final"),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Package Table
-              _buildCompactTable(
-                title: "Package",
-                rows: packageRows,
-                dropdownItems: packages,
-                selectedRowIndex: selectedPackageRow,
-                onDropdownChanged: (index, item) {
-                  packageRows[index].selectedItem = item.name;
-                  packageRows[index].code = item.code;
-                  packageRows[index].unit = item.unit;
-                  packageRows[index].price = item.price;
-                  packageRows.refresh();
-                  _checkAndAddRow(packageRows);
-                },
-                onFieldChanged: (index) => _checkAndAddRow(packageRows),
-                headers: ["Package", "Code", "Unit", "Price (\$)", "Initial", "Used", "Final", "Cost (\$)"],
-                color: AppTheme.primaryColor,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Services Table
-              _buildCompactTable(
-                title: "Services",
-                rows: serviceRows,
-                dropdownItems: services,
-                selectedRowIndex: selectedServiceRow,
-                onDropdownChanged: (index, item) {
-                  serviceRows[index].selectedItem = item.name;
-                  serviceRows[index].code = item.code;
-                  serviceRows[index].unit = item.unit;
-                  serviceRows[index].price = item.price;
-                  serviceRows.refresh();
-                  _checkAndAddRow(serviceRows);
-                },
-                onFieldChanged: (index) => _checkAndAddRow(serviceRows),
-                headers: ["Services", "Code", "Unit", "Price (\$)", "Usage", "Cost (\$)"],
-                color: AppTheme.successColor,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Engineering Table
-              _buildCompactTable(
-                title: "Engineering",
-                rows: engineeringRows,
-                dropdownItems: engineering,
-                selectedRowIndex: selectedEngineeringRow,
-                onDropdownChanged: (index, item) {
-                  engineeringRows[index].selectedItem = item.name;
-                  engineeringRows[index].code = item.code;
-                  engineeringRows[index].unit = item.unit;
-                  engineeringRows[index].price = item.price;
-                  engineeringRows.refresh();
-                  _checkAndAddRow(engineeringRows);
-                },
-                onFieldChanged: (index) => _checkAndAddRow(engineeringRows),
-                headers: ["Engineering", "Code", "Unit", "Price (\$)", "Usage", "Cost (\$)"],
-                color: AppTheme.infoColor,
-              ),
-            ],
+                ),
+                const SizedBox(width: 16),
+                _buildCompactRadio("Used", "Used"),
+                const SizedBox(width: 12),
+                _buildCompactRadio("Final", "Final"),
+                
+                const Spacer(),
+                
+                // Save button
+                Obx(() => ElevatedButton.icon(
+                  onPressed: dashboardController.isLocked.value || isSaving.value
+                      ? null
+                      : _saveAllData,
+                  icon: isSaving.value
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.save, size: 16),
+                  label: Text(
+                    isSaving.value ? 'Saving...' : 'Save All',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    minimumSize: const Size(100, 32),
+                  ),
+                )),
+              ],
+            ),
           ),
-        ),
+
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Package Table
+                    _buildCompactTable(
+                      title: "Package",
+                      rows: packageRows,
+                      dropdownItems: packages,
+                      selectedRowIndex: selectedPackageRow,
+                      rowLoading: packageRowLoading,
+                      onDropdownChanged: (index, item) {
+                        packageRows[index].selectedItem = item.name;
+                        packageRows[index].code = item.code;
+                        packageRows[index].unit = item.unit;
+                        packageRows[index].price = item.price;
+                        packageRows.refresh();
+                        _checkAndAddRow(packageRows, packageRowLoading);
+                      },
+                      onFieldChanged: (index) => _checkAndAddRow(packageRows, packageRowLoading),
+                      onCalculate: _calculatePackageCost,
+                      headers: ["Package", "Code", "Unit", "Price (\$)", "Initial", "Used", "Final", "Cost (\$)", ""],
+                      color: AppTheme.primaryColor,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Services Table
+                    _buildCompactTable(
+                      title: "Services",
+                      rows: serviceRows,
+                      dropdownItems: services,
+                      selectedRowIndex: selectedServiceRow,
+                      rowLoading: serviceRowLoading,
+                      onDropdownChanged: (index, item) {
+                        serviceRows[index].selectedItem = item.name;
+                        serviceRows[index].code = item.code;
+                        serviceRows[index].unit = item.unit;
+                        serviceRows[index].price = item.price;
+                        serviceRows.refresh();
+                        _checkAndAddRow(serviceRows, serviceRowLoading);
+                      },
+                      onFieldChanged: (index) => _checkAndAddRow(serviceRows, serviceRowLoading),
+                      onCalculate: _calculateServiceCost,
+                      headers: ["Services", "Code", "Unit", "Price (\$)", "Usage", "Cost (\$)", ""],
+                      color: AppTheme.successColor,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Engineering Table
+                    _buildCompactTable(
+                      title: "Engineering",
+                      rows: engineeringRows,
+                      dropdownItems: engineering,
+                      selectedRowIndex: selectedEngineeringRow,
+                      rowLoading: engineeringRowLoading,
+                      onDropdownChanged: (index, item) {
+                        engineeringRows[index].selectedItem = item.name;
+                        engineeringRows[index].code = item.code;
+                        engineeringRows[index].unit = item.unit;
+                        engineeringRows[index].price = item.price;
+                        engineeringRows.refresh();
+                        _checkAndAddRow(engineeringRows, engineeringRowLoading);
+                      },
+                      onFieldChanged: (index) => _checkAndAddRow(engineeringRows, engineeringRowLoading),
+                      onCalculate: _calculateEngineeringCost,
+                      headers: ["Engineering", "Code", "Unit", "Price (\$)", "Usage", "Cost (\$)", ""],
+                      color: AppTheme.infoColor,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  void _checkAndAddRow<T extends BaseRowData>(RxList<T> rows) {
+  void _checkAndAddRow<T extends BaseRowData>(RxList<T> rows, RxList<bool> loadingStates) {
     // Check if last row (5th or beyond) is filled
     if (rows.length >= 5) {
       final lastRow = rows.last;
       if (lastRow.selectedItem.isNotEmpty) {
         if (T == PackageRowData) {
           rows.add(PackageRowData() as T);
+          loadingStates.add(false);
         } else if (T == ServiceRowData) {
           rows.add(ServiceRowData() as T);
+          loadingStates.add(false);
         } else if (T == EngineeringRowData) {
           rows.add(EngineeringRowData() as T);
+          loadingStates.add(false);
         }
       }
     }
@@ -236,8 +558,10 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
     required RxList<T> rows,
     required RxList<I> dropdownItems,
     required RxInt selectedRowIndex,
+    required RxList<bool> rowLoading,
     required Function(int, I) onDropdownChanged,
     required Function(int) onFieldChanged,
+    required Function(int) onCalculate,
     required List<String> headers,
     required Color color,
   }) {
@@ -251,7 +575,7 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
               color: color,
               borderRadius: const BorderRadius.only(
@@ -263,7 +587,7 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
               title,
               style: AppTheme.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: 12,
+                fontSize: 11,
                 color: Colors.white,
               ),
             ),
@@ -271,7 +595,7 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
 
           // Table with fixed height and scrollable content
           SizedBox(
-            height: 220, // Fixed height
+            height: 180, // Reduced fixed height for compression
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SingleChildScrollView(
@@ -283,8 +607,8 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
                     ),
                   ),
                   child: DataTable(
-                    headingRowHeight: 32,
-                    dataRowHeight: 32,
+                    headingRowHeight: 28, // Compressed header height
+                    dataRowHeight: 28, // Compressed row height
                     columnSpacing: 0,
                     horizontalMargin: 0,
                     dividerThickness: 0,
@@ -294,12 +618,12 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
                       horizontalInside: BorderSide(color: Colors.grey.shade200, width: 1),
                     ),
                     headingTextStyle: AppTheme.bodySmall.copyWith(
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: color,
                     ),
                     dataTextStyle: AppTheme.bodySmall.copyWith(
-                      fontSize: 10,
+                      fontSize: 9,
                     ),
                     columns: headers.map((h) => DataColumn(
                       label: Container(
@@ -307,7 +631,7 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
                         alignment: h.contains('Price') || h.contains('Cost') || h.contains('Initial') || h.contains('Used') || h.contains('Final') || h.contains('Usage')
                             ? Alignment.centerRight
                             : Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
                         child: Text(h),
                       ),
                     )).toList(),
@@ -327,7 +651,9 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
                           onDropdownChanged: onDropdownChanged,
                           onFieldChanged: onFieldChanged,
                           onRowSelected: () => selectedRowIndex.value = index,
+                          onCalculate: onCalculate,
                           headers: headers,
+                          isLoading: rowLoading[index],
                         ),
                       );
                     }),
@@ -343,15 +669,17 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
 
   double _getColumnWidth(String header) {
     if (header.contains('Package') || header.contains('Services') || header.contains('Engineering')) {
-      return 180;
+      return 160;
     } else if (header == 'Code') {
-      return 100;
-    } else if (header == 'Unit') {
-      return 80;
-    } else if (header.contains('Price') || header.contains('Cost')) {
-      return 100;
-    } else {
       return 90;
+    } else if (header == 'Unit') {
+      return 70;
+    } else if (header.contains('Price') || header.contains('Cost')) {
+      return 90;
+    } else if (header == '') {
+      return 40; // Play button column
+    } else {
+      return 80;
     }
   }
 
@@ -363,7 +691,9 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
     required Function(int, I) onDropdownChanged,
     required Function(int) onFieldChanged,
     required VoidCallback onRowSelected,
+    required Function(int) onCalculate,
     required List<String> headers,
+    required bool isLoading,
   }) {
     List<DataCell> cells = [];
 
@@ -372,19 +702,19 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
       GestureDetector(
         onTap: onRowSelected,
         child: Container(
-          width: 180,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          width: 160,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Row(
             children: [
               // Dropdown icon - shows only in selected row
               if (isSelected)
                 Icon(
                   Icons.arrow_drop_down,
-                  size: 16,
+                  size: 14,
                   color: AppTheme.primaryColor,
                 ),
               if (isSelected)
-                const SizedBox(width: 4),
+                const SizedBox(width: 2),
               
               // Dropdown
               Expanded(
@@ -401,14 +731,14 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
                     hint: Text(
                       "Select",
                       style: AppTheme.bodySmall.copyWith(
-                        fontSize: 10,
+                        fontSize: 9,
                         color: Colors.grey,
                       ),
                     ),
                     isExpanded: true,
                     isDense: true,
                     icon: const SizedBox.shrink(),
-                    menuMaxHeight: 250,
+                    menuMaxHeight: 200,
                     items: dropdownItems.map((item) {
                       String name = '';
                       if (item is PackageItem) name = item.name;
@@ -419,7 +749,7 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
                         value: item,
                         child: Text(
                           name,
-                          style: AppTheme.bodySmall.copyWith(fontSize: 10),
+                          style: AppTheme.bodySmall.copyWith(fontSize: 9),
                           overflow: TextOverflow.ellipsis,
                         ),
                       );
@@ -444,29 +774,29 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
     // Code
     cells.add(DataCell(
       Container(
-        width: 100,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Text(row.code, style: AppTheme.bodySmall.copyWith(fontSize: 10)),
+        width: 90,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Text(row.code, style: AppTheme.bodySmall.copyWith(fontSize: 9)),
       ),
     ));
 
     // Unit
     cells.add(DataCell(
       Container(
-        width: 80,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Text(row.unit, style: AppTheme.bodySmall.copyWith(fontSize: 10)),
+        width: 70,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Text(row.unit, style: AppTheme.bodySmall.copyWith(fontSize: 9)),
       ),
     ));
 
     // Price
     cells.add(DataCell(
       Container(
-        width: 100,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        width: 90,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
         child: Text(
           row.price > 0 ? row.price.toStringAsFixed(2) : '',
-          style: AppTheme.bodySmall.copyWith(fontSize: 10),
+          style: AppTheme.bodySmall.copyWith(fontSize: 9),
           textAlign: TextAlign.right,
         ),
       ),
@@ -478,24 +808,35 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
       cells.add(_buildEditableCell(row.initial, (val) {
         row.initial = val;
         onFieldChanged(index);
-      }, 90));
+      }, 80));
       cells.add(_buildEditableCell(row.used, (val) {
         row.used = val;
         onFieldChanged(index);
-      }, 90));
-      cells.add(_buildEditableCell(row.final_, (val) {
-        row.final_ = val;
-        onFieldChanged(index);
-      }, 90));
+      }, 80));
       cells.add(DataCell(
         Container(
-          width: 100,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          width: 80,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Text(
-            row.calculateCost().toStringAsFixed(2),
+            row.final_,
             style: AppTheme.bodySmall.copyWith(
-              fontSize: 10,
+              fontSize: 9,
+              color: Colors.grey.shade600,
+            ),
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ));
+      cells.add(DataCell(
+        Container(
+          width: 90,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text(
+            row.cost > 0 ? row.cost.toStringAsFixed(2) : '',
+            style: AppTheme.bodySmall.copyWith(
+              fontSize: 9,
               fontWeight: FontWeight.w600,
+              color: row.cost > 0 ? AppTheme.primaryColor : Colors.black,
             ),
             textAlign: TextAlign.right,
           ),
@@ -503,29 +844,63 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
       ));
     } else {
       // Usage, Cost
-      cells.add(_buildEditableCell(row is ServiceRowData ? row.usage : (row as EngineeringRowData).usage, (val) {
-        if (row is ServiceRowData) {
-          row.usage = val;
-        } else if (row is EngineeringRowData) {
-          row.usage = val;
-        }
-        onFieldChanged(index);
-      }, 90));
+      cells.add(_buildEditableCell(
+        row is ServiceRowData ? row.usage : (row as EngineeringRowData).usage, 
+        (val) {
+          if (row is ServiceRowData) {
+            row.usage = val;
+          } else if (row is EngineeringRowData) {
+            row.usage = val;
+          }
+          onFieldChanged(index);
+        }, 
+        80
+      ));
       cells.add(DataCell(
         Container(
-          width: 100,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          width: 90,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Text(
-            row.calculateCost().toStringAsFixed(2),
+            row.cost > 0 ? row.cost.toStringAsFixed(2) : '',
             style: AppTheme.bodySmall.copyWith(
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: FontWeight.w600,
+              color: row.cost > 0 ? AppTheme.primaryColor : Colors.black,
             ),
             textAlign: TextAlign.right,
           ),
         ),
       ));
     }
+
+    // Play button column
+    cells.add(DataCell(
+      Container(
+        width: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: isLoading
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : IconButton(
+                icon: Icon(
+                  Icons.play_circle_outline,
+                  size: 18,
+                  color: row.selectedItem.isNotEmpty && !dashboardController.isLocked.value
+                      ? AppTheme.primaryColor
+                      : Colors.grey.shade400,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: row.selectedItem.isNotEmpty && !dashboardController.isLocked.value
+                    ? () => onCalculate(index)
+                    : null,
+                tooltip: 'Calculate Cost',
+              ),
+      ),
+    ));
 
     return cells;
   }
@@ -534,14 +909,14 @@ class _ConsumeServicesViewState extends State<ConsumeServicesView> {
     return DataCell(
       Container(
         width: width,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
         child: TextField(
           controller: TextEditingController(text: value),
           enabled: !dashboardController.isLocked.value,
-          style: AppTheme.bodySmall.copyWith(fontSize: 10),
+          style: AppTheme.bodySmall.copyWith(fontSize: 9),
           decoration: const InputDecoration(
             isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             border: InputBorder.none,
           ),
           keyboardType: TextInputType.number,
@@ -558,38 +933,19 @@ abstract class BaseRowData {
   String code = '';
   String unit = '';
   double price = 0.0;
-
-  double calculateCost();
+  double cost = 0.0;
 }
 
 class PackageRowData extends BaseRowData {
   String initial = '';
   String used = '';
   String final_ = '';
-
-  @override
-  double calculateCost() {
-    final usedVal = double.tryParse(used) ?? 0.0;
-    return price * usedVal;
-  }
 }
 
 class ServiceRowData extends BaseRowData {
   String usage = '';
-
-  @override
-  double calculateCost() {
-    final usageVal = double.tryParse(usage) ?? 0.0;
-    return price * usageVal;
-  }
 }
 
 class EngineeringRowData extends BaseRowData {
   String usage = '';
-
-  @override
-  double calculateCost() {
-    final usageVal = double.tryParse(usage) ?? 0.0;
-    return price * usageVal;
-  }
 }

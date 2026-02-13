@@ -13,6 +13,12 @@ class ProductsController extends GetxController {
   final RxBool isSaving = false.obs;
   final RxBool isLoading = false.obs;
 
+  // Track which existing product is currently being inline-edited
+  final RxnString editingProductId = RxnString(null);
+
+  // Store original data before inline edit (to restore on cancel)
+  ProductModel? _editingOriginalProduct;
+
   @override
   void onInit() {
     super.onInit();
@@ -69,6 +75,65 @@ class ProductsController extends GetxController {
     if (index < 0 || index >= products.length) return false;
     final product = products[index];
     return product.id != null && existingProductIds.contains(product.id);
+  }
+
+  // Start inline editing — save a deep copy of original data for cancel
+  void startInlineEdit(ProductModel product) {
+    // If another row is being edited, cancel it first
+    if (editingProductId.value != null && editingProductId.value != product.id) {
+      cancelInlineEdit();
+    }
+
+    _editingOriginalProduct = ProductModel(
+      id: product.id,
+      product: product.product,
+      code: product.code,
+      sg: product.sg,
+      unitNum: product.unitNum,
+      unitClass: product.unitClass,
+      group: product.group,
+      retail: product.retail,
+      a: product.a,
+      b: product.b,
+    );
+
+    editingProductId.value = product.id;
+  }
+
+  // Cancel inline edit — restore original data
+  void cancelInlineEdit() {
+    if (editingProductId.value == null || _editingOriginalProduct == null) {
+      editingProductId.value = null;
+      return;
+    }
+
+    final idx = products.indexWhere((p) => p.id == editingProductId.value);
+    if (idx != -1 && _editingOriginalProduct != null) {
+      products[idx] = _editingOriginalProduct!;
+      products.refresh();
+    }
+
+    editingProductId.value = null;
+    _editingOriginalProduct = null;
+  }
+
+  // Save inline edited row — calls update API
+  Future<void> saveInlineEdit(String productId) async {
+    final idx = products.indexWhere((p) => p.id == productId);
+    if (idx == -1) return;
+
+    final product = products[idx];
+
+    if (!product.isValid()) {
+      showErrorAlert('Please fill all required fields (Product, Code, SG, Unit Num, Unit Class, Group)');
+      return;
+    }
+
+    await updateProductData(productId, product);
+
+    // Clear editing state only on success (updateProductData calls loadProducts on success)
+    editingProductId.value = null;
+    _editingOriginalProduct = null;
   }
 
   // Update product API call
@@ -285,6 +350,8 @@ class ProductsController extends GetxController {
   void onClose() {
     products.clear();
     existingProductIds.clear();
+    editingProductId.value = null;
+    _editingOriginalProduct = null;
     super.onClose();
   }
 }
